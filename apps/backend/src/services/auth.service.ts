@@ -19,7 +19,10 @@ export const loginUser = async (input: LoginInput): Promise<AuthResponse> => {
     throw new Error('Usuario no encontrado');
   }
 
-  const isPasswordValid = await bcrypt.compare(input.password, user.password);
+  const isPasswordValid = await bcrypt.compare(
+    input.password,
+    user.password_hash
+  );
   if (!isPasswordValid) {
     throw new Error('Contraseña incorrecta');
   }
@@ -68,7 +71,7 @@ export const registerUser = async (
     .insert([
       {
         email: input.email,
-        password: hashedPassword,
+        password_hash: hashedPassword,
         name: input.name,
       },
     ])

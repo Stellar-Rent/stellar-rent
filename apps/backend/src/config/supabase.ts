@@ -10,17 +10,17 @@ export type Database = {
           email: string;
           name: string;
           created_at: string;
-          password: string;
+          password_hash: string;
         };
         Insert: {
           email: string;
           name: string;
-          password: string;
+          password_hash: string;
         };
         Update: {
           email?: string;
           name?: string;
-          password?: string;
+          password_hash?: string;
         };
       };
     };
