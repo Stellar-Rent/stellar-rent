@@ -1,10 +1,41 @@
+import type { NextFunction, Request, Response } from 'express';
 import { z } from 'zod';
+import { loginSchema, registerSchema } from '../types/auth.types';
 
-export const loginSchema = z.object({
-  email: z.string().email('Email inválido'),
-  password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
-});
+export const validateLogin = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    loginSchema.parse(req.body);
+    next();
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        error: 'Datos de inicio de sesión inválidos',
+        details: error.errors,
+      });
+    }
+    next(error);
+  }
+};
 
-export const registerSchema = loginSchema.extend({
-  name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
-});
+export const validateRegister = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    registerSchema.parse(req.body);
+    next();
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        error: 'Datos de registro inválidos',
+        details: error.errors,
+      });
+    }
+    next(error);
+  }
+};
