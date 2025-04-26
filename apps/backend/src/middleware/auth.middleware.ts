@@ -14,8 +14,12 @@ export const authenticateToken = (
     return res.status(401).json({ error: 'Token no proporcionado' });
   }
 
+  if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET environment variable is required');
+  }
+
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET ?? '') as {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET) as {
       id: string;
       email: string;
     };
