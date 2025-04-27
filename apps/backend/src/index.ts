@@ -2,6 +2,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import express from 'express';
 import rateLimit from 'express-rate-limit';
+import { register } from './controllers/authController';
 
 // Environment variables configuration
 dotenv.config();
@@ -26,6 +27,9 @@ app.use(
   })
 );
 app.use(limiter);
+
+// Register route
+app.post('/auth/register', register);
 
 // Test route
 app.get('/', (_req, res) => {
