@@ -31,9 +31,6 @@ app.use(rateLimiter);
 // Routes
 app.use('/auth', authRoutes);
 
-// Register route
-app.post('/auth/register', register);
-
 // Test route
 app.get('/', (_req, res) => {
   res.json({ message: 'Stellar Rent API is running successfully 🚀' });
