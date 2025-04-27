@@ -6,7 +6,22 @@ import { supabase } from '../services/supabase';
 // Define Zod schema to validate request body
 const registerSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(6),
+  password: z
+    .string()
+    .min(8)
+    .refine(
+      (password) => {
+        const hasUpperCase = /[A-Z]/.test(password);
+        const hasLowerCase = /[a-z]/.test(password);
+        const hasNumber = /[0-9]/.test(password);
+        const hasSpecialChar = /[#?!@$%^&*-]/.test(password);
+        return hasUpperCase && hasLowerCase && hasNumber && hasSpecialChar;
+      },
+      {
+        message:
+          'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character',
+      }
+    ),
   name: z.string().min(1),
 });
 
