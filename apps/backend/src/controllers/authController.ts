@@ -1,80 +1,53 @@
-import bcrypt from 'bcrypt';
 import type { Request, Response } from 'express';
-import { z } from 'zod';
-import { supabase } from '../services/supabase';
+import { loginUser, registerUser } from '../services/authService';
 
-// Define Zod schema to validate request body
-const registerSchema = z.object({
-  email: z.string().email(),
-  password: z
-    .string()
-    .min(8)
-    .refine(
-      (password) => {
-        const hasUpperCase = /[A-Z]/.test(password);
-        const hasLowerCase = /[a-z]/.test(password);
-        const hasNumber = /[0-9]/.test(password);
-        const hasSpecialChar = /[#?!@$%^&*-]/.test(password);
-        return hasUpperCase && hasLowerCase && hasNumber && hasSpecialChar;
-      },
-      {
-        message:
-          'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character',
-      }
-    ),
-  name: z.string().min(1),
-});
+export const login = async (req: Request, res: Response) => {
+  try {
+    const { token, user } = await loginUser(req.body);
+    res.status(200).json({ token, user });
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : 'Error desconocido';
 
-// Register controller function
+    if (
+      errorMessage === 'Usuario no encontrado' ||
+      errorMessage === 'Contraseña incorrecta'
+    ) {
+      res.status(401).json({ error: 'Credenciales inválidas' });
+    } else if (errorMessage.includes('validation')) {
+      res.status(400).json({ error: 'Datos de entrada inválidos' });
+    } else {
+      console.error('Error en login:', error);
+      res.status(500).json({ error: 'Error interno del servidor' });
+    }
+  }
+};
+
 export const register = async (req: Request, res: Response) => {
   try {
-    // Validate the request body
-    const parsedData = registerSchema.safeParse(req.body);
-    if (!parsedData.success) {
-      return res.status(400).json({ error: 'Invalid request data' });
+    // Log registration attempt without PII in production
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('Iniciando registro con datos:', {
+        email: req.body.email,
+        name: req.body.name,
+      });
+    } else {
+      console.log('Iniciando intento de registro');
     }
 
-    const { email, password, name } = parsedData.data;
+    const { token, user } = await registerUser(req.body);
+    res.status(201).json({ token, user });
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : 'Error desconocido';
+    console.error('Error en registro:', errorMessage);
 
-    // Check if user already exists
-    const { data: existingUser, error: fetchError } = await supabase
-      .from('users')
-      .select('id')
-      .eq('email', email)
-      .single();
-
-    if (fetchError && fetchError.code !== 'PGRST116') {
-      console.error(fetchError);
-      return res.status(500).json({ error: 'Error checking existing user' });
+    if (errorMessage === 'El email ya está registrado') {
+      res.status(409).json({ error: 'El email ya está registrado' });
+    } else if (errorMessage.includes('validation')) {
+      res.status(400).json({ error: 'Datos de entrada inválidos' });
+    } else {
+      res.status(500).json({ error: 'Error al registrar usuario' });
     }
-
-    if (existingUser) {
-      return res
-        .status(409)
-        .json({ error: 'User with this email already exists' });
-    }
-
-    // Hash the password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Insert the new user
-    const { data: newUser, error: insertError } = await supabase
-      .from('users')
-      .insert([{ email, password: hashedPassword, name }])
-      .select()
-      .single();
-
-    if (insertError) {
-      console.error(insertError);
-      return res.status(500).json({ error: 'Error creating user' });
-    }
-
-    // Remove password before sending response
-    const { password: _removedPassword, ...userWithoutPassword } = newUser;
-
-    return res.status(201).json(userWithoutPassword);
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: 'Server error' });
   }
 };

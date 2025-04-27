@@ -1,7 +1,7 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
-import { supabase } from '../src/services/supabase';
+import { supabase } from './supabase';
 
 // Define Zod schema for registration
 const registerSchema = z.object({
@@ -31,11 +31,10 @@ const loginSchema = z.object({
   password: z.string().min(1),
 });
 
-// Define types based on Zod schemas
-type RegisterData = z.infer<typeof registerSchema>;
-type LoginData = z.infer<typeof loginSchema>;
+type RegisterUserInput = z.infer<typeof registerSchema>;
+type LoginUserInput = z.infer<typeof loginSchema>;
 
-export const registerUser = async (data: RegisterData) => {
+export const registerUser = async (data: RegisterUserInput) => {
   // Validate input
   const parsedData = registerSchema.safeParse(data);
   if (!parsedData.success) {
@@ -86,7 +85,7 @@ export const registerUser = async (data: RegisterData) => {
   return { token, user: userWithoutPassword };
 };
 
-export const loginUser = async (data: LoginData) => {
+export const loginUser = async (data: LoginUserInput) => {
   // Validate input
   const parsedData = loginSchema.safeParse(data);
   if (!parsedData.success) {
