@@ -50,7 +50,7 @@ export const registerUser = async (data: RegisterUserInput) => {
     .eq('email', email)
     .single();
 
-  if (fetchError && fetchError.code !== 'PGRST116') {
+  if (fetchError) {
     throw new Error('Error checking existing user');
   }
 
