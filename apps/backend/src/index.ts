@@ -1,22 +1,22 @@
 import cors from 'cors';
 import dotenv from 'dotenv';
 import express from 'express';
-import rateLimit from 'express-rate-limit';
-import { register } from './controllers/authController';
+import { errorMiddleware } from './middleware/error.middleware';
+import { rateLimiter } from './middleware/rateLimiter';
+import authRoutes from './routes/auth';
 
 // Environment variables configuration
 dotenv.config();
 
+// Debug: verificar variables de entorno
+console.log('Variables de entorno cargadas:', {
+  supabaseUrl: process.env.SUPABASE_URL ? '✅' : '❌',
+  supabaseKey: process.env.SUPABASE_ANON_KEY ? '✅' : '❌',
+  jwtSecret: process.env.JWT_SECRET ? '✅' : '❌',
+});
+
 const app = express();
 const PORT = process.env.PORT || 3000;
-
-// Rate limiting configuration
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  standardHeaders: true,
-  legacyHeaders: false,
-});
 
 // Middleware
 app.use(express.json());
@@ -26,7 +26,10 @@ app.use(
     credentials: true,
   })
 );
-app.use(limiter);
+app.use(rateLimiter);
+
+// Routes
+app.use('/auth', authRoutes);
 
 // Register route
 app.post('/auth/register', register);
@@ -37,21 +40,11 @@ app.get('/', (_req, res) => {
 });
 
 // Error handling
-app.use(
-  (
-    err: Error,
-    _req: express.Request,
-    res: express.Response,
-    _next: express.NextFunction
-  ) => {
-    console.error(err.stack);
-    res.status(500).json({ error: 'Something went wrong on the server' });
-  }
-);
+app.use(errorMiddleware);
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`Servidor corriendo en el puerto ${PORT}`);
 });
 
 export { app };
