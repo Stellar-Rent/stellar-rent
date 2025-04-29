@@ -13,7 +13,6 @@ export function Providers({ children }: ProvidersProps) {
     <NextThemesProvider
       attribute="class"
       defaultTheme="light"
-      forcedTheme="light"
       disableTransitionOnChange
     >
       <StellarProvider>
