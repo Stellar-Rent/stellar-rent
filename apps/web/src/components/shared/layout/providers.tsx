@@ -1,7 +1,7 @@
 'use client';
 
-import React from 'react';
 import dynamic from 'next/dynamic';
+import React from 'react';
 import { StellarProvider } from '~/hooks/stellar/stellar-context';
 import { AuthProvider } from '~/hooks/use-auth';
 
@@ -29,8 +29,8 @@ export function Providers({ children }: ProvidersProps) {
     <ThemeProvider
       attribute="class"
       defaultTheme="light"
-      enableSystem={false}
-      disableTransitionOnChange
+      enableSystem={true}
+      storageKey="stellar-rent-theme"
     >
       <StellarProvider>
         <AuthProvider>{children}</AuthProvider>
