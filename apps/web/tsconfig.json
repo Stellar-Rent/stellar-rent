@@ -26,9 +26,8 @@
     // Path aliases
     "baseUrl": ".",
     "paths": {
-      "~/*": [
-        "./src/*"
-      ]
+      "~/*": ["./src/*"],
+      "@/*": ["./src/*"]
     },
     "incremental": true,
     "esModuleInterop": true,
