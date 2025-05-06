@@ -39,7 +39,20 @@ export function ThemeToggle() {
           />
           <span className="sr-only">Cambiar tema</span>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-[150px]" sideOffset={8}>
+        <DropdownMenuContent
+          align="end"
+          className="w-[150px]"
+          sideOffset={8}
+          {...Object.assign(
+            {},
+            {
+              container:
+                typeof window !== 'undefined'
+                  ? (document.getElementById('theme-portal-root') ?? undefined)
+                  : undefined,
+            }
+          )}
+        >
           <DropdownMenuItem
             onClick={() => setTheme('light')}
             className="flex items-center gap-2 cursor-pointer"

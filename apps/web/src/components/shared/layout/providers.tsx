@@ -1,5 +1,6 @@
 'use client';
 
+import { useTheme } from 'next-themes';
 import dynamic from 'next/dynamic';
 import React from 'react';
 import { StellarProvider } from '~/hooks/stellar/stellar-context';
@@ -22,11 +23,22 @@ interface ProvidersProps {
 }
 
 export function Providers({ children }: ProvidersProps) {
+  const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
 
   React.useEffect(() => {
     setMounted(true);
   }, []);
+
+  React.useEffect(() => {
+    const portal =
+      typeof window !== 'undefined'
+        ? document.getElementById('theme-portal-root')
+        : null;
+    if (portal && resolvedTheme) {
+      portal.className = resolvedTheme;
+    }
+  }, [resolvedTheme]);
 
   if (!mounted) {
     return (
