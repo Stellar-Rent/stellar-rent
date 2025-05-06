@@ -1,4 +1,5 @@
 {
+  "extends": "../../tsconfig.json", 
   "compilerOptions": {
     // Enable latest features
     "lib": [
@@ -24,10 +25,10 @@
     "noUnusedParameters": false,
     "noPropertyAccessFromIndexSignature": false,
     // Path aliases
-    "baseUrl": ".",
+    "baseUrl": "src",
     "paths": {
-      "~/*": [
-        "./src/*"
+      "@/*": [
+        "./*"
       ]
     },
     "incremental": true,

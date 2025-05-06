@@ -120,3 +120,43 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Estilo para el borde animado */
+.stellar-border {
+  --offset: 25px; 
+  border-radius: 15px; 
+  position: relative;
+  height: auto;
+  width: 100%;
+  padding: 30px; 
+  max-width: 400px; 
+  overflow: hidden;
+  border: 2px solid transparent; 
+  box-shadow: 0 0 20px rgba(220, 219, 219, 0.931); 
+}
+
+/* Borde con la animación */
+.stellar-border::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: inherit;
+  background: conic-gradient(transparent 270deg, #C0C0C0, transparent);
+  animation: rotate 1s linear infinite; 
+  z-index: -1; 
+  box-shadow: 0 0 20px rgba(192, 192, 192, 0.9); 
+}
+
+/* Animación para el giro del borde */
+@keyframes rotate {
+  0% {
+    transform: translate(-50%, -50%) scale(1.4) rotate(0deg);
+  }
+
+  100% {
+    transform: translate(-50%, -50%) scale(1.4) rotate(1turn);
+  }
+}

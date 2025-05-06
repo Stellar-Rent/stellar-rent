@@ -2,37 +2,46 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import express from 'express';
 import rateLimit from 'express-rate-limit';
-
-// Environment variables configuration
+import jwt from 'jsonwebtoken';
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Rate limiting configuration
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  windowMs: 15 * 60 * 1000,
+  max: 100,
   standardHeaders: true,
   legacyHeaders: false,
 });
 
-// Middleware
 app.use(express.json());
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+    origin: process.env.CORS_ORIGIN || 'http://localhost:3001',
     credentials: true,
   })
 );
 app.use(limiter);
 
-// Test route
+app.post('/auth/login', (req, res) => {
+  const { email, password } = req.body;
+
+  if (email === 'user@example.com' && password === 'password123') {
+    const token = jwt.sign(
+      { email },
+      process.env.JWT_SECRET || 'your-secret-key',
+      { expiresIn: '1h' }
+    );
+    return res.json({ token });
+  }
+  return res.status(401).json({ message: 'Credenciales incorrectas' });
+});
+
 app.get('/', (_req, res) => {
   res.json({ message: 'Stellar Rent API is running successfully 🚀' });
 });
 
-// Error handling
 app.use(
   (
     err: Error,
@@ -45,7 +54,6 @@ app.use(
   }
 );
 
-// Start server
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
