@@ -32,6 +32,5 @@
       "biome check --apply",
       "biome format --write"
     ]
-  },
-  "packageManager": "bun@1.0.26"
+  }
 }
