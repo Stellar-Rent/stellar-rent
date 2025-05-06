@@ -5,7 +5,7 @@ export default function Home() {
   const fecha = new Date().toLocaleDateString();
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
+    <main className="flex flex-1 flex-col items-center justify-between p-8">
       <h1>{mensaje}</h1>
       <p>Fecha: {fecha}</p>
     </main>

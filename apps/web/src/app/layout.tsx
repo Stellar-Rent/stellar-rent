@@ -24,9 +24,12 @@ export default function RootLayout({
       <body
         className={`${inter.className} min-h-screen bg-background text-foreground antialiased`}
       >
+        <div id="theme-portal-root" />
         <Providers>
           <Navbar />
-          <main className="min-h-[calc(100vh-3.5rem)] pt-14">{children}</main>
+          <main className="flex-1 flex flex-col items-center justify-between p-2">
+            {children}
+          </main>
         </Providers>
       </body>
     </html>
