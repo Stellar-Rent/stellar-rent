@@ -3,7 +3,7 @@
 import { Home } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { ThemeToggle } from '../shared/ThemeToggle';
+import { ThemeToggle } from '../shared/theme-toggle';
 
 export function Navbar() {
   const [mounted, setMounted] = useState(false);
