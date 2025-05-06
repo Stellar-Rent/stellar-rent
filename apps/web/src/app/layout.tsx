@@ -18,10 +18,15 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es" suppressHydrationWarning>
-      <body className={inter.className}>
+      <head>
+        <meta name="color-scheme" content="light dark" />
+      </head>
+      <body
+        className={`${inter.className} min-h-screen bg-background text-foreground antialiased`}
+      >
         <Providers>
           <Navbar />
-          <main className="pt-14">{children}</main>
+          <main className="min-h-[calc(100vh-3.5rem)] pt-14">{children}</main>
         </Providers>
       </body>
     </html>
