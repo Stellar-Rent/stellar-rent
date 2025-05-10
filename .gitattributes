@@ -1,0 +1,59 @@
+# Frontend (Next.js)
+*.ts linguist-language=TypeScript
+*.tsx linguist-language=TypeScript
+*.js linguist-language=JavaScript
+*.jsx linguist-language=JavaScript
+*.css linguist-language=CSS
+
+# Stellar Blockchain
+*.ts linguist-language=TypeScript
+*.js linguist-language=JavaScript
+
+# Build and Dependencies
+.next/ linguist-generated=true
+.next/ -diff
+dist/ linguist-generated=true
+dist/ -diff
+node_modules/ linguist-vendored
+node_modules/ -diff
+bun.lock linguist-generated=true
+
+# Documentation
+*.md linguist-documentation
+docs/ linguist-documentation
+README.md linguist-documentation
+
+# Test Files
+*.test.ts linguist-language=TypeScript
+*.test.tsx linguist-language=TypeScript
+__tests__/ linguist-language=TypeScript
+
+# IDE and Editor Files
+.vscode/ linguist-vendored
+.idea/ linguist-vendored
+*.json linguist-language=JSON
+.env.* linguist-language=Text
+
+# Ignore binary files
+*.jpg binary
+*.png binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.svg linguist-language=SVG
+
+# Configuration Files
+*.config.js linguist-language=JavaScript
+*.config.ts linguist-language=TypeScript
+tailwind.config.js linguist-language=JavaScript
+next.config.js linguist-language=JavaScript
+postcss.config.js linguist-language=JavaScript
+eslint.config.js linguist-language=JavaScript
+prettier.config.js linguist-language=JavaScript
+
+# Database
+*.sql linguist-language=SQL
+prisma/ linguist-language=Prisma
+
+# Security
+.env.example linguist-language=Text 
