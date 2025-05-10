@@ -31,7 +31,7 @@ StellarRent connects property owners and tenants through a decentralized platfor
 
 ### Core Operations
 
-![Diagram showing the overall architecture of StellarRent, including core actions: list property, rent property, and confirm rental.](diagrams/overall-architecture.png)  
+![Diagram showing the overall architecture of StellarRent, including core actions: list property, rent property, and confirm rental.](assets/flow-stellar-rent.png)  
 *Sequence diagram showcasing how the core operations (list property, rent property, confirm rental, and payment escrow) are handled.*
 
 ### Current Development State
