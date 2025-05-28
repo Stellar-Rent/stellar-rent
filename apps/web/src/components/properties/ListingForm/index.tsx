@@ -1,5 +1,6 @@
 'use client';
 import * as Form from '@radix-ui/react-form';
+import Image from 'next/image';
 import type React from 'react';
 import useListingForm from '~/hooks/use-listing-form';
 import { createListing } from '~/services/propertyService';
@@ -32,9 +33,7 @@ const LocationPicker: React.FC<{
             Selected: {value.lat.toFixed(4)}, {value.lng.toFixed(4)}
           </span>
         ) : (
-          <span className="text-sm text-gray-500">
-            Click or press Enter to select location
-          </span>
+          <span className="text-sm text-gray-500">Click or press Enter to select location</span>
         )}
       </div>
     </div>
@@ -45,10 +44,9 @@ const AddressFields: React.FC<{
   value: Address;
   onChange: (address: Address) => void;
 }> = ({ value, onChange }) => {
-  const handleChange =
-    (field: keyof Address) => (e: React.ChangeEvent<HTMLInputElement>) => {
-      onChange({ ...value, [field]: e.target.value });
-    };
+  const handleChange = (field: keyof Address) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    onChange({ ...value, [field]: e.target.value });
+  };
 
   return (
     <div className="space-y-4">
@@ -198,12 +196,12 @@ const PhotoUploader: React.FC<{
             key={typeof photo === 'string' ? photo : URL.createObjectURL(photo)}
             className="relative group"
           >
-            <img
-              src={
-                typeof photo === 'string' ? photo : URL.createObjectURL(photo)
-              }
+            <Image
+              src={typeof photo === 'string' ? photo : URL.createObjectURL(photo)}
               alt={`Property ${index + 1}`}
               className="w-full h-32 object-cover rounded-lg"
+              width={300}
+              height={128}
             />
             <button
               type="button"
@@ -242,8 +240,7 @@ const ListingSection: React.FC<{
 );
 
 const ListingForm: React.FC = () => {
-  const { register, handleSubmit, formState, setValue, watch } =
-    useListingForm();
+  const { register, handleSubmit, formState, setValue, watch } = useListingForm();
   const location = watch('location') || { lat: 0, lng: 0 };
   const address = watch('address') || {
     street: '',
@@ -273,9 +270,7 @@ const ListingForm: React.FC = () => {
           />
         </Form.Control>
         {formState.errors.title && (
-          <Form.Message className={helpTextClass}>
-            {formState.errors.title.message}
-          </Form.Message>
+          <Form.Message className={helpTextClass}>{formState.errors.title.message}</Form.Message>
         )}
       </Form.Field>
 
@@ -308,35 +303,21 @@ const ListingForm: React.FC = () => {
           />
         </Form.Control>
         {formState.errors.price && (
-          <Form.Message className={helpTextClass}>
-            {formState.errors.price.message}
-          </Form.Message>
+          <Form.Message className={helpTextClass}>{formState.errors.price.message}</Form.Message>
         )}
       </Form.Field>
 
       <ListingSection title="Location">
-        <LocationPicker
-          value={location}
-          onChange={(coords) => setValue('location', coords)}
-        />
-        <AddressFields
-          value={address}
-          onChange={(addr) => setValue('address', addr)}
-        />
+        <LocationPicker value={location} onChange={(coords) => setValue('location', coords)} />
+        <AddressFields value={address} onChange={(addr) => setValue('address', addr)} />
       </ListingSection>
 
       <ListingSection title="Amenities">
-        <AmenitiesSelector
-          value={amenities}
-          onChange={(items) => setValue('amenities', items)}
-        />
+        <AmenitiesSelector value={amenities} onChange={(items) => setValue('amenities', items)} />
       </ListingSection>
 
       <ListingSection title="Photos">
-        <PhotoUploader
-          value={photos}
-          onChange={(items) => setValue('photos', items)}
-        />
+        <PhotoUploader value={photos} onChange={(items) => setValue('photos', items)} />
       </ListingSection>
 
       <Form.Submit asChild>
