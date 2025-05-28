@@ -10,6 +10,68 @@ We welcome contributions from the community! Whether you're fixing a bug, adding
 - **Picking an Issue on OnlyDust**: Select an open issue and provide details about your qualifications in the comments.
 - **Code Style**: Use Biome for auto-formatting. Ensure Biome is set as your default formatter in your IDE (`vscode://settings/editor.defaultFormatter`). Install the [Biome extension](https://marketplace.visualstudio.com/items?itemName=biomejs.biome).
 
+## 🚀 Quick Start for Contributors
+
+1. **Fork & Clone**
+   ```bash
+   git clone https://github.com/yourusername/stellar-rent.git
+   cd stellar-rent
+   ```
+
+2. **Install Dependencies**
+   ```bash
+   bun install
+   ```
+
+3. **Create a Branch**
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+
+4. **Make Changes & Format**
+   ```bash
+   # Make your changes...
+   bun run format-and-lint:fix  # Auto-fixes formatting
+   ```
+
+5. **Create Pull Request**
+   - Add a description (any length is fine!)
+   - Our CI will handle the rest
+
+## ✅ Automated Quality Checks
+
+Our CI/CD is designed to be **contributor-friendly** while maintaining code quality:
+
+- **Code Formatting**: Auto-formatted with Biome
+- **Build Validation**: Ensures your changes don't break anything
+- **Security**: Basic check for exposed secrets
+- **Smart Testing**: Only tests the apps you modify (faster CI)
+- **Large PR Warning**: Friendly reminder for large changes (doesn't block merge)
+
+### 🎯 Contributor-Friendly Features
+
+- **Auto-formatting**: Code gets formatted automatically
+- **No strict commit rules**: Write commits however you prefer (though conventional commits are encouraged)
+- **No required labels**: We don't enforce labels on PRs
+- **Draft PRs**: Skip validation until you're ready
+- **Warnings vs Errors**: Most issues are warnings, not blockers
+
+## 🛠️ Development Commands
+
+```bash
+# Format code automatically
+bun run format-and-lint:fix
+
+# Check formatting
+bun run format-and-lint
+
+# Build all apps
+bun run build
+
+# Start development
+bun run dev
+```
+
 ## Git conventions
 
 We follow the [Conventional Commits](https://www.conventionalcommits.org/) specification as configured in our `commitlint.config.js`. Keep commit messages concise and descriptive.
@@ -103,5 +165,26 @@ git push origin feat/your-feature-name
 - On the description provide a summary of the changes you have made
 - On the reviewers add the reviewers you want to review your PR
 - Wait for the reviewers to review your PR
+
+## 🤝 What We Need vs What We Don't
+
+### What We Need
+- **Description**: Tell us what you changed and why
+- **Working code**: Should build without errors
+
+### What We Don't Require
+- Perfect commit message format (conventional commits encouraged but not enforced by CI)
+- Labels on PRs
+- Detailed descriptions (brief is fine!)
+- Perfect code style (we auto-format)
+
+## 🆘 Need Help?
+
+- **Formatting issues?** Run `bun run format-and-lint:fix`
+- **Build errors?** Check the CI logs for specific errors
+- **Large PR warning?** Consider splitting into smaller PRs (but it won't block merge)
+- **Questions?** Open an issue or ask in your PR
+
+Thanks for contributing! 🎉
 
 ---
