@@ -1,11 +1,11 @@
 import './globals.css';
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Quicksand } from 'next/font/google';
 import { Toaster } from 'react-hot-toast';
 import { Navbar } from '~/components/layout/Navbar';
 import { Providers } from '~/components/shared/layout/providers';
 
-const inter = Inter({ subsets: ['latin'] });
+const quicksand = Quicksand({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'StellaRent',
@@ -23,14 +23,12 @@ export default function RootLayout({
         <meta name="color-scheme" content="light dark" />
       </head>
       <body
-        className={`${inter.className} min-h-screen bg-background text-foreground antialiased`}
+        className={`${quicksand.className} min-h-screen bg-background text-foreground antialiased`}
       >
         <div id="theme-portal-root" />
         <Providers>
           <Navbar />
-          <main className="flex-1 flex flex-col items-center justify-between p-2">
-            {children}
-          </main>
+          <main className="flex-1 flex flex-col items-center justify-between p-2">{children}</main>
           <Toaster position="top-right" />
         </Providers>
       </body>
