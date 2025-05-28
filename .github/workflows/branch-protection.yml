@@ -1,0 +1,20 @@
+name: Branch Protection
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  protect-main:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Verify push comes from PR merge
+        run: |
+          if [[ "${{ github.event.head_commit.message }}" =~ ^Merge\ pull\ request ]]; then
+            echo "✅ Authorized push: comes from PR merge"
+          else
+            echo "❌ Direct push to main not allowed"
+            echo "Commit message: ${{ github.event.head_commit.message }}"
+            exit 1
+          fi 

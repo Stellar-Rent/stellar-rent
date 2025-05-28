@@ -1,0 +1,74 @@
+name: PR Validation
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: [main, develop]
+
+jobs:
+  validate-pr:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check PR has description
+        run: |
+          body="${{ github.event.pull_request.body }}"
+          if [[ -z "$body" ]]; then
+            echo "❌ Please add a description to your PR"
+            exit 1
+          fi
+          echo "✅ PR description provided"
+
+      - name: Check for large PR
+        run: |
+          files_count=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | wc -l)
+          lines_added=$(git diff --numstat ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | awk '{sum+=$1} END {print sum}')
+          
+          echo "📊 PR Stats:"
+          echo "- Files changed: $files_count"
+          echo "- Lines added: $lines_added"
+          
+          # Just warn, don't fail
+          if [[ $files_count -gt 30 || $lines_added -gt 1000 ]]; then
+            echo "⚠️  Large PR detected - consider breaking it into smaller ones"
+          fi
+
+  security-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for exposed secrets
+        run: |
+          # Basic patterns for common secrets
+          patterns=(
+            "password.*="
+            "secret.*="
+            "api_key.*="
+            "private_key.*="
+            "-----BEGIN.*PRIVATE KEY-----"
+          )
+          
+          found_secrets=false
+          for pattern in "${patterns[@]}"; do
+            if git diff ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | grep -i "$pattern"; then
+              echo "⚠️  Possible secret found: $pattern"
+              found_secrets=true
+            fi
+          done
+          
+          if [[ "$found_secrets" == "true" ]]; then
+            echo "❌ Possible secrets detected in code changes"
+            echo "Please review and remove any sensitive information"
+            exit 1
+          fi
+          
+          echo "✅ No secrets detected" 
