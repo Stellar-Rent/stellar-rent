@@ -1,20 +1,29 @@
 {
   "$schema": "https://biomejs.dev/schemas/1.5.3/schema.json",
   "vcs": {
-    "enabled": false,
+    "enabled": true,
     "clientKind": "git",
-    "useIgnoreFile": false
+    "useIgnoreFile": true
   },
   "files": {
     "ignoreUnknown": false,
-    "ignore": ["./apps/web/.next", "./apps/contract/dist", "node_modules"]
+    "ignore": [
+      "./apps/web/.next",
+      "./apps/contract/dist",
+      "./apps/*/dist",
+      "./apps/*/build",
+      "node_modules",
+      "*.lock",
+      "coverage"
+    ]
   },
   "formatter": {
     "enabled": true,
     "formatWithErrors": false,
     "indentStyle": "space",
     "indentWidth": 2,
-    "lineWidth": 80
+    "lineWidth": 100,
+    "lineEnding": "lf"
   },
   "organizeImports": {
     "enabled": true
@@ -22,12 +31,32 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true
+      "recommended": true,
+      "correctness": {
+        "noUnusedVariables": "warn"
+      },
+      "suspicious": {
+        "noDebugger": "warn",
+        "noConsoleLog": "off"
+      }
     }
   },
   "javascript": {
     "formatter": {
-      "quoteStyle": "single"
+      "quoteStyle": "single",
+      "jsxQuoteStyle": "double",
+      "trailingComma": "es5",
+      "semicolons": "always"
+    }
+  },
+  "json": {
+    "formatter": {
+      "enabled": true
+    }
+  },
+  "css": {
+    "formatter": {
+      "enabled": true
     }
   }
 }
