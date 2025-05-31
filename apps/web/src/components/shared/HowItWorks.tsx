@@ -48,7 +48,7 @@ export const HowItWorks = () => {
               <p className="text-muted-foreground">{step.description}</p>
 
               {index < steps.length - 1 && (
-                <div className="hidden md:block absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-1/2">
+                <div className="hidden md:block absolute right-[-32px] top-1/2 transform -translate-y-1/2 z-10">
                   <svg
                     width="24"
                     height="24"
