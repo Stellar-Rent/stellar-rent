@@ -84,14 +84,17 @@ export const SearchBar = () => {
             </div>
 
             {showSuggestions && (
-              <ul className="absolute w-full mt-1 bg-background border rounded-md shadow-md z-20 max-h-48 overflow-y-auto">
+              <ul 
+                className="absolute w-full mt-1 bg-background border rounded-md shadow-md z-20 max-h-48 overflow-y-auto"
+                role="listbox"
+                aria-label="Location suggestions"
+              >
                 {suggestions.map((suggestion) => (
-                  <li
+                  <button
                     key={suggestion}
+                    type="button"
                     onClick={() => selectSuggestion(suggestion)}
-                    className="p-2 hover:bg-muted cursor-pointer"
-                    role="option"
-                    tabIndex={0}
+                    className="w-full text-left p-2 hover:bg-muted cursor-pointer"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' || e.key === ' ') {
                         selectSuggestion(suggestion);
@@ -99,7 +102,7 @@ export const SearchBar = () => {
                     }}
                   >
                     {suggestion}
-                  </li>
+                  </button>
                 ))}
               </ul>
             )}
