@@ -67,7 +67,7 @@ export const HeroSection = () => {
               size="lg"
               variant="outline"
               className={cn(
-                'text-white border-white hover:bg-white/10 dark:text-[#C2F2FF] dark:border-[#C2F2FF] dark:hover:bg-[#C2F2FF]/10',
+                'group text-white border-white hover:bg-white/10 dark:text-[#C2F2FF] dark:border-[#C2F2FF] dark:hover:bg-[#C2F2FF]/10',
                 'transition-all duration-300 hover:shadow-lg'
               )}
               asChild
