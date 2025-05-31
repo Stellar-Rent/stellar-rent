@@ -84,24 +84,24 @@ export const SearchBar = () => {
             </div>
 
             {showSuggestions && (
-              <select
-                className="absolute w-full mt-1 bg-background border rounded-md shadow-md z-20"
-                size={suggestions.length > 5 ? 5 : suggestions.length}
-                tabIndex={0}
-                value={formData.location}
-                onChange={(e) => selectSuggestion(e.target.value)}
-                onBlur={() => setShowSuggestions(false)}
-              >
+              <ul className="absolute w-full mt-1 bg-background border rounded-md shadow-md z-20 max-h-48 overflow-y-auto">
                 {suggestions.map((suggestion) => (
-                  <option
+                  <li
                     key={suggestion}
-                    value={suggestion}
+                    onClick={() => selectSuggestion(suggestion)}
                     className="p-2 hover:bg-muted cursor-pointer"
+                    role="option"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        selectSuggestion(suggestion);
+                      }
+                    }}
                   >
                     {suggestion}
-                  </option>
+                  </li>
                 ))}
-              </select>
+              </ul>
             )}
           </div>
 
@@ -136,9 +136,15 @@ export const SearchBar = () => {
                 type="number"
                 min="1"
                 max="16"
+                step="1"
                 placeholder="Guests"
                 value={formData.guests}
-                onChange={(e) => setFormData({ ...formData, guests: Number(e.target.value) })}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    guests: Number.parseInt(e.target.value) || 1,
+                  })
+                }
                 className="border-0 p-0 focus-visible:ring-0 w-16"
               />
             </div>
