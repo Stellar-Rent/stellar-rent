@@ -18,7 +18,7 @@ pub enum BookingStatus {
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Booking {
-    pub id: u64,  // Changed to u64 for simplicity
+    pub id: u64, // Changed to u64 for simplicity
     pub property_id: String,
     pub user_id: String,
     pub start_date: u64,
@@ -56,7 +56,7 @@ impl BookingContract {
 
         // Get all bookings for this property
         let bookings = Self::get_property_bookings_internal(&env, property_id.clone());
-        
+
         // Check for overlaps
         for booking in bookings.iter() {
             if booking.status != BookingStatus::Cancelled {
@@ -66,7 +66,7 @@ impl BookingContract {
                 }
             }
         }
-        
+
         true
     }
 
@@ -83,7 +83,7 @@ impl BookingContract {
         if start_date >= end_date {
             panic!("Invalid dates: start date must be before end date");
         }
-        
+
         if total_price <= 0 {
             panic!("Invalid price: price must be greater than zero");
         }
@@ -100,14 +100,10 @@ impl BookingContract {
         }
 
         // Generate unique booking ID
-        let book_count: u64 = env
-            .storage()
-            .persistent()
-            .get(&BOOK_COUNT)
-            .unwrap_or(0);
-        
+        let book_count: u64 = env.storage().persistent().get(&BOOK_COUNT).unwrap_or(0);
+
         let booking_id = book_count;
-        
+
         // Create booking
         let booking = Booking {
             id: booking_id,
@@ -126,42 +122,40 @@ impl BookingContract {
             .persistent()
             .get(&BOOKINGS)
             .unwrap_or(vec![&env]);
-        
+
         bookings_map.push_back((booking_id, booking.clone()));
         env.storage().persistent().set(&BOOKINGS, &bookings_map);
 
         // Update property bookings
         let mut prop_bookings = Self::get_property_bookings_internal(&env, property_id.clone());
         prop_bookings.push_back(booking.clone());
-        
+
         // Store with property ID as key
         env.storage().persistent().set(&property_id, &prop_bookings);
 
         // Update booking counter
-        env.storage().persistent().set(&BOOK_COUNT, &(book_count + 1));
+        env.storage()
+            .persistent()
+            .set(&BOOK_COUNT, &(book_count + 1));
 
         // TODO: Initiate escrow here
         // This would typically involve calling an external escrow contract
-        
+
         booking_id
     }
 
     /// Cancel a booking
-    pub fn cancel_booking(
-        env: Env,
-        booking_id: u64,
-        user_id: String,
-    ) -> bool {
+    pub fn cancel_booking(env: Env, booking_id: u64, user_id: String) -> bool {
         // Get the booking
         let mut bookings_map: Vec<(u64, Booking)> = env
             .storage()
             .persistent()
             .get(&BOOKINGS)
             .unwrap_or(vec![&env]);
-        
+
         let mut booking_found = false;
         let mut updated_booking = None;
-        
+
         for i in 0..bookings_map.len() {
             let (id, mut booking) = bookings_map.get(i).unwrap();
             if id == booking_id {
@@ -169,13 +163,14 @@ impl BookingContract {
                 if booking.user_id != user_id {
                     panic!("Unauthorized: only the booking owner can cancel");
                 }
-                
+
                 // Check if booking can be cancelled
-                if booking.status == BookingStatus::Completed || 
-                   booking.status == BookingStatus::Cancelled {
+                if booking.status == BookingStatus::Completed
+                    || booking.status == BookingStatus::Cancelled
+                {
                     panic!("Invalid status: booking cannot be cancelled");
                 }
-                
+
                 // Update status
                 booking.status = BookingStatus::Cancelled;
                 bookings_map.set(i, (id, booking.clone()));
@@ -184,14 +179,14 @@ impl BookingContract {
                 break;
             }
         }
-        
+
         if !booking_found {
             panic!("Booking not found");
         }
-        
+
         // Update storage
         env.storage().persistent().set(&BOOKINGS, &bookings_map);
-        
+
         // Update property bookings
         if let Some(booking) = updated_booking {
             let mut prop_bookings: Vec<Booking> = env
@@ -199,19 +194,21 @@ impl BookingContract {
                 .persistent()
                 .get(&booking.property_id)
                 .unwrap_or(vec![&env]);
-            
+
             for i in 0..prop_bookings.len() {
                 if prop_bookings.get(i).unwrap().id == booking_id {
                     prop_bookings.set(i, booking.clone());
                     break;
                 }
             }
-            
-            env.storage().persistent().set(&booking.property_id, &prop_bookings);
+
+            env.storage()
+                .persistent()
+                .set(&booking.property_id, &prop_bookings);
         }
-        
+
         // TODO: Trigger escrow refund
-        
+
         true
     }
 
@@ -222,13 +219,13 @@ impl BookingContract {
             .persistent()
             .get(&BOOKINGS)
             .unwrap_or(vec![&env]);
-        
+
         for (id, booking) in bookings_map.iter() {
             if id == booking_id {
                 return booking;
             }
         }
-        
+
         panic!("Booking not found");
     }
 
@@ -241,25 +238,25 @@ impl BookingContract {
     ) -> Booking {
         // TODO: Add proper authorization check for host/system
         caller.require_auth();
-        
+
         let mut bookings_map: Vec<(u64, Booking)> = env
             .storage()
             .persistent()
             .get(&BOOKINGS)
             .unwrap_or(vec![&env]);
-        
+
         let mut booking_found = false;
         let mut updated_booking = None;
-        
+
         for i in 0..bookings_map.len() {
             let (id, mut booking) = bookings_map.get(i).unwrap();
             if id == booking_id {
                 // Validate status transition
                 match (booking.status, new_status) {
-                    (BookingStatus::Pending, BookingStatus::Confirmed) |
-                    (BookingStatus::Confirmed, BookingStatus::Completed) |
-                    (BookingStatus::Pending, BookingStatus::Cancelled) |
-                    (BookingStatus::Confirmed, BookingStatus::Cancelled) => {
+                    (BookingStatus::Pending, BookingStatus::Confirmed)
+                    | (BookingStatus::Confirmed, BookingStatus::Completed)
+                    | (BookingStatus::Pending, BookingStatus::Cancelled)
+                    | (BookingStatus::Confirmed, BookingStatus::Cancelled) => {
                         booking.status = new_status;
                         bookings_map.set(i, (id.clone(), booking.clone()));
                         updated_booking = Some(booking.clone());
@@ -270,14 +267,14 @@ impl BookingContract {
                 break;
             }
         }
-        
+
         if !booking_found {
             panic!("Booking not found");
         }
-        
+
         // Update storage
         env.storage().persistent().set(&BOOKINGS, &bookings_map);
-        
+
         // Update property bookings
         if let Some(booking) = &updated_booking {
             let mut prop_bookings: Vec<Booking> = env
@@ -285,19 +282,21 @@ impl BookingContract {
                 .persistent()
                 .get(&booking.property_id)
                 .unwrap_or(vec![&env]);
-            
+
             for i in 0..prop_bookings.len() {
                 if prop_bookings.get(i).unwrap().id == booking_id {
                     prop_bookings.set(i, booking.clone());
                     break;
                 }
             }
-            
-            env.storage().persistent().set(&booking.property_id, &prop_bookings);
+
+            env.storage()
+                .persistent()
+                .set(&booking.property_id, &prop_bookings);
         }
-        
+
         // TODO: Trigger escrow actions based on status change
-        
+
         updated_booking.unwrap()
     }
 
@@ -326,7 +325,7 @@ impl BookingContract {
             .persistent()
             .get(&BOOKINGS)
             .unwrap_or(vec![&env]);
-        
+
         for i in 0..bookings_map.len() {
             let (id, mut booking) = bookings_map.get(i).unwrap();
             if id == booking_id {
@@ -336,10 +335,10 @@ impl BookingContract {
                 return true;
             }
         }
-        
+
         panic!("Booking not found");
     }
 }
 
 #[cfg(test)]
-mod test; 
+mod test;
