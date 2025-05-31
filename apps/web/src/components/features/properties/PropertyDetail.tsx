@@ -159,6 +159,8 @@ export const PropertyDetail = ({ id }: PropertyDetailProps) => {
   const cleaningFee = 150;
   const serviceFee = 100;
   const total = subtotal + cleaningFee + serviceFee;
+  
+  const [imageError, setImageError] = useState(false);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -173,14 +175,21 @@ export const PropertyDetail = ({ id }: PropertyDetailProps) => {
         {/* Property Images */}
         <div className="lg:col-span-2">
           <div className="relative h-[400px] w-full rounded-lg overflow-hidden">
-            <Image
-              src={property.image}
-              alt={property.title}
-              fill
-              className="object-cover"
-              priority
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 70vw, 60vw"
-            />
+            {!imageError ? (
+              <Image
+                src={property.image}
+                alt={property.title}
+                fill
+                className="object-cover"
+                priority
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 70vw, 60vw"
+                onError={() => setImageError(true)}
+              />
+            ) : (
+              <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                <p className="text-muted-foreground">Image not available</p>
+              </div>
+            )}
             <div className="absolute bottom-4 right-4 bg-white/90 dark:bg-[#0B1D39]/90 px-3 py-1 rounded-md text-sm font-medium flex items-center">
               <Star className="w-4 h-4 mr-1 text-yellow-500" /> {property.rating}
             </div>
