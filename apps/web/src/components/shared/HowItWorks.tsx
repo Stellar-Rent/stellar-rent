@@ -36,10 +36,10 @@ export const HowItWorks = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {steps.map((step) => (
+          {steps.map((step, index) => (
             <div
               key={step.title}
-              className="flex flex-col items-center text-center p-6 rounded-lg bg-card"
+              className="relative flex flex-col items-center text-center p-6 rounded-lg bg-card"
             >
               <div className="mb-4 p-4 rounded-full bg-blue-100 dark:bg-blue-900/50">
                 {step.icon}
@@ -47,7 +47,7 @@ export const HowItWorks = () => {
               <h3 className="text-xl font-semibold mb-2">{step.title}</h3>
               <p className="text-muted-foreground">{step.description}</p>
 
-              {steps.indexOf(step) < steps.length - 1 && (
+              {index < steps.length - 1 && (
                 <div className="hidden md:block absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-1/2">
                   <svg
                     width="24"
