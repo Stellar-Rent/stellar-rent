@@ -84,17 +84,20 @@ export const SearchBar = () => {
             </div>
 
             {showSuggestions && (
-              <ul 
+              <div 
                 className="absolute w-full mt-1 bg-background border rounded-md shadow-md z-20 max-h-48 overflow-y-auto"
                 role="listbox"
                 aria-label="Location suggestions"
+                tabIndex={-1}
               >
                 {suggestions.map((suggestion) => (
                   <button
                     key={suggestion}
                     type="button"
                     onClick={() => selectSuggestion(suggestion)}
-                    className="w-full text-left p-2 hover:bg-muted cursor-pointer"
+                    className="w-full text-left p-2 hover:bg-muted cursor-pointer focus:bg-muted focus:outline-none"
+                    role="option"
+                    aria-selected={formData.location === suggestion}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' || e.key === ' ') {
                         selectSuggestion(suggestion);
@@ -104,7 +107,7 @@ export const SearchBar = () => {
                     {suggestion}
                   </button>
                 ))}
-              </ul>
+              </div>
             )}
           </div>
 
