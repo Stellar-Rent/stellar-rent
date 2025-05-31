@@ -162,19 +162,9 @@ export const FeaturedProperties = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Suspense
-            fallback={Array(6)
-              .fill(0)
-              .map((_, _idx) => (
-                <PropertyCardSkeleton
-                  key={`property-skeleton-${Math.random().toString(36).substring(2, 9)}`}
-                />
-              ))}
-          >
-            {MOCK_PROPERTIES.map((property) => (
-              <PropertyCard key={property.id} property={property} />
-            ))}
-          </Suspense>
+          {MOCK_PROPERTIES.map((property) => (
+            <PropertyCard key={property.id} property={property} />
+          ))}
         </div>
       </div>
     </section>
