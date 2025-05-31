@@ -14,34 +14,42 @@ export const Footer = () => {
               Rent properties instantly with cryptocurrency. Secure, fast, and transparent.
             </p>
             <div className="flex space-x-4">
-              <Link
+              <a
                 href="https://github.com"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-blue-200 hover:text-white dark:text-blue-300 dark:hover:text-white"
               >
-                <Github size={20} />
+                <Github size={20} aria-hidden="true" />
                 <span className="sr-only">GitHub</span>
-              </Link>
-              <Link
+              </a>
+              <a
                 href="https://twitter.com"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-blue-200 hover:text-white dark:text-blue-300 dark:hover:text-white"
               >
-                <Twitter size={20} />
+                <Twitter size={20} aria-hidden="true" />
                 <span className="sr-only">Twitter</span>
-              </Link>
-              <Link
+              </a>
+              <a
                 href="https://instagram.com"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-blue-200 hover:text-white dark:text-blue-300 dark:hover:text-white"
               >
-                <Instagram size={20} />
+                <Instagram size={20} aria-hidden="true" />
                 <span className="sr-only">Instagram</span>
-              </Link>
-              <Link
+              </a>
+              <a
                 href="https://facebook.com"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-blue-200 hover:text-white dark:text-blue-300 dark:hover:text-white"
               >
-                <Facebook size={20} />
+                <Facebook size={20} aria-hidden="true" />
                 <span className="sr-only">Facebook</span>
-              </Link>
+              </a>
             </div>
           </div>
 
