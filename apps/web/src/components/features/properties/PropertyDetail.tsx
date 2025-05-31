@@ -6,7 +6,7 @@ import { MapPin, Star, Users, Home, Calendar, Wallet } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
-// Same property type from FeaturedProperties
+// Extended property type with additional details
 type Property = {
   id: string;
   title: string;
@@ -15,6 +15,9 @@ type Property = {
   image: string;
   rating: number;
   distance: string;
+  maxGuests: number;
+  bedrooms: number;
+  amenities: string[];
 };
 
 // Mock function to simulate API call - to be replaced with actual API
@@ -29,6 +32,9 @@ const getPropertyById = (id: string): Property => {
       image: '/images/house1.jpg',
       rating: 4.1,
       distance: '30km',
+      maxGuests: 4,
+      bedrooms: 2,
+      amenities: ['Wi-Fi', 'Air conditioning', 'Fully equipped kitchen', 'Washer & dryer']
     },
     {
       id: '2',
@@ -38,6 +44,9 @@ const getPropertyById = (id: string): Property => {
       image: '/images/house2.jpg',
       rating: 4.8,
       distance: '6km',
+      maxGuests: 8,
+      bedrooms: 4,
+      amenities: ['Pool', 'Wi-Fi', 'Air conditioning', 'Fully equipped kitchen', 'Washer & dryer']
     },
     {
       id: '3',
@@ -47,6 +56,9 @@ const getPropertyById = (id: string): Property => {
       image: '/images/house3.jpg',
       rating: 3.9,
       distance: '14km',
+      maxGuests: 2,
+      bedrooms: 1,
+      amenities: ['Wi-Fi', 'Air conditioning', 'Fully equipped kitchen']
     },
     {
       id: '4',
@@ -56,6 +68,9 @@ const getPropertyById = (id: string): Property => {
       image: '/images/house4.jpg',
       rating: 4.5,
       distance: '8km',
+      maxGuests: 3,
+      bedrooms: 1,
+      amenities: ['Wi-Fi', 'Air conditioning', 'Smart TV', 'Fully equipped kitchen']
     },
     {
       id: '5',
@@ -65,6 +80,9 @@ const getPropertyById = (id: string): Property => {
       image: '/images/house5.jpg',
       rating: 4.2,
       distance: '12km',
+      maxGuests: 2,
+      bedrooms: 1,
+      amenities: ['Wi-Fi', 'Fully equipped kitchen', 'Free parking']
     },
     {
       id: '6',
@@ -74,6 +92,9 @@ const getPropertyById = (id: string): Property => {
       image: '/images/house.jpg',
       rating: 4.7,
       distance: '10km',
+      maxGuests: 6,
+      bedrooms: 3,
+      amenities: ['Wi-Fi', 'Air conditioning', 'Fully equipped kitchen', 'Washer & dryer', 'Free parking', 'Smart TV']
     },
   ];
 
@@ -122,11 +143,11 @@ export const PropertyDetail = ({ id }: PropertyDetailProps) => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
             <div className="bg-card p-4 rounded-lg flex flex-col items-center">
               <Users className="w-6 h-6 mb-2 text-blue-600 dark:text-blue-400" />
-              <span className="font-medium">4 Guests</span>
+              <span className="font-medium">{property.maxGuests} Guests</span>
             </div>
             <div className="bg-card p-4 rounded-lg flex flex-col items-center">
               <Home className="w-6 h-6 mb-2 text-blue-600 dark:text-blue-400" />
-              <span className="font-medium">2 Bedrooms</span>
+              <span className="font-medium">{property.bedrooms} Bedrooms</span>
             </div>
             <div className="bg-card p-4 rounded-lg flex flex-col items-center">
               <MapPin className="w-6 h-6 mb-2 text-blue-600 dark:text-blue-400" />
@@ -153,33 +174,15 @@ export const PropertyDetail = ({ id }: PropertyDetailProps) => {
             </p>
           </div>
 
-          <div>
-            <h2 className="text-xl font-semibold mb-4">Amenities</h2>
-            <ul className="grid grid-cols-2 gap-2">
-              <li className="flex items-center">
-                <span className="w-2 h-2 bg-blue-600 dark:bg-blue-400 rounded-full mr-2"></span>
-                High-speed WiFi
-              </li>
-              <li className="flex items-center">
-                <span className="w-2 h-2 bg-blue-600 dark:bg-blue-400 rounded-full mr-2"></span>
-                Air conditioning
-              </li>
-              <li className="flex items-center">
-                <span className="w-2 h-2 bg-blue-600 dark:bg-blue-400 rounded-full mr-2"></span>
-                Fully equipped kitchen
-              </li>
-              <li className="flex items-center">
-                <span className="w-2 h-2 bg-blue-600 dark:bg-blue-400 rounded-full mr-2"></span>
-                Washer & dryer
-              </li>
-              <li className="flex items-center">
-                <span className="w-2 h-2 bg-blue-600 dark:bg-blue-400 rounded-full mr-2"></span>
-                Free parking
-              </li>
-              <li className="flex items-center">
-                <span className="w-2 h-2 bg-blue-600 dark:bg-blue-400 rounded-full mr-2"></span>
-                Smart TV
-              </li>
+          <div className="mb-8">
+            <h2 className="text-2xl font-semibold mb-4">Amenities</h2>
+            <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              {property.amenities.map((amenity, index) => (
+                <li key={index} className="flex items-center">
+                  <span className="w-2 h-2 bg-blue-600 dark:bg-blue-400 rounded-full mr-2"></span>
+                  {amenity}
+                </li>
+              ))}
             </ul>
           </div>
         </div>
