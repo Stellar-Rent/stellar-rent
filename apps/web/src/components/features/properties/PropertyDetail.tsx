@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/card';
 import { MapPin, Star, Users, Home, Calendar, Wallet } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useState } from 'react';
 
 // Extended property type with additional details
 type Property = {
@@ -108,6 +109,20 @@ interface PropertyDetailProps {
 export const PropertyDetail = ({ id }: PropertyDetailProps) => {
   // In a real app, this would use SWR or React Query with an API call
   const property = getPropertyById(id);
+  
+  const [bookingData, setBookingData] = useState({
+    checkIn: '',
+    checkOut: '',
+    guests: 1,
+  });
+  
+  const nights = bookingData.checkIn && bookingData.checkOut 
+    ? Math.max(1, Math.ceil((new Date(bookingData.checkOut).getTime() - new Date(bookingData.checkIn).getTime()) / (1000 * 60 * 60 * 24)))
+    : 0;
+  const subtotal = property.price * nights;
+  const cleaningFee = 150;
+  const serviceFee = 100;
+  const total = subtotal + cleaningFee + serviceFee;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -197,24 +212,31 @@ export const PropertyDetail = ({ id }: PropertyDetailProps) => {
 
             <div className="grid grid-cols-2 gap-4 mb-6">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Check-in</label>
+                <label htmlFor="check-in" className="text-sm font-medium">Check-in</label>
                 <div className="flex items-center border rounded-md p-2 bg-background">
                   <Calendar className="h-5 w-5 text-muted-foreground mr-2" />
                   <input
+                    id="check-in"
                     type="date"
                     className="border-0 p-0 focus:outline-none w-full bg-transparent"
                     placeholder="Add date"
+                    value={bookingData.checkIn}
+                    onChange={(e) => setBookingData({ ...bookingData, checkIn: e.target.value })}
                   />
                 </div>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Check-out</label>
+                <label htmlFor="check-out" className="text-sm font-medium">Check-out</label>
                 <div className="flex items-center border rounded-md p-2 bg-background">
                   <Calendar className="h-5 w-5 text-muted-foreground mr-2" />
                   <input
+                    id="check-out"
                     type="date"
                     className="border-0 p-0 focus:outline-none w-full bg-transparent"
                     placeholder="Add date"
+                    value={bookingData.checkOut}
+                    onChange={(e) => setBookingData({ ...bookingData, checkOut: e.target.value })}
+                    min={bookingData.checkIn} // Prevent selecting checkout before checkin
                   />
                 </div>
               </div>
@@ -227,31 +249,34 @@ export const PropertyDetail = ({ id }: PropertyDetailProps) => {
                 <select 
                   id="guest-count"
                   className="border-0 p-0 focus:outline-none w-full bg-transparent"
+                  value={bookingData.guests}
+                  onChange={(e) => setBookingData({ ...bookingData, guests: Number(e.target.value) })}
                 >
-                  <option value="1">1 guest</option>
-                  <option value="2">2 guests</option>
-                  <option value="3">3 guests</option>
-                  <option value="4">4 guests</option>
+                  {[...Array(property.maxGuests)].map((_, i) => (
+                    <option key={i + 1} value={i + 1}>
+                      {i + 1} {i === 0 ? 'guest' : 'guests'}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
 
             <div className="mb-6">
               <div className="flex justify-between mb-2">
-                <span>${property.price} × 5 nights</span>
-                <span>${property.price * 5}</span>
+                <span>${property.price} × {nights || 0} nights</span>
+                <span>${subtotal || 0}</span>
               </div>
               <div className="flex justify-between mb-2">
                 <span>Cleaning fee</span>
-                <span>$150</span>
+                <span>${cleaningFee}</span>
               </div>
               <div className="flex justify-between mb-2">
                 <span>Service fee</span>
-                <span>$100</span>
+                <span>${serviceFee}</span>
               </div>
               <div className="border-t pt-2 mt-2 flex justify-between font-bold">
                 <span>Total (USDC)</span>
-                <span>${property.price * 5 + 150 + 100}</span>
+                <span>${total || cleaningFee + serviceFee}</span>
               </div>
             </div>
 
