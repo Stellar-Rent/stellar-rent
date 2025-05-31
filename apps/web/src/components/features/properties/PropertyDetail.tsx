@@ -218,10 +218,13 @@ export const PropertyDetail = ({ id }: PropertyDetailProps) => {
             </div>
 
             <div className="space-y-2 mb-6">
-              <label className="text-sm font-medium">Guests</label>
+              <label htmlFor="guest-count" className="text-sm font-medium">Guests</label>
               <div className="flex items-center border rounded-md p-2 bg-background">
                 <Users className="h-5 w-5 text-muted-foreground mr-2" />
-                <select className="border-0 p-0 focus:outline-none w-full bg-transparent">
+                <select 
+                  id="guest-count"
+                  className="border-0 p-0 focus:outline-none w-full bg-transparent"
+                >
                   <option value="1">1 guest</option>
                   <option value="2">2 guests</option>
                   <option value="3">3 guests</option>
