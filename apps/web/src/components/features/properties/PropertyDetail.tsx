@@ -141,9 +141,20 @@ export const PropertyDetail = ({ id }: PropertyDetailProps) => {
     guests: 1,
   });
   
-  const nights = bookingData.checkIn && bookingData.checkOut 
-    ? Math.max(1, Math.ceil((new Date(bookingData.checkOut).getTime() - new Date(bookingData.checkIn).getTime()) / (1000 * 60 * 60 * 24)))
-    : 0;
+  const calculateNights = (checkIn: string, checkOut: string): number => {
+    if (!checkIn || !checkOut) return 0;
+    
+    const checkInDate = new Date(checkIn);
+    const checkOutDate = new Date(checkOut);
+    
+    // Validate dates
+    if (checkInDate >= checkOutDate) return 0;
+    
+    const timeDiff = checkOutDate.getTime() - checkInDate.getTime();
+    return Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+  };
+  
+  const nights = calculateNights(bookingData.checkIn, bookingData.checkOut);
   const subtotal = property.price * nights;
   const cleaningFee = 150;
   const serviceFee = 100;
