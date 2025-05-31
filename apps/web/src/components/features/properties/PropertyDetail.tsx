@@ -253,7 +253,7 @@ export const PropertyDetail = ({ id }: PropertyDetailProps) => {
                   onChange={(e) => setBookingData({ ...bookingData, guests: Number(e.target.value) })}
                 >
                   {[...Array(property.maxGuests)].map((_, i) => (
-                    <option key={i + 1} value={i + 1}>
+                    <option key={`guest-${i + 1}`} value={i + 1}>
                       {i + 1} {i === 0 ? 'guest' : 'guests'}
                     </option>
                   ))}
