@@ -99,7 +99,11 @@ const getPropertyById = (id: string): Property => {
     },
   ];
 
-  return mockProperties.find((property) => property.id === id) || mockProperties[0];
+  const property = mockProperties.find((property) => property.id === id);
+  if (!property) {
+    throw new Error(`Property with id "${id}" not found`);
+  }
+  return property;
 };
 
 interface PropertyDetailProps {
@@ -108,7 +112,28 @@ interface PropertyDetailProps {
 
 export const PropertyDetail = ({ id }: PropertyDetailProps) => {
   // In a real app, this would use SWR or React Query with an API call
-  const property = getPropertyById(id);
+  let property;
+  try {
+    property = getPropertyById(id);
+  } catch (error) {
+    return (
+      <div className="container mx-auto px-4 py-8 text-center">
+        <Link
+          href="/"
+          className="inline-flex items-center text-blue-600 dark:text-blue-400 mb-6 hover:underline"
+        >
+          ← Back to properties
+        </Link>
+        <div className="bg-red-50 dark:bg-red-900/20 p-8 rounded-lg max-w-md mx-auto">
+          <h2 className="text-2xl font-bold text-red-700 dark:text-red-400 mb-4">Property Not Found</h2>
+          <p className="mb-4">The property you're looking for could not be found. It may have been removed or the ID is incorrect.</p>
+          <Button asChild className="mt-4">
+            <Link href="/">Browse Available Properties</Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
   
   const [bookingData, setBookingData] = useState({
     checkIn: '',
@@ -192,9 +217,9 @@ export const PropertyDetail = ({ id }: PropertyDetailProps) => {
           <div className="mb-8">
             <h2 className="text-2xl font-semibold mb-4">Amenities</h2>
             <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
-              {property.amenities.map((amenity, index) => (
-                <li key={index} className="flex items-center">
-                  <span className="w-2 h-2 bg-blue-600 dark:bg-blue-400 rounded-full mr-2"></span>
+              {property.amenities.map((amenity) => (
+                <li key={amenity} className="flex items-center">
+                  <span className="w-2 h-2 bg-blue-600 dark:bg-blue-400 rounded-full mr-2" />
                   {amenity}
                 </li>
               ))}
