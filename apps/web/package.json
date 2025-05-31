@@ -20,7 +20,7 @@
     "@stellar/stellar-sdk": "^13.3.0",
     "base64url": "^3.0.1",
     "bigint-conversion": "^2.4.3",
-    "caniuse-lite": "^1.0.30001720",
+
     "cbor-x": "^1.6.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -39,6 +39,7 @@
     "zod": "^3.24.3"
   },
   "devDependencies": {
+    "caniuse-lite": "^1.0.30001720",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
