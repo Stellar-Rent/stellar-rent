@@ -112,7 +112,7 @@ interface PropertyDetailProps {
 
 export const PropertyDetail = ({ id }: PropertyDetailProps) => {
   // In a real app, this would use SWR or React Query with an API call
-  let property;
+  let property: Property;
   try {
     property = getPropertyById(id);
   } catch (error) {
