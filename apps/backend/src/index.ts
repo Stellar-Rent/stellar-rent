@@ -1,9 +1,15 @@
 import cors from 'cors';
 import dotenv from 'dotenv';
 import express from 'express';
+
+import { initializeDatabase } from './db/init';
+
+import { Router } from 'express';
 import { errorMiddleware } from './middleware/error.middleware';
 import { rateLimiter } from './middleware/rateLimiter';
-import authRoutes from './routes/auth';
+import routes from './routes';
+import authRouter from './routes/auth';
+import profileRouter from './routes/profile.routes';
 
 // Environment variables configuration
 dotenv.config();
@@ -18,6 +24,12 @@ console.log('Variables de entorno cargadas:', {
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+const router = Router();
+
+// Apply prefixes here
+router.use('/auth', authRouter);
+router.use('/profile', profileRouter);
+
 // Middleware
 app.use(express.json());
 app.use(
@@ -29,7 +41,7 @@ app.use(
 app.use(rateLimiter);
 
 // Routes
-app.use('/auth', authRoutes);
+app.use('/api', routes);
 
 // Test route
 app.get('/', (_req, res) => {
@@ -39,7 +51,9 @@ app.get('/', (_req, res) => {
 // Error handling
 app.use(errorMiddleware);
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`Servidor corriendo en el puerto ${PORT}`);
+// Initialize DB and then start server
+initializeDatabase().then(() => {
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
+  });
 });

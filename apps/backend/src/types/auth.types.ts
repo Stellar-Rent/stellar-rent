@@ -19,17 +19,51 @@ export const loginSchema = z.object({
   password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
 });
 
-export const registerSchema = loginSchema.extend({
-  name: z
-    .string()
-    .min(1, 'El nombre es requerido')
-    .max(100, 'El nombre es demasiado largo'),
+export const registerSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(6),
+  name: z.string(),
+  avatar_url: z.string().url().optional(),
+  phone: z.string().optional(),
+  address: z.any().optional(), // ideally make this stricter
+  preferences: z.any().optional(),
+  social_links: z.any().optional(),
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;
 
+export interface PublicProfile {
+  name: string;
+  avatar_url?: string;
+  phone?: string;
+  address?: {
+    street: string;
+    city: string;
+    country: string;
+    postal_code: string;
+  };
+  preferences?: {
+    notifications: boolean;
+    newsletter: boolean;
+    language: string;
+  };
+  social_links?: {
+    facebook?: string;
+    twitter?: string;
+    instagram?: string;
+  };
+  verification_status: 'unverified' | 'pending' | 'verified';
+  last_active: string;
+}
+
+export interface AuthUser {
+  id: string;
+  email: string;
+  profile: PublicProfile;
+}
+
 export interface AuthResponse {
   token: string;
-  user: User;
+  user: AuthUser;
 }

@@ -4,24 +4,35 @@ import { createClient } from '@supabase/supabase-js';
 export type Database = {
   public: {
     Tables: {
-      users: {
+      profiles: {
         Row: {
-          id: string;
-          email: string;
+          user_id: string;
           name: string;
-          created_at: string;
-          password_hash: string;
+          avatar_url?: string;
+          phone?: string;
+          address?: {
+            street: string;
+            city: string;
+            country: string;
+            postal_code: string;
+          };
+          preferences?: {
+            notifications: boolean;
+            newsletter: boolean;
+            language: string;
+          };
+          social_links?: {
+            facebook?: string;
+            twitter?: string;
+            instagram?: string;
+          };
+          verification_status: 'unverified' | 'pending' | 'verified';
+          last_active: string; // store as ISO string
         };
-        Insert: {
-          email: string;
-          name: string;
-          password_hash: string;
+        Insert: Omit<Database['public']['Tables']['profiles']['Row'], 'last_active'> & {
+          last_active?: string;
         };
-        Update: {
-          email?: string;
-          name?: string;
-          password_hash?: string;
-        };
+        Update: Partial<Database['public']['Tables']['profiles']['Row']>;
       };
     };
   };

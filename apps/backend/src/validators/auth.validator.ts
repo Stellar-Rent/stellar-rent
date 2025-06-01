@@ -2,11 +2,7 @@ import type { NextFunction, Request, Response } from 'express';
 import { z } from 'zod';
 import { loginSchema, registerSchema } from '../types/auth.types';
 
-export const validateLogin = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const validateLogin = (req: Request, res: Response, next: NextFunction) => {
   try {
     loginSchema.parse(req.body);
     next();
@@ -21,11 +17,7 @@ export const validateLogin = (
   }
 };
 
-export const validateRegister = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const validateRegister = (req: Request, res: Response, next: NextFunction) => {
   try {
     registerSchema.parse(req.body);
     next();
