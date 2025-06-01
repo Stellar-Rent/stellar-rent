@@ -25,9 +25,22 @@ export const registerSchema = z.object({
   name: z.string(),
   avatar_url: z.string().url().optional(),
   phone: z.string().optional(),
-  address: z.any().optional(), // ideally make this stricter
-  preferences: z.any().optional(),
-  social_links: z.any().optional(),
+  address: z.object({
+    street: z.string(),
+    city: z.string(),
+    country: z.string(),
+    postal_code: z.string(),
+  }).optional(),
+  preferences: z.object({
+    notifications: z.boolean(),
+    newsletter: z.boolean(),
+    language: z.string(),
+  }).optional(),
+  social_links: z.object({
+    facebook: z.string().url().optional(),
+    twitter: z.string().url().optional(),
+    instagram: z.string().url().optional(),
+  }).optional(),
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;
