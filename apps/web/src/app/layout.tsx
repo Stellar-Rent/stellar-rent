@@ -28,7 +28,7 @@ export default function RootLayout({
         <div id="theme-portal-root" />
         <Providers>
           <Navbar />
-          <main className="flex-1 flex flex-col items-center justify-between p-2">{children}</main>
+          <main className="flex-1 flex flex-col">{children}</main>
           <Toaster position="top-right" />
         </Providers>
       </body>
