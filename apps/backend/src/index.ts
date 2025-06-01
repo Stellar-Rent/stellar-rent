@@ -7,10 +7,12 @@ import { initializeDatabase } from './db/init';
 import { Router } from 'express';
 import { errorMiddleware } from './middleware/error.middleware';
 import { rateLimiter } from './middleware/rateLimiter';
+
 import routes from './routes';
 import authRouter from './routes/auth';
 import profileRouter from './routes/profile.routes';
 
+import propertyRoutes from './routes/property.route';
 // Environment variables configuration
 dotenv.config();
 
@@ -42,6 +44,10 @@ app.use(rateLimiter);
 
 // Routes
 app.use('/api', routes);
+
+app.use('/auth', authRoutes);
+app.use('/properties', propertyRoutes);
+
 
 // Test route
 app.get('/', (_req, res) => {
