@@ -31,7 +31,7 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+    origin: process.env.CORS_ORIGIN || 'http://localhost:3001',
     credentials: true,
   })
 );
@@ -40,6 +40,16 @@ app.use(rateLimiter);
 // Routes
 app.use('/auth', authRoutes);
 app.use('/properties', propertyRoutes);
+
+// Health check endpoint for Docker
+app.get('/health', (_req, res) => {
+  res.status(200).json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || 'development',
+  });
+});
 
 // Test route
 app.get('/', (_req, res) => {
@@ -51,5 +61,6 @@ app.use(errorMiddleware);
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`Servidor corriendo en el puerto ${PORT}`);
+  console.log(`✅ Server running on port ${PORT}`);
+  console.log(`🚀 Environment: ${process.env.NODE_ENV || 'development'}`);
 });

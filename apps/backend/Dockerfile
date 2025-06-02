@@ -1,64 +1,25 @@
-# Multi-stage Dockerfile for StellarRent Backend
-# Use official Bun image as base for minimal size
-FROM oven/bun:1.1.29-alpine AS base
+FROM oven/bun:1.1.29
 
-# Set working directory
 WORKDIR /app
 
-# Install system dependencies for native modules
-RUN apk add --no-cache \
-    python3 \
-    make \
-    g++ \
-    && rm -rf /var/cache/apk/*
+# Install curl for health check
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
-# Create non-root user for security
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S stellarrent -u 1001 -G nodejs
-
-# Stage 2: Dependencies installation
-FROM base AS deps
-
-# Copy package.json and bun.lockb (if exists)
+# Copy package files
 COPY package.json bun.lockb* ./
 
 # Install dependencies
-RUN bun install --frozen-lockfile --production
+RUN bun install
 
-# Stage 3: Build stage
-FROM base AS builder
-
-# Copy dependencies from deps stage
-COPY --from=deps /app/node_modules ./node_modules
-
-# Copy package.json and source code
-COPY package.json ./
+# Copy source code
 COPY . .
 
-# Build the application
-RUN bun run build
-
-# Stage 4: Production image
-FROM base AS runner
-
-# Set environment to production
-ENV NODE_ENV=production
-ENV PORT=3000
-
-# Copy built application
-COPY --from=builder --chown=stellarrent:nodejs /app/dist ./dist
-COPY --from=builder --chown=stellarrent:nodejs /app/package.json ./
-COPY --from=deps --chown=stellarrent:nodejs /app/node_modules ./node_modules
-
-# Switch to non-root user
-USER stellarrent
-
-# Expose the backend port (default: 3000)
+# Expose port
 EXPOSE 3000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD bun --version || exit 1
+    CMD curl -f http://localhost:3000/health || exit 1
 
-# Set the default command to start the backend in production mode
-CMD ["bun", "run", "start"]
+# Start the application directly from TypeScript
+CMD ["bun", "run", "src/index.ts"]

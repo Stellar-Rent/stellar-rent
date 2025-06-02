@@ -1,75 +1,22 @@
-version: '3.8'
-
 services:
-  # StellarRent Backend Service
   backend:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: base  # Use base stage for development
-    container_name: stellarrent-backend-dev
+    build: .
+    container_name: stellarrent-backend
     ports:
-      - "${PORT:-3000}:3000"
-    environment:
-      - NODE_ENV=development
-      - PORT=3000
-      - SUPABASE_URL=${SUPABASE_URL}
-      - SUPABASE_KEY=${SUPABASE_KEY}
-      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
-      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
-      - JWT_SECRET=${JWT_SECRET}
-      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:3001}
-      - STELLAR_NETWORK=${STELLAR_NETWORK:-testnet}
-      - TRUSTLESS_WORK_API=${TRUSTLESS_WORK_API}
+      - "3000:3000"
+    env_file: .env
     volumes:
-      # Mount the apps/backend directory as a volume to enable hot-reloading during development
       - .:/app
       - /app/node_modules  # Prevent overwriting node_modules
-      - /app/dist          # Prevent overwriting dist
-    working_dir: /app
     command: ["bun", "run", "dev"]
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/", "||", "exit", "1"]
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
-    networks:
-      - stellarrent-network
-    depends_on:
-      - supabase
-    env_file:
-      - .env
-
-  # Supabase service for local development (optional)
-  supabase:
-    image: supabase/supabase:latest
-    container_name: stellarrent-supabase-dev
-    ports:
-      - "54321:8000"  # Supabase Studio
-      - "54322:5432"  # PostgreSQL
-    environment:
-      - POSTGRES_PASSWORD=your_postgres_password
-      - JWT_SECRET=${JWT_SECRET}
-      - ANON_KEY=${SUPABASE_KEY}
-      - SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
-    volumes:
-      - supabase_data:/var/lib/postgresql/data
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "pg_isready", "-U", "postgres"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    networks:
-      - stellarrent-network
 
 networks:
-  stellarrent-network:
-    driver: bridge
+  default:
     name: stellarrent-network
-
-volumes:
-  supabase_data:
-    driver: local

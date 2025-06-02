@@ -6,6 +6,7 @@ Backend API for StellarRent, built with Express, TypeScript and Supabase.
 
 - **Node.js** (v18+)
 - **Bun** (install with `curl -fsSL https://bun.sh/install | bash`)
+- **Docker & Docker Compose** (for containerized development)
 - **Supabase account** and project created
 
 ## 🛠️ Complete Setup
@@ -40,24 +41,80 @@ CORS_ORIGIN=http://localhost:3000
 > 💡 **Tip**: Find your keys in Supabase → Settings → API
 
 ### 4. Run Server
+
+**Option A: Local Development**
 ```bash
 bun run dev
 ```
 
+**Option B: Docker Development (Recommended)**
+```bash
+# Start with Docker Compose
+docker-compose up
+
+# Or in background
+docker-compose up -d
+```
+
 API running at **http://localhost:3000** 🎉
 
-## 🐳 Docker Commands
+## 🐳 Docker Development
+
+We provide a **simple and clean Docker setup** for development:
+
+### Quick Start
+```bash
+# Build and start the container
+docker-compose up
+
+# Run in background
+docker-compose up -d
+
+# Stop containers
+docker-compose down
+
+# View logs
+docker-compose logs backend
+
+# Follow logs in real-time
+docker-compose logs -f backend
+```
+
+### Health Check
+```bash
+# Test if the API is running
+curl http://localhost:3000/health
+# Expected: {"status":"healthy","timestamp":"...","uptime":...}
+
+# Test main endpoint
+curl http://localhost:3000/
+# Expected: {"message":"Stellar Rent API is running successfully 🚀"}
+```
+
+### Docker Commands
 
 | Command | Description |
 |---------|-------------|
-| `bun run docker:build` | Build Docker image |
-| `bun run docker:dev` | Start development environment |
-| `bun run docker:prod` | Start production environment |
-| `bun run docker:stop` | Stop all containers |
-| `bun run docker:logs` | View backend logs |
-| `bun run docker:shell` | Access container shell |
-| `bun run docker:test` | Run tests in container |
-| `bun run docker:clean` | Clean up containers and images |
+| `docker-compose up` | Start development environment |
+| `docker-compose up -d` | Start in background |
+| `docker-compose down` | Stop and remove containers |
+| `docker-compose logs backend` | View backend logs |
+| `docker-compose restart backend` | Restart backend service |
+| `docker build -t stellarrent-backend .` | Build image manually |
+
+### Docker Features
+- ✅ **Hot reload**: Code changes automatically restart the server
+- ✅ **Health check**: Built-in `/health` endpoint monitoring
+- ✅ **Volume mounting**: Local changes sync with container
+- ✅ **Simple setup**: Uses Bun for fast TypeScript execution
+- ✅ **Environment variables**: Reads from `.env` file
+
+### Dockerfile Structure
+Our Dockerfile is simple and effective:
+- Uses `oven/bun:1.1.29` for fast TypeScript/JavaScript runtime
+- Installs `curl` for health checks
+- Runs TypeScript directly (no build step needed)
+- Exposes port 3000 with health monitoring
 
 ## 📜 Available Scripts
 
@@ -67,7 +124,6 @@ API running at **http://localhost:3000** 🎉
 | `bun build` | Build for production |
 | `bun start` | Start production server |
 | `bun test` | Run test suite |
-| `bun run docker:*` | Docker-related commands |
 
 ## 🧪 Testing
 
@@ -75,6 +131,9 @@ API running at **http://localhost:3000** 🎉
 ```bash
 # Test basic endpoint
 curl http://localhost:3000/properties/amenities
+
+# Test health endpoint (Docker)
+curl http://localhost:3000/health
 
 # Run test suite (if exists)
 bun test
