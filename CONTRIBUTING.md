@@ -23,20 +23,96 @@ We welcome contributions from the community! Whether you're fixing a bug, adding
    bun install
    ```
 
-3. **Create a Branch**
+3. **Development Setup**
+
+   **Option A: Docker (Recommended for beginners)**
+   ```bash
+   # Navigate to backend and start with Docker
+   cd apps/backend
+   docker-compose up
+   
+   # Test that it's working
+   curl http://localhost:3000/health
+   ```
+
+   **Option B: Local Development**
+   ```bash
+   # Setup environment variables (see apps/backend/README.md)
+   # Then start development
+   bun run dev
+   ```
+
+4. **Create a Branch**
    ```bash
    git checkout -b feature/your-feature-name
    ```
 
-4. **Make Changes & Format**
+5. **Make Changes & Format**
    ```bash
    # Make your changes...
    bun run format-and-lint:fix  # Auto-fixes formatting
    ```
 
-5. **Create Pull Request**
+6. **Create Pull Request**
    - Add a description (any length is fine!)
    - Our CI will handle the rest
+
+## 🐳 Docker Development (Recommended)
+
+For easier onboarding, we provide a **simple Docker setup** especially for the backend:
+
+### Quick Docker Setup
+```bash
+# 1. Clone and navigate
+git clone https://github.com/yourusername/stellar-rent.git
+cd stellar-rent/apps/backend
+
+# 2. Create .env file (minimal setup for Docker)
+echo "PORT=3000
+SUPABASE_URL=https://placeholder.supabase.co
+SUPABASE_ANON_KEY=placeholder_key
+SUPABASE_SERVICE_ROLE_KEY=placeholder_service_key
+JWT_SECRET=test_jwt_secret_for_docker_testing
+CORS_ORIGIN=http://localhost:3001
+NODE_ENV=development" > .env
+
+# 3. Start Docker containers
+docker-compose up
+
+# 4. Test the API
+curl http://localhost:3000/health
+```
+
+### Docker Benefits for Contributors
+- ✅ **No local setup needed**: Works out of the box
+- ✅ **Environment consistency**: Same setup for everyone
+- ✅ **Hot reload**: Code changes automatically restart the server
+- ✅ **Health monitoring**: Built-in health checks
+- ✅ **Easy cleanup**: `docker-compose down` removes everything
+
+### Docker Commands
+```bash
+# Start development environment
+docker-compose up
+
+# Run in background
+docker-compose up -d
+
+# Stop everything
+docker-compose down
+
+# View logs
+docker-compose logs backend
+
+# Restart after changes
+docker-compose restart backend
+```
+
+### Working with Docker
+- **Edit code normally**: Changes sync automatically with the container
+- **Install new packages**: Restart container after adding dependencies
+- **Database changes**: You'll still need Supabase setup for full functionality
+- **Debugging**: Use `docker-compose logs backend` to see server logs
 
 ## ✅ Automated Quality Checks
 

@@ -155,4 +155,4 @@ After configuring the DB:
 3. ✅ Verify authentication
 4. ✅ Create your first property via API
 
-Your database is ready for development! 🚀 
+Your database is ready for development! 🚀
