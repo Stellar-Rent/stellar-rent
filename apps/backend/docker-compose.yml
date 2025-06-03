@@ -1,0 +1,22 @@
+services:
+  backend:
+    build: .
+    container_name: stellarrent-backend
+    ports:
+      - "3000:3000"
+    env_file: .env
+    volumes:
+      - .:/app
+      - /app/node_modules  # Prevent overwriting node_modules
+    command: ["bun", "run", "dev"]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  default:
+    name: stellarrent-network

@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Disable SWC compilation
+  swcMinify: false,
   reactStrictMode: true,
   transpilePackages: ['@stellar-rent/ui'],
   webpack: (config) => {

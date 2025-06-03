@@ -31,19 +31,21 @@ StellarRent connects property owners and tenants through a decentralized platfor
 
 ### Core Operations
 
-![Diagram showing the overall architecture of StellarRent, including core actions: list property, rent property, and confirm rental.](assets/flow-stellar-rent.png)  
-*Sequence diagram showcasing how the core operations (list property, rent property, confirm rental, and payment escrow) are handled.*
+![Diagram showing the overall architecture of StellarRent, including core actions: list property, rent property, and confirm rental.](assets/flow-stellar-rent.png)
+_Sequence diagram showcasing how the core operations (list property, rent property, confirm rental, and payment escrow) are handled._
 
 ### Current Development State
 
 StellarRent is under active development. Contributions are welcome!
 
 We are currently building a minimal prototype, focusing on the essential features:
+
 - Listing properties on Testnet using Soroban smart contracts.
 - Renting properties with USDC payments.
 - Securing payments with a basic escrow system.
 
 The project uses:
+
 - **Frontend**: Next.js with Tailwind CSS for a user-friendly interface.
 - **Backend**: Node.js/Express with Supabase for user authentication and data management.
 - **Smart Contracts**: Soroban on Stellar for decentralized rental logic.
@@ -63,6 +65,7 @@ We are also registered on [OnlyDust](https://app.onlydust.com/projects/stellarre
 ## Contact
 
 Feel free to reach out via our community telegram:
+
 - [Telegram](https://t.me/stellarentdevs)
 
 ---
@@ -76,6 +79,7 @@ Let's build a fairer, more efficient rental ecosystem together—powered by Stel
 ---
 
 ## **Thanks to all the contributors who have made this project possible!**
+
 <a href="https://github.com/Stellar-Rent/stellar-rent/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=Stellar-Rent/stellar-rent" />
 </a>
