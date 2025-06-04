@@ -20,60 +20,71 @@ export function EscrowStatusCard({
   bookingId,
 }: EscrowStatusCardProps) {
   if (!bookingId) {
-    throw new Error('BookingId is required for EscrowStatusCard');
+    return (
+      <Card className="overflow-hidden">
+        <div className="p-6 text-center text-red-500">
+          <XCircle className="w-8 h-8 mx-auto mb-2" />
+          <p>Unable to load payment status: Missing booking ID</p>
+        </div>
+      </Card>
+    );
   }
   const { escrowData } = useEscrowStatus(bookingId, initialStatus);
 
   const currentStatus = escrowData?.status || initialStatus;
   const lastUpdated = escrowData?.lastUpdated || new Date();
 
-  const getStatusConfig = (status: EscrowStatus) => {
-    switch (status) {
-      case 'pending':
-        return {
-          icon: Clock,
-          color: 'text-yellow-500',
-          bgColor: 'bg-yellow-50 dark:bg-yellow-900/20',
-          borderColor: 'border-yellow-200 dark:border-yellow-800',
-          title: 'Payment Pending',
-          description: 'Your payment is being processed and will be held in escrow until check-in.',
-          progress: 25,
-        };
-      case 'confirmed':
-        return {
-          icon: Shield,
-          color: 'text-blue-500',
-          bgColor: 'bg-blue-50 dark:bg-blue-900/20',
-          borderColor: 'border-blue-200 dark:border-blue-800',
-          title: 'Payment Secured',
-          description:
-            'Your payment is now safely held in escrow and will be released to the host after your stay.',
-          progress: 75,
-        };
-      case 'completed':
-        return {
-          icon: CheckCircle,
-          color: 'text-green-500',
-          bgColor: 'bg-green-50 dark:bg-green-900/20',
-          borderColor: 'border-green-200 dark:border-green-800',
-          title: 'Payment Released',
-          description: 'Your stay is complete and payment has been released to the host.',
-          progress: 100,
-        };
-      case 'cancelled':
-        return {
-          icon: XCircle,
-          color: 'text-red-500',
-          bgColor: 'bg-red-50 dark:bg-red-900/20',
-          borderColor: 'border-red-200 dark:border-red-800',
-          title: 'Payment Refunded',
-          description: 'Your booking was cancelled and payment has been refunded.',
-          progress: 0,
-        };
-    }
-  };
+  // Status configurations moved outside for performance
+  const STATUS_CONFIGS = {
+    pending: {
+      icon: Clock,
+      color: 'text-yellow-500',
+      bgColor: 'bg-yellow-50 dark:bg-yellow-900/20',
+      borderColor: 'border-yellow-200 dark:border-yellow-800',
+      title: 'Payment Pending',
+      description: 'Your payment is being processed and will be held in escrow until check-in.',
+      progress: 25,
+    },
+    confirmed: {
+      icon: Shield,
+      color: 'text-blue-500',
+      bgColor: 'bg-blue-50 dark:bg-blue-900/20',
+      borderColor: 'border-blue-200 dark:border-blue-800',
+      title: 'Payment Secured',
+      description:
+        'Your payment is safely held in escrow and will be released to the host after check-in.',
+      progress: 75,
+    },
+    completed: {
+      icon: CheckCircle,
+      color: 'text-green-500',
+      bgColor: 'bg-green-50 dark:bg-green-900/20',
+      borderColor: 'border-green-200 dark:border-green-800',
+      title: 'Payment Complete',
+      description:
+        'Payment has been successfully released to the host. Thank you for your booking!',
+      progress: 100,
+    },
+    cancelled: {
+      icon: XCircle,
+      color: 'text-red-500',
+      bgColor: 'bg-red-50 dark:bg-red-900/20',
+      borderColor: 'border-red-200 dark:border-red-800',
+      title: 'Booking Cancelled',
+      description: 'Your booking has been cancelled and payment has been refunded.',
+      progress: 0,
+    },
+  } as const;
 
-  const statusConfig = getStatusConfig(currentStatus);
+  const statusConfig = STATUS_CONFIGS[currentStatus] || {
+    icon: Clock,
+    color: 'text-gray-500',
+    bgColor: 'bg-gray-50 dark:bg-gray-900/20',
+    borderColor: 'border-gray-200 dark:border-gray-800',
+    title: 'Unknown Status',
+    description: 'Payment status is currently unknown.',
+    progress: 0,
+  };
   const StatusIcon = statusConfig.icon;
 
   // Make explorer URL configurable
@@ -81,7 +92,11 @@ export function EscrowStatusCard({
     process.env.NEXT_PUBLIC_STELLAR_EXPLORER_URL || 'https://stellar.expert/explorer/testnet';
 
   const openTransactionExplorer = () => {
-    window.open(`${STELLAR_EXPLORER_BASE_URL}/tx/${transactionHash}`, '_blank');
+    window.open(
+      `${STELLAR_EXPLORER_BASE_URL}/tx/${transactionHash}`,
+      '_blank',
+      'noopener,noreferrer'
+    );
   };
 
   return (
@@ -140,6 +155,8 @@ export function EscrowStatusCard({
                 size="sm"
                 onClick={openTransactionExplorer}
                 className="h-auto p-0 text-primary hover:text-primary/80"
+                aria-label={`View transaction ${transactionHash} on Stellar explorer`}
+                title="Open transaction in Stellar explorer"
               >
                 <ExternalLink className="w-3 h-3 mr-1" />
                 View on Explorer
@@ -160,13 +177,22 @@ export function EscrowStatusCard({
               {
                 status: 'confirmed',
                 label: 'Funds Secured in Escrow',
-                completed: currentStatus !== 'pending',
+                completed: currentStatus !== 'pending' && currentStatus !== 'cancelled',
               },
               {
                 status: 'completed',
                 label: 'Payment Released to Host',
                 completed: currentStatus === 'completed',
               },
+              ...(currentStatus === 'cancelled'
+                ? [
+                    {
+                      status: 'cancelled',
+                      label: 'Booking Cancelled & Refunded',
+                      completed: true,
+                    },
+                  ]
+                : []),
             ].map((step) => (
               <div key={step.status} className="flex items-center space-x-3">
                 <div
