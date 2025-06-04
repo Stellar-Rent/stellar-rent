@@ -1,3 +1,4 @@
+import type { BookingData } from '@/types/booking';
 /**
  * @jest-environment jsdom
  */
@@ -15,7 +16,7 @@ jest.mock('@/hooks/useEscrowStatus', () => ({
   getEstimatedTimeToNextStatus: () => '~5 minutes until confirmation',
 }));
 
-const mockBookingData = {
+const mockBookingData: BookingData = {
   id: 'BK123456789',
   property: {
     title: 'Luxury Beachfront Villa',

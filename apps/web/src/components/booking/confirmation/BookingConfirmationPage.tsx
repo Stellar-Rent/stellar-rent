@@ -1,31 +1,11 @@
 'use client';
 
+import type { BookingData } from '@/types/booking';
 import { CheckCircle2 } from 'lucide-react';
 import { BookingDetailsCard } from './BookingDetailsCard';
 import { EscrowStatusCard } from './EscrowStatusCard';
 import { HostContactCard } from './HostContactCard';
 import { NavigationActions } from './NavigationActions';
-
-interface BookingData {
-  id: string;
-  property: {
-    title: string;
-    image: string;
-  };
-  dates: {
-    from: Date;
-    to: Date;
-  };
-  guests: number;
-  totalAmount: number;
-  transactionHash: string;
-  escrowStatus: 'pending' | 'confirmed' | 'completed' | 'cancelled';
-  host: {
-    name: string;
-    email: string;
-    phone?: string;
-  };
-}
 
 interface BookingConfirmationPageProps {
   bookingData: BookingData;

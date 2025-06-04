@@ -1,29 +1,9 @@
 'use client';
 
 import { Card, CardHeader } from '@/components/ui/card';
+import type { BookingData } from '@/types/booking';
 import { format } from 'date-fns';
 import { Calendar, DollarSign, MapPin, Users } from 'lucide-react';
-
-interface BookingData {
-  id: string;
-  property: {
-    title: string;
-    image: string;
-  };
-  dates: {
-    from: Date;
-    to: Date;
-  };
-  guests: number;
-  totalAmount: number;
-  transactionHash: string;
-  escrowStatus: 'pending' | 'confirmed' | 'completed' | 'cancelled';
-  host: {
-    name: string;
-    email: string;
-    phone?: string;
-  };
-}
 
 interface BookingDetailsCardProps {
   bookingData: BookingData;

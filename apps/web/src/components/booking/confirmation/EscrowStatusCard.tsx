@@ -2,24 +2,26 @@
 
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader } from '@/components/ui/card';
-import { getEstimatedTimeToNextStatus, useEscrowStatus } from '@/hooks/useEscrowStatus';
+import { useEscrowStatus } from '@/hooks/useEscrowStatus';
+import type { EscrowStatus } from '@/types/booking';
 import { CheckCircle, Clock, ExternalLink, Shield, XCircle } from 'lucide-react';
-
-type EscrowStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled';
 
 interface EscrowStatusCardProps {
   escrowStatus: EscrowStatus;
   transactionHash: string;
   totalAmount: number;
-  bookingId?: string;
+  bookingId: string;
 }
 
 export function EscrowStatusCard({
   escrowStatus: initialStatus,
   transactionHash,
   totalAmount,
-  bookingId = 'default',
+  bookingId,
 }: EscrowStatusCardProps) {
+  if (!bookingId) {
+    throw new Error('BookingId is required for EscrowStatusCard');
+  }
   const { escrowData } = useEscrowStatus(bookingId, initialStatus);
 
   const currentStatus = escrowData?.status || initialStatus;
@@ -74,8 +76,12 @@ export function EscrowStatusCard({
   const statusConfig = getStatusConfig(currentStatus);
   const StatusIcon = statusConfig.icon;
 
+  // Make explorer URL configurable
+  const STELLAR_EXPLORER_BASE_URL =
+    process.env.NEXT_PUBLIC_STELLAR_EXPLORER_URL || 'https://stellar.expert/explorer/testnet';
+
   const openTransactionExplorer = () => {
-    window.open(`https://stellar.expert/explorer/testnet/tx/${transactionHash}`, '_blank');
+    window.open(`${STELLAR_EXPLORER_BASE_URL}/tx/${transactionHash}`, '_blank');
   };
 
   return (
@@ -84,7 +90,13 @@ export function EscrowStatusCard({
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold text-foreground">Payment Status</h2>
           <div className="text-xs text-muted-foreground">
-            Updated: {lastUpdated.toLocaleTimeString()}
+            Updated:{' '}
+            {lastUpdated.toLocaleString(undefined, {
+              month: 'short',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+            })}
           </div>
         </div>
       </CardHeader>
@@ -105,15 +117,8 @@ export function EscrowStatusCard({
           {/* Progress Bar */}
           <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
             <div
-              className={`bg-[#4A90E2] h-2 rounded-full transition-all duration-500 ease-out ${
-                statusConfig.progress === 25
-                  ? 'w-1/4'
-                  : statusConfig.progress === 75
-                    ? 'w-3/4'
-                    : statusConfig.progress === 100
-                      ? 'w-full'
-                      : 'w-0'
-              }`}
+              className="bg-primary h-2 rounded-full transition-all duration-500 ease-out"
+              style={{ width: `${statusConfig.progress}%` }}
             />
           </div>
         </div>
@@ -134,7 +139,7 @@ export function EscrowStatusCard({
                 variant="ghost"
                 size="sm"
                 onClick={openTransactionExplorer}
-                className="h-auto p-0 text-[#4A90E2] hover:text-[#357ABD]"
+                className="h-auto p-0 text-primary hover:text-primary/80"
               >
                 <ExternalLink className="w-3 h-3 mr-1" />
                 View on Explorer
@@ -166,7 +171,7 @@ export function EscrowStatusCard({
               <div key={step.status} className="flex items-center space-x-3">
                 <div
                   className={`w-2 h-2 rounded-full ${
-                    step.completed ? 'bg-[#4A90E2]' : 'bg-gray-300 dark:bg-gray-600'
+                    step.completed ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-600'
                   }`}
                 />
                 <span

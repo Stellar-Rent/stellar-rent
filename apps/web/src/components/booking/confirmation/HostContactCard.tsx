@@ -26,7 +26,9 @@ export function HostContactCard({ host }: HostContactCardProps) {
   };
 
   const handleMessageHost = () => {
-    console.log('Open messaging system');
+    // TODO: Implement messaging functionality
+    // This should open a modal or navigate to messaging interface
+    console.error('Messaging functionality not implemented yet');
   };
 
   return (

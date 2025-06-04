@@ -1,28 +1,16 @@
 'use client';
 
+import type { EscrowData, EscrowStatus, UseEscrowStatusReturn } from '@/types/booking';
 import { useCallback, useEffect, useState } from 'react';
 
-type EscrowStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled';
-
-interface EscrowData {
-  status: EscrowStatus;
-  transactionHash: string;
-  amount: number;
-  lastUpdated: Date;
-  estimatedConfirmationTime?: Date;
-}
-
-interface UseEscrowStatusReturn {
-  escrowData: EscrowData | null;
-  loading: boolean;
-  error: string | null;
-  refetch: () => Promise<void>;
-}
+// Constants for timing consistency
+const PENDING_TO_CONFIRMED_MINUTES = 5;
+const POLLING_INTERVAL_DEFAULT = 10000;
 
 export function useEscrowStatus(
-  _bookingId: string,
+  bookingId: string,
   initialStatus: EscrowStatus = 'pending',
-  pollingInterval = 10000
+  pollingInterval = POLLING_INTERVAL_DEFAULT
 ): UseEscrowStatusReturn {
   const [escrowData, setEscrowData] = useState<EscrowData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -34,34 +22,39 @@ export function useEscrowStatus(
 
       await new Promise((resolve) => setTimeout(resolve, 500));
       const now = new Date();
+
+      // Generate more realistic mock data
       const mockData: EscrowData = {
         status: initialStatus,
-        transactionHash: 'ABC123DEF456GHI789JKL012MNO345PQR678STU901VWX234YZ',
-        amount: 750,
+        transactionHash: `0x${bookingId.toLowerCase().padEnd(32, '0')}`,
+        amount: Math.floor(Math.random() * 1000) + 500, // Random amount between 500-1500
         lastUpdated: now,
-        estimatedConfirmationTime: new Date(now.getTime() + 5 * 60 * 1000),
+        estimatedConfirmationTime: new Date(
+          now.getTime() + PENDING_TO_CONFIRMED_MINUTES * 60 * 1000
+        ),
       };
 
-      if (escrowData) {
-        const timeSinceLastUpdate = now.getTime() - escrowData.lastUpdated.getTime();
-        const minutesSinceUpdate = timeSinceLastUpdate / (1000 * 60);
+      setEscrowData((prevData) => {
+        if (prevData) {
+          const timeSinceLastUpdate = now.getTime() - prevData.lastUpdated.getTime();
+          const minutesSinceUpdate = timeSinceLastUpdate / (1000 * 60);
 
-        if (escrowData.status === 'pending' && minutesSinceUpdate > 2) {
-          mockData.status = 'confirmed';
-          mockData.estimatedConfirmationTime = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-        } else {
-          mockData.status = escrowData.status;
-          mockData.estimatedConfirmationTime = escrowData.estimatedConfirmationTime;
+          if (prevData.status === 'pending' && minutesSinceUpdate > PENDING_TO_CONFIRMED_MINUTES) {
+            mockData.status = 'confirmed';
+            mockData.estimatedConfirmationTime = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+          } else {
+            mockData.status = prevData.status;
+            mockData.estimatedConfirmationTime = prevData.estimatedConfirmationTime;
+          }
         }
-      }
-
-      setEscrowData(mockData);
+        return mockData;
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch escrow status');
     } finally {
       setLoading(false);
     }
-  }, [initialStatus, escrowData]);
+  }, [initialStatus, bookingId]);
 
   const refetch = async () => {
     setLoading(true);
@@ -137,7 +130,7 @@ export function getEstimatedTimeToNextStatus(
 
   switch (currentStatus) {
     case 'pending': {
-      const remainingMinutes = Math.max(0, 5 - minutesSinceUpdate);
+      const remainingMinutes = Math.max(0, PENDING_TO_CONFIRMED_MINUTES - minutesSinceUpdate);
       if (remainingMinutes > 0) {
         return `~${Math.ceil(remainingMinutes)} minutes until confirmation`;
       }

@@ -13,18 +13,30 @@ export function NavigationActions() {
   };
 
   const handleDownloadConfirmation = () => {
-    console.log('Download confirmation PDF');
+    // TODO: Implement PDF generation and download
+    // Consider using libraries like jsPDF or react-pdf
+    throw new Error('PDF download not implemented yet');
   };
 
-  const handleShareBooking = () => {
+  const handleShareBooking = async () => {
     if (navigator.share) {
-      navigator.share({
-        title: 'StellarRent Booking Confirmation',
-        text: 'Check out my booking confirmation!',
-        url: window.location.href,
-      });
+      try {
+        await navigator.share({
+          title: 'StellarRent Booking Confirmation',
+          text: 'Check out my booking confirmation!',
+          url: window.location.href,
+        });
+      } catch (error) {
+        console.error('Failed to share:', error);
+      }
     } else {
-      navigator.clipboard.writeText(window.location.href);
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        // Consider showing a success message to the user
+      } catch (error) {
+        console.error('Failed to copy to clipboard:', error);
+        // Consider showing an error message or alternative sharing method
+      }
     }
   };
 
@@ -33,7 +45,9 @@ export function NavigationActions() {
   };
 
   const handleViewProperty = () => {
-    router.push('/property/123');
+    // TODO: Get actual property ID from booking data
+    // This should be passed as a prop or derived from context
+    console.error('Property ID not available - this functionality needs booking data');
   };
 
   return (
@@ -47,7 +61,7 @@ export function NavigationActions() {
         <div className="space-y-3">
           <Button
             onClick={handleMyBookings}
-            className="w-full bg-[#4A90E2] hover:bg-[#357ABD] text-white flex items-center justify-between group"
+            className="w-full bg-primary hover:bg-primary/90 text-white flex items-center justify-between group"
             size="lg"
           >
             <div className="flex items-center space-x-3">
@@ -60,7 +74,7 @@ export function NavigationActions() {
           <Button
             onClick={handleGoHome}
             variant="outline"
-            className="w-full border-[#4A90E2] text-[#4A90E2] hover:bg-[#4A90E2] hover:text-white flex items-center justify-between group"
+            className="w-full border-primary text-primary hover:bg-primary hover:text-white flex items-center justify-between group"
             size="lg"
           >
             <div className="flex items-center space-x-3">
@@ -139,7 +153,7 @@ export function NavigationActions() {
         {/* Important Notice */}
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
           <div className="flex items-start space-x-3">
-            <div className="w-2 h-2 rounded-full bg-[#4A90E2] mt-2 flex-shrink-0" />
+            <div className="w-2 h-2 rounded-full bg-primary mt-2 flex-shrink-0" />
             <div className="text-sm">
               <p className="font-medium text-foreground mb-1">Important Reminder</p>
               <p className="text-muted-foreground">
