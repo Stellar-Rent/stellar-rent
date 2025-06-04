@@ -78,7 +78,37 @@ CREATE INDEX IF NOT EXISTS properties_amenities_idx ON public.properties USING G
 CREATE INDEX IF NOT EXISTS properties_location_idx ON public.properties(city, country);
 
 -- ===============================================
--- 4. FUNCTION TO UPDATE updated_at
+-- 4. BOOKINGS TABLE
+-- ===============================================
+
+CREATE TABLE IF NOT EXISTS public.bookings (
+  id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+  user_id uuid NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+  property_id uuid NOT NULL REFERENCES public.properties(id) ON DELETE CASCADE,
+  amount decimal(10,2) NOT NULL,
+  status varchar(20) NOT NULL DEFAULT 'pending',
+  start_date date NOT NULL,
+  end_date date NOT NULL,
+  escrow_address text,
+  transaction_hash varchar(64),
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
+  updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
+  
+  -- Constraints to validate data
+  CONSTRAINT booking_status_check CHECK (status IN ('pending', 'confirmed', 'cancelled')),
+  CONSTRAINT booking_amount_check CHECK (amount > 0),
+  CONSTRAINT booking_dates_check CHECK (end_date > start_date)
+);
+
+-- Indexes to optimize queries
+CREATE INDEX IF NOT EXISTS bookings_user_id_idx ON public.bookings(user_id);
+CREATE INDEX IF NOT EXISTS bookings_property_id_idx ON public.bookings(property_id);
+CREATE INDEX IF NOT EXISTS bookings_status_idx ON public.bookings(status);
+CREATE INDEX IF NOT EXISTS bookings_transaction_hash_idx ON public.bookings(transaction_hash);
+CREATE INDEX IF NOT EXISTS bookings_created_at_idx ON public.bookings(created_at);
+
+-- ===============================================
+-- 5. FUNCTION TO UPDATE updated_at
 -- ===============================================
 
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -102,8 +132,14 @@ CREATE TRIGGER update_properties_updated_at
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_bookings_updated_at ON public.bookings;
+CREATE TRIGGER update_bookings_updated_at
+    BEFORE UPDATE ON public.bookings
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
 -- ===============================================
--- 5. STORAGE CONFIGURATION
+-- 6. STORAGE CONFIGURATION
 -- ===============================================
 
 -- Create bucket for property images
@@ -112,12 +148,13 @@ VALUES ('property-images', 'property-images', true)
 ON CONFLICT (id) DO NOTHING;
 
 -- ===============================================
--- 6. ROW LEVEL SECURITY (RLS) POLICIES
+-- 7. ROW LEVEL SECURITY (RLS) POLICIES
 -- ===============================================
 
 -- Enable Row Level Security
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.properties ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.bookings ENABLE ROW LEVEL SECURITY;
 
 -- User policies
 -- Users can view and update their own information
@@ -144,8 +181,34 @@ CREATE POLICY "Owners can delete own properties" ON public.properties
 CREATE POLICY "Authenticated users can create properties" ON public.properties
     FOR INSERT WITH CHECK (auth.uid() = owner_id);
 
+-- Booking policies
+-- Users can view their own bookings and property owners can view bookings for their properties
+CREATE POLICY "Users can view relevant bookings" ON public.bookings
+    FOR SELECT USING (
+        auth.uid() = user_id OR 
+        auth.uid() IN (SELECT owner_id FROM public.properties WHERE id = property_id)
+    );
+
+-- Users can create bookings for available properties
+CREATE POLICY "Authenticated users can create bookings" ON public.bookings
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- Users can update their own bookings, property owners can update bookings for their properties
+CREATE POLICY "Users can update relevant bookings" ON public.bookings
+    FOR UPDATE USING (
+        auth.uid() = user_id OR 
+        auth.uid() IN (SELECT owner_id FROM public.properties WHERE id = property_id)
+    );
+
+-- Users can cancel their own bookings, property owners can cancel bookings for their properties
+CREATE POLICY "Users can delete relevant bookings" ON public.bookings
+    FOR DELETE USING (
+        auth.uid() = user_id OR 
+        auth.uid() IN (SELECT owner_id FROM public.properties WHERE id = property_id)
+    );
+
 -- ===============================================
--- 7. STORAGE POLICIES
+-- 8. STORAGE POLICIES
 -- ===============================================
 
 -- Policy to read images (public)
@@ -174,7 +237,7 @@ CREATE POLICY "Users can delete own property images" ON storage.objects
     );
 
 -- ===============================================
--- 8. SAMPLE DATA (OPTIONAL)
+-- 9. SAMPLE DATA (OPTIONAL)
 -- ===============================================
 
 -- Uncomment these lines to insert sample data
@@ -210,7 +273,7 @@ INSERT INTO public.properties (
 */
 
 -- ===============================================
--- 9. VERIFICATION
+-- 10. VERIFICATION
 -- ===============================================
 
 -- Verify that tables were created correctly
@@ -220,7 +283,7 @@ SELECT
     tableowner
 FROM pg_tables 
 WHERE schemaname = 'public' 
-AND tablename IN ('users', 'properties');
+AND tablename IN ('users', 'properties', 'bookings');
 
 -- Verify that the bucket was created
 SELECT name, public FROM storage.buckets WHERE name = 'property-images';
@@ -228,7 +291,7 @@ SELECT name, public FROM storage.buckets WHERE name = 'property-images';
 -- ===============================================
 -- SCRIPT COMPLETED
 -- ===============================================
--- ✅ Tables created: users, properties
+-- ✅ Tables created: users, properties, bookings
 -- ✅ Indexes optimized for queries
 -- ✅ Constraints and validations applied
 -- ✅ Triggers for updated_at configured

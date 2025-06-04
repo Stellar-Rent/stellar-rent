@@ -76,6 +76,41 @@ export type Database = {
         };
         Update: Partial<Database['public']['Tables']['properties']['Insert']>;
       };
+
+      bookings: {
+        Row: {
+          id: string;
+          user_id: string;
+          property_id: string;
+          amount: number;
+          status: 'pending' | 'confirmed' | 'cancelled';
+          start_date: string;
+          end_date: string;
+          escrow_address: string | null;
+          transaction_hash: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          property_id: string;
+          amount: number;
+          status?: 'pending' | 'confirmed' | 'cancelled';
+          start_date: string;
+          end_date: string;
+          escrow_address?: string;
+          transaction_hash?: string;
+        };
+        Update: {
+          amount?: number;
+          status?: 'pending' | 'confirmed' | 'cancelled';
+          start_date?: string;
+          end_date?: string;
+          escrow_address?: string;
+          transaction_hash?: string;
+          updated_at?: string;
+        };
+      };
     };
   };
 };
