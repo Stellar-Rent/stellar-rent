@@ -25,7 +25,7 @@ console.log('Variables de entorno cargadas:', {
 });
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = Number(process.env.PORT) || 3000;
 
 // Middleware
 app.use(express.json());
@@ -50,7 +50,6 @@ app.get('/health', (_req, res) => {
     environment: process.env.NODE_ENV || 'development',
   });
 });
-
 
 // Test route
 app.get('/', (_req, res) => {
