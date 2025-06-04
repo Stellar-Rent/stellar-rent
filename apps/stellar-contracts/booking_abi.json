@@ -1,0 +1,241 @@
+{
+  "contractName": "BookingContract",
+  "abi": {
+    "functions": [
+      {
+        "name": "initialize",
+        "inputs": [],
+        "outputs": [],
+        "description": "Initialize the contract"
+      },
+      {
+        "name": "check_availability",
+        "inputs": [
+          {
+            "name": "property_id",
+            "type": "String"
+          },
+          {
+            "name": "start_date",
+            "type": "u64"
+          },
+          {
+            "name": "end_date",
+            "type": "u64"
+          }
+        ],
+        "outputs": [
+          {
+            "type": "bool"
+          }
+        ],
+        "description": "Check if a property is available for the given dates"
+      },
+      {
+        "name": "create_booking",
+        "inputs": [
+          {
+            "name": "property_id",
+            "type": "String"
+          },
+          {
+            "name": "user_id",
+            "type": "String"
+          },
+          {
+            "name": "start_date",
+            "type": "u64"
+          },
+          {
+            "name": "end_date",
+            "type": "u64"
+          },
+          {
+            "name": "total_price",
+            "type": "i128"
+          }
+        ],
+        "outputs": [
+          {
+            "type": "u64",
+            "description": "Booking ID"
+          }
+        ],
+        "description": "Create a new booking"
+      },
+      {
+        "name": "cancel_booking",
+        "inputs": [
+          {
+            "name": "booking_id",
+            "type": "u64"
+          },
+          {
+            "name": "user_id",
+            "type": "String"
+          }
+        ],
+        "outputs": [
+          {
+            "type": "bool"
+          }
+        ],
+        "description": "Cancel a booking"
+      },
+      {
+        "name": "get_booking",
+        "inputs": [
+          {
+            "name": "booking_id",
+            "type": "u64"
+          }
+        ],
+        "outputs": [
+          {
+            "type": "Booking"
+          }
+        ],
+        "description": "Get a specific booking by ID"
+      },
+      {
+        "name": "update_status",
+        "inputs": [
+          {
+            "name": "booking_id",
+            "type": "u64"
+          },
+          {
+            "name": "new_status",
+            "type": "BookingStatus"
+          },
+          {
+            "name": "caller",
+            "type": "Address"
+          }
+        ],
+        "outputs": [
+          {
+            "type": "Booking"
+          }
+        ],
+        "description": "Update booking status"
+      },
+      {
+        "name": "get_property_bookings",
+        "inputs": [
+          {
+            "name": "property_id",
+            "type": "String"
+          }
+        ],
+        "outputs": [
+          {
+            "type": "Vec<Booking>"
+          }
+        ],
+        "description": "Get all bookings for a specific property"
+      },
+      {
+        "name": "set_escrow_id",
+        "inputs": [
+          {
+            "name": "booking_id",
+            "type": "u64"
+          },
+          {
+            "name": "escrow_id",
+            "type": "String"
+          },
+          {
+            "name": "_caller",
+            "type": "Address"
+          }
+        ],
+        "outputs": [
+          {
+            "type": "bool"
+          }
+        ],
+        "description": "Set escrow ID for a booking (called by escrow system)"
+      }
+    ],
+    "types": [
+      {
+        "name": "BookingStatus",
+        "type": "enum",
+        "variants": [
+          "Pending",
+          "Confirmed",
+          "Completed",
+          "Cancelled"
+        ]
+      },
+      {
+        "name": "Booking",
+        "type": "struct",
+        "fields": [
+          {
+            "name": "id",
+            "type": "u64"
+          },
+          {
+            "name": "property_id",
+            "type": "String"
+          },
+          {
+            "name": "user_id",
+            "type": "String"
+          },
+          {
+            "name": "start_date",
+            "type": "u64"
+          },
+          {
+            "name": "end_date",
+            "type": "u64"
+          },
+          {
+            "name": "total_price",
+            "type": "i128"
+          },
+          {
+            "name": "status",
+            "type": "BookingStatus"
+          },
+          {
+            "name": "escrow_id",
+            "type": "Option<String>"
+          }
+        ]
+      }
+    ],
+    "errors": [
+      {
+        "name": "InvalidDates",
+        "description": "Start date must be before end date and cannot be in the past"
+      },
+      {
+        "name": "InvalidPrice",
+        "description": "Price must be greater than zero"
+      },
+      {
+        "name": "BookingOverlap",
+        "description": "Dates conflict with existing reservation"
+      },
+      {
+        "name": "Unauthorized",
+        "description": "Only the booking owner can perform this action"
+      },
+      {
+        "name": "InvalidStatus",
+        "description": "Booking status cannot be changed or invalid status transition"
+      },
+      {
+        "name": "BookingNotFound",
+        "description": "The specified booking ID does not exist"
+      }
+    ]
+  },
+  "contractId": "CB3ILSDNHL6TWZYZJAS4L27GLHNAGW4ISW6YXIBHGHL4QYI4JPLP6W3E",
+  "network": "testnet"
+}
