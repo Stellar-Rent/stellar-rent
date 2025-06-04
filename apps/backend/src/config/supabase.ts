@@ -24,18 +24,16 @@ export type Database = {
           password_hash?: string;
         };
       };
-
       properties: {
         Row: {
           id: string;
           title: string;
           description: string;
           price: number;
-          address: string;
-          city: string;
-          country: string;
-          latitude: number | null;
-          longitude: number | null;
+          location_address: string;
+          location_city: string;
+          location_country: string;
+          location_coordinates: { latitude: number; longitude: number } | null;
           amenities: string[];
           images: string[];
           bedrooms: number;
@@ -43,10 +41,12 @@ export type Database = {
           max_guests: number;
           owner_id: string;
           status: 'available' | 'booked' | 'maintenance';
-          availability: AvailabilityRange[];
+          availability: Array<{ from: string; to: string }>;
           security_deposit: number;
-          cancellation_policy: CancellationPolicy | null;
-          property_token: string | null;
+          cancellation_policy: {
+            daysBefore: number;
+            refundPercentage: number;
+          } | null;
           created_at: string;
           updated_at: string;
         };
@@ -55,11 +55,10 @@ export type Database = {
           title: string;
           description: string;
           price: number;
-          address: string;
-          city: string;
-          country: string;
-          latitude?: number | null;
-          longitude?: number | null;
+          location_address: string;
+          location_city: string;
+          location_country: string;
+          location_coordinates?: { latitude: number; longitude: number } | null;
           amenities?: string[];
           images?: string[];
           bedrooms: number;
@@ -67,14 +66,38 @@ export type Database = {
           max_guests: number;
           owner_id: string;
           status?: 'available' | 'booked' | 'maintenance';
-          availability?: AvailabilityRange[];
-          security_deposit?: number;
-          cancellation_policy?: CancellationPolicy | null;
-          property_token?: string | null;
+          availability?: Array<{ from: string; to: string }>;
+          security_deposit: number;
+          cancellation_policy?: {
+            daysBefore: number;
+            refundPercentage: number;
+          } | null;
           created_at?: string;
           updated_at?: string;
         };
-        Update: Partial<Database['public']['Tables']['properties']['Insert']>;
+        Update: {
+          title?: string;
+          description?: string;
+          price?: number;
+          location_address?: string;
+          location_city?: string;
+          location_country?: string;
+          location_coordinates?: { latitude: number; longitude: number } | null;
+          amenities?: string[];
+          images?: string[];
+          bedrooms?: number;
+          bathrooms?: number;
+          max_guests?: number;
+          owner_id?: string;
+          status?: 'available' | 'booked' | 'maintenance';
+          availability?: Array<{ from: string; to: string }>;
+          security_deposit?: number;
+          cancellation_policy?: {
+            daysBefore: number;
+            refundPercentage: number;
+          } | null;
+          updated_at?: string;
+        };
       };
     };
   };
