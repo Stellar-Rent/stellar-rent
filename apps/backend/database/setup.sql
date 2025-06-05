@@ -270,6 +270,18 @@ INSERT INTO public.properties (
     '123e4567-e89b-12d3-a456-426614174000',
     'available'
 ) ON CONFLICT DO NOTHING;
+
+-- Sample booking
+INSERT INTO public.bookings (
+    user_id, property_id, amount, status, start_date, end_date
+) VALUES (
+    '123e4567-e89b-12d3-a456-426614174000',
+    '123e4567-e89b-12d3-a456-426614174000',
+    150.00,
+    'pending',
+    '2025-01-01',
+    '2025-01-05'
+) ON CONFLICT DO NOTHING;
 */
 
 -- ===============================================
