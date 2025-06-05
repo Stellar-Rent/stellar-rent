@@ -4,6 +4,7 @@ import express from 'express';
 import { errorMiddleware } from './middleware/error.middleware';
 import { rateLimiter } from './middleware/rateLimiter';
 import authRoutes from './routes/auth';
+import bookingRoutes from './routes/booking.routes';
 import propertyRoutes from './routes/property.route';
 // Environment variables configuration
 dotenv.config();
@@ -39,6 +40,7 @@ app.use(rateLimiter);
 
 // Routes
 app.use('/auth', authRoutes);
+app.use('/api', bookingRoutes);
 app.use('/properties', propertyRoutes);
 
 // Health check endpoint for Docker
