@@ -13,6 +13,18 @@ export interface CancellationPolicy {
   description?: string;
 }
 
+export interface SearchProperties {
+  location?: string;
+  startDate?: string;
+  endDate?: string;
+  guests?: number;
+  minPrice?: number;
+  maxPrice?: number;
+  amenities?: string[];
+  page?: number;
+  limit?: number;
+}
+
 export interface Property {
   id: string;
   title: string;
@@ -98,6 +110,8 @@ export const searchPropertiesQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(10),
   sort_by: z.enum(['price', 'created_at', 'title']).default('created_at'),
   sort_order: z.enum(['asc', 'desc']).default('desc'),
+  from: z.string().date('Invalid date format').optional(),
+  to: z.string().date('Invalid date format').optional(),
 });
 
 export const updatePropertySchema = propertySchema.partial();
