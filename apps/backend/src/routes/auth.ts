@@ -1,10 +1,10 @@
 import { Router } from 'express';
-import { login, register } from '../controllers/authController';
+import { login, register } from '../controllers/auth.controller';
 import { validateLogin, validateRegister } from '../validators/auth.validator';
 
-const router = Router();
+const authRouter = Router();
 
-router.post('/login', validateLogin, login);
-router.post('/register', validateRegister, register);
+authRouter.post('/login', validateLogin, login);
+authRouter.post('/register', validateRegister, register);
 
-export default router;
+export default authRouter;

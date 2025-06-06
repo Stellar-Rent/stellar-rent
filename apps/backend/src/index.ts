@@ -1,10 +1,20 @@
 import cors from 'cors';
 import dotenv from 'dotenv';
 import express from 'express';
+
+import { initializeDatabase } from './db/init';
+
+import { Router } from 'express';
 import { errorMiddleware } from './middleware/error.middleware';
 import { rateLimiter } from './middleware/rateLimiter';
+
+import routes from './routes';
+import authRouter from './routes/auth';
+import profileRouter from './routes/profile.routes';
+
 import authRoutes from './routes/auth';
 import propertyRoutes from './routes/property.route';
+
 // Environment variables configuration
 dotenv.config();
 
@@ -27,6 +37,12 @@ console.log('Variables de entorno cargadas:', {
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+const router = Router();
+
+// Apply prefixes here
+router.use('/auth', authRouter);
+router.use('/profile', profileRouter);
+
 // Middleware
 app.use(express.json());
 app.use(
@@ -38,6 +54,9 @@ app.use(
 app.use(rateLimiter);
 
 // Routes
+
+app.use('/api', routes);
+
 app.use('/auth', authRoutes);
 app.use('/properties', propertyRoutes);
 
@@ -52,6 +71,7 @@ app.get('/health', (_req, res) => {
 });
 
 
+
 // Test route
 app.get('/', (_req, res) => {
   res.json({ message: 'Stellar Rent API is running successfully 🚀' });
@@ -60,8 +80,10 @@ app.get('/', (_req, res) => {
 // Error handling
 app.use(errorMiddleware);
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`✅ Server running on port ${PORT}`);
-  console.log(`🚀 Environment: ${process.env.NODE_ENV || 'development'}`);
-});
+
+// Initialize DB and then start server
+initializeDatabase().then(() => {
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
+  });
+
