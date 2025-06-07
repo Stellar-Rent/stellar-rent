@@ -1,6 +1,9 @@
 import { Contract, nativeToScVal } from '@stellar/stellar-sdk';
 
-const contractId = process.env.BOOKING_CONTRACT_ID;
+const contractId = process.env.SOROBAN_CONTRACT_ID;
+if (!contractId) {
+  throw new Error('BOOKING_CONTRACT_ID environment variable is required');
+}
 
 export async function checkBookingAvailability(
   propertyId: string,
