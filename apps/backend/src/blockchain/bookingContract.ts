@@ -58,8 +58,22 @@ export async function checkBookingAvailability(
     const propertyIdScVal = nativeToScVal(propertyId, { type: 'string' });
     const startDateScVal = nativeToScVal(startDate, { type: 'i64' });
     const endDateScVal = nativeToScVal(endDate, { type: 'i64' });
-    const sourceKeypair = Keypair.random();
-    const account = await server.getAccount(sourceKeypair.publicKey());
+// … earlier in apps/backend/src/blockchain/bookingContract.ts …
+
+const server = new stellarRpc.Server(rpcUrl);
+
+const secretKey = process.env.STELLAR_SECRET_KEY;
+if (!secretKey) {
+  throw new Error('STELLAR_SECRET_KEY environment variable is required');
+}
+
+// … later, around line 41 …
+
+// Use a funded account from environment or configuration
+const sourceKeypair = Keypair.fromSecret(
+  process.env.STELLAR_SECRET_KEY || 'your-funded-account-secret'
+);
+const account = await server.getAccount(sourceKeypair.publicKey());
     const tx = new TransactionBuilder(account, {
       fee: '100',
       networkPassphrase: Networks.TESTNET, // or your network
