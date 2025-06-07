@@ -1,6 +1,12 @@
 import { describe, expect, test } from 'bun:test';
 import { confirmPaymentSchema } from '../types/booking.types';
 import type { Booking } from '../types/booking.types';
+import {
+  BookingNotFoundError,
+  BookingPermissionError,
+  BookingStatusError,
+  TransactionValidationError
+} from '../errors/booking.errors';
 
 describe('Booking Types and Validation', () => {
   describe('confirmPaymentSchema validation', () => {
@@ -205,23 +211,10 @@ describe('API Contract Tests', () => {
 describe('Custom Error Classes Tests', () => {
   describe('Error class behavior', () => {
     test('should create custom error instances correctly', () => {
-      // Simulate the custom error classes from the controller
-      class BookingNotFoundError extends Error {
-        constructor(message: string) {
-          super(message);
-          this.name = 'BookingNotFoundError';
-        }
-      }
-
-      class BookingStatusError extends Error {
-        constructor(message: string) {
-          super(message);
-          this.name = 'BookingStatusError';
-        }
-      }
-
       const notFoundError = new BookingNotFoundError('Booking not found');
       const statusError = new BookingStatusError('Cannot confirm a cancelled booking');
+      const permissionError = new BookingPermissionError('Permission denied');
+      const transactionError = new TransactionValidationError('Invalid transaction');
 
       expect(notFoundError instanceof BookingNotFoundError).toBe(true);
       expect(notFoundError instanceof Error).toBe(true);
@@ -232,6 +225,32 @@ describe('Custom Error Classes Tests', () => {
       expect(statusError instanceof Error).toBe(true);
       expect(statusError.name).toBe('BookingStatusError');
       expect(statusError.message).toBe('Cannot confirm a cancelled booking');
+
+      expect(permissionError instanceof BookingPermissionError).toBe(true);
+      expect(permissionError instanceof Error).toBe(true);
+      expect(permissionError.name).toBe('BookingPermissionError');
+      expect(permissionError.message).toBe('Permission denied');
+
+      expect(transactionError instanceof TransactionValidationError).toBe(true);
+      expect(transactionError instanceof Error).toBe(true);
+      expect(transactionError.name).toBe('TransactionValidationError');
+      expect(transactionError.message).toBe('Invalid transaction');
+    });
+
+    test('should have correct error inheritance', () => {
+      const errors = [
+        new BookingNotFoundError('test'),
+        new BookingStatusError('test'),
+        new BookingPermissionError('test'),
+        new TransactionValidationError('test')
+      ];
+
+      for (const error of errors) {
+        expect(error instanceof Error).toBe(true);
+        expect(error.name).toBeDefined();
+        expect(error.message).toBe('test');
+        expect(error.stack).toBeDefined();
+      }
     });
   });
 });

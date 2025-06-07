@@ -1,5 +1,11 @@
 import { supabase } from '../config/supabase';
 import type { Booking, ConfirmPaymentInput, ConfirmPaymentResponse } from '../types/booking.types';
+import {
+  BookingNotFoundError,
+  BookingPermissionError,
+  BookingStatusError,
+  TransactionValidationError
+} from '../errors/booking.errors';
 
 // MOCK: Stellar SDK integration - Replace with actual Stellar SDK when available
 const mockStellarVerification = async (transactionHash: string): Promise<boolean> => {
@@ -38,18 +44,18 @@ export const confirmBookingPayment = async (
       .single();
 
     if (fetchError || !booking) {
-      throw new Error('Booking not found or you do not have permission to confirm this booking');
+      throw new BookingNotFoundError('Booking not found or access denied');
     }
 
     if (booking.status !== 'pending') {
-      throw new Error(`Cannot confirm payment for booking with status: ${booking.status}`);
+      throw new BookingStatusError(`Cannot confirm payment for booking with status: ${booking.status}`);
     }
 
     // 2. MOCK: Verify transaction on Stellar blockchain
     const isTransactionValid = await mockStellarVerification(input.transactionHash);
 
     if (!isTransactionValid) {
-      throw new Error('Invalid or failed Stellar transaction');
+      throw new TransactionValidationError('Invalid or failed Stellar transaction');
     }
 
     // 3. Update booking status and transaction hash
@@ -65,7 +71,7 @@ export const confirmBookingPayment = async (
       .single();
 
     if (updateError || !updatedBooking) {
-      throw new Error('Failed to update booking status');
+      throw new BookingStatusError('Failed to update booking status');
     }
 
     // 4. MOCK: Notify Trustless Work for escrow management
