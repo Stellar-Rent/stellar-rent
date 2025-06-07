@@ -11,7 +11,7 @@ import {
 
 const contractId = process.env.SOROBAN_CONTRACT_ID;
 if (!contractId) {
-  throw new Error('BOOKING_CONTRACT_ID environment variable is required');
+  throw new Error('SOROBAN_CONTRACT_ID environment variable is required');
 }
 const rpcUrl = process.env.SOROBAN_RPC_URL;
 if (!rpcUrl) {
