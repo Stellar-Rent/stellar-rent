@@ -5,4 +5,9 @@ export const rateLimiter = rateLimit({
   max: 100, // limit each IP to 100 requests per windowMs
   standardHeaders: true,
   legacyHeaders: false,
+  keyGenerator: (req): string => {
+    // Handle localhost and development environments
+    // In production, consider checking proxy headers
+    return req.ip || req.headers['x-forwarded-for']?.toString().split(',')[0] || 'localhost';
+  },
 });

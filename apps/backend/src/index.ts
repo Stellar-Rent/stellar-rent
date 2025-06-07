@@ -4,6 +4,7 @@ import express from 'express';
 import { errorMiddleware } from './middleware/error.middleware';
 import { rateLimiter } from './middleware/rateLimiter';
 import authRoutes from './routes/auth';
+import bookingRoutes from './routes/booking.route';
 import propertyRoutes from './routes/property.route';
 // Environment variables configuration
 dotenv.config();
@@ -25,7 +26,7 @@ console.log('Variables de entorno cargadas:', {
 });
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = Number(process.env.PORT) || 3000;
 
 // Middleware
 app.use(express.json());
@@ -40,6 +41,7 @@ app.use(rateLimiter);
 // Routes
 app.use('/auth', authRoutes);
 app.use('/properties', propertyRoutes);
+app.use('/bookings', bookingRoutes);
 
 // Health check endpoint for Docker
 app.get('/health', (_req, res) => {
@@ -50,7 +52,6 @@ app.get('/health', (_req, res) => {
     environment: process.env.NODE_ENV || 'development',
   });
 });
-
 
 // Test route
 app.get('/', (_req, res) => {
