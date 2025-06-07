@@ -25,16 +25,11 @@ export async function checkBookingAvailability(
   from: string,
   to: string
 ): Promise<boolean> {
-export async function checkBookingAvailability(
-  propertyId: string,
-  from: string,
-  to: string
-): Promise<boolean> {
   // Validate date strings
   const fromDate = new Date(from);
   const toDate = new Date(to);
 
-  if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) {
+  if (Number.isNaN(fromDate.getTime()) || Number.isNaN(toDate.getTime())) {
     throw new Error('Invalid date format provided');
   }
 
@@ -46,7 +41,6 @@ export async function checkBookingAvailability(
   const endDate = Math.floor(toDate.getTime() / 1000);
 
   // …rest of the implementation…
-}
 
   try {
     const contract = new Contract({
@@ -59,22 +53,20 @@ export async function checkBookingAvailability(
     const propertyIdScVal = nativeToScVal(propertyId, { type: 'string' });
     const startDateScVal = nativeToScVal(startDate, { type: 'i64' });
     const endDateScVal = nativeToScVal(endDate, { type: 'i64' });
-// … earlier in apps/backend/src/blockchain/bookingContract.ts …
+    // … earlier in apps/backend/src/blockchain/bookingContract.ts …
 
-const server = new stellarRpc.Server(rpcUrl);
+    const secretKey = process.env.STELLAR_SECRET_KEY;
+    if (!secretKey) {
+      throw new Error('STELLAR_SECRET_KEY environment variable is required');
+    }
 
-const secretKey = process.env.STELLAR_SECRET_KEY;
-if (!secretKey) {
-  throw new Error('STELLAR_SECRET_KEY environment variable is required');
-}
+    // … later, around line 41 …
 
-// … later, around line 41 …
-
-// Use a funded account from environment or configuration
-const sourceKeypair = Keypair.fromSecret(
-  process.env.STELLAR_SECRET_KEY || 'your-funded-account-secret'
-);
-const account = await server.getAccount(sourceKeypair.publicKey());
+    // Use a funded account from environment or configuration
+    const sourceKeypair = Keypair.fromSecret(
+      process.env.STELLAR_SECRET_KEY || 'your-funded-account-secret'
+    );
+    const account = await server.getAccount(sourceKeypair.publicKey());
     const tx = new TransactionBuilder(account, {
       fee: '100',
       networkPassphrase, // or your network
