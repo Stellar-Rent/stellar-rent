@@ -25,7 +25,9 @@ export const confirmPayment = async (req: BookingRequest, res: Response) => {
       console.log('Payment confirmation attempt:', {
         bookingId,
         userId,
-        transactionHash: input.transactionHash.substring(0, 8) + '...'
+        transactionHash: input.transactionHash.length > 8
+          ? `${input.transactionHash.substring(0, 8)}...`
+          : input.transactionHash
       });
     } else {
       console.log(`Payment confirmation attempt for booking ${bookingId}`);
