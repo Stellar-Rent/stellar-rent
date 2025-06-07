@@ -26,9 +26,13 @@ export async function checkBookingAvailability(
 ): Promise<boolean> {
   const startDate = Math.floor(new Date(from).getTime() / 1000);
   const endDate = Math.floor(new Date(to).getTime() / 1000);
-  const contract = new Contract(contractId as string);
 
   try {
+    const contract = new Contract({
+      contractId,
+      rpc: server,
+    });
+
     // Call the contract's check_availability function
     // You may need to adjust argument types depending on your contract's ABI
     const propertyIdScVal = nativeToScVal(propertyId, { type: 'string' });
