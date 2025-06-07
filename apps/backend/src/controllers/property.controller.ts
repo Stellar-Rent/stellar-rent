@@ -437,7 +437,10 @@ export async function searchPropertiesController(req: Request, res: Response): P
     const result = await searchProperties(filters, options);
 
     if (!result.success) {
-      if (result.error?.toLowerCase().includes('blockchain')) {
+      if (
+        result.error?.startsWith('BLOCKCHAIN_') ||
+        (result.details as { type?: string })?.type === 'blockchain'
+      ) {
         res
           .status(503)
           .json(

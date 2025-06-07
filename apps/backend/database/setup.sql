@@ -291,7 +291,7 @@ CREATE POLICY "Users can delete own property images" ON storage.objects
 
 -- Uncomment these lines to insert sample data
 
-/*
+
 -- Sample user
 INSERT INTO public.users (id, email, name, password_hash) VALUES
     ('123e4567-e89b-12d3-a456-426614174000', 'test@stellarrent.com', 'Test User', '$2b$10$example.hash.here')
@@ -333,7 +333,7 @@ INSERT INTO public.properties (
     '123e4567-e89b-12d3-a456-426614174000',
     'available'
 ) ON CONFLICT DO NOTHING;
-*/
+
 
 -- ===============================================
 -- 10. VERIFICATION
