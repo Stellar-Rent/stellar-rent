@@ -18,6 +18,7 @@ if (!rpcUrl) {
   throw new Error('SOROBAN_RPC_URL environment variable is required');
 }
 const server = new stellarRpc.Server(rpcUrl);
+const networkPassphrase = process.env.SOROBAN_NETWORK_PASSPHRASE || Networks.TESTNET;
 
 export async function checkBookingAvailability(
   propertyId: string,
@@ -76,7 +77,7 @@ const sourceKeypair = Keypair.fromSecret(
 const account = await server.getAccount(sourceKeypair.publicKey());
     const tx = new TransactionBuilder(account, {
       fee: '100',
-      networkPassphrase: Networks.TESTNET, // or your network
+      networkPassphrase, // or your network
     })
       .addOperation(
         contract.call('check_availability', propertyIdScVal, startDateScVal, endDateScVal)
