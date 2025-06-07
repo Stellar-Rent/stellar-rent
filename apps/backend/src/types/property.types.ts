@@ -15,8 +15,8 @@ export interface CancellationPolicy {
 
 export interface SearchProperties {
   location?: string;
-  startDate?: string;
-  endDate?: string;
+  from?: string;
+  to?: string;
   guests?: number;
   minPrice?: number;
   maxPrice?: number;
