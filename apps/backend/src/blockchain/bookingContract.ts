@@ -11,7 +11,7 @@ import {
 
 const contractId = process.env.SOROBAN_CONTRACT_ID;
 if (!contractId) {
-  throw new Error('BOOKING_CONTRACT_ID environment variable is required');
+  throw new Error('SOROBAN_CONTRACT_ID environment variable is required');
 }
 const rpcUrl = process.env.SOROBAN_RPC_URL;
 if (!rpcUrl) {
@@ -25,8 +25,28 @@ export async function checkBookingAvailability(
   from: string,
   to: string
 ): Promise<boolean> {
-  const startDate = Math.floor(new Date(from).getTime() / 1000);
-  const endDate = Math.floor(new Date(to).getTime() / 1000);
+export async function checkBookingAvailability(
+  propertyId: string,
+  from: string,
+  to: string
+): Promise<boolean> {
+  // Validate date strings
+  const fromDate = new Date(from);
+  const toDate = new Date(to);
+
+  if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) {
+    throw new Error('Invalid date format provided');
+  }
+
+  if (fromDate >= toDate) {
+    throw new Error('From date must be before to date');
+  }
+
+  const startDate = Math.floor(fromDate.getTime() / 1000);
+  const endDate = Math.floor(toDate.getTime() / 1000);
+
+  // …rest of the implementation…
+}
 
   try {
     const contract = new Contract({
@@ -39,8 +59,22 @@ export async function checkBookingAvailability(
     const propertyIdScVal = nativeToScVal(propertyId, { type: 'string' });
     const startDateScVal = nativeToScVal(startDate, { type: 'i64' });
     const endDateScVal = nativeToScVal(endDate, { type: 'i64' });
-    const sourceKeypair = Keypair.random();
-    const account = await server.getAccount(sourceKeypair.publicKey());
+// … earlier in apps/backend/src/blockchain/bookingContract.ts …
+
+const server = new stellarRpc.Server(rpcUrl);
+
+const secretKey = process.env.STELLAR_SECRET_KEY;
+if (!secretKey) {
+  throw new Error('STELLAR_SECRET_KEY environment variable is required');
+}
+
+// … later, around line 41 …
+
+// Use a funded account from environment or configuration
+const sourceKeypair = Keypair.fromSecret(
+  process.env.STELLAR_SECRET_KEY || 'your-funded-account-secret'
+);
+const account = await server.getAccount(sourceKeypair.publicKey());
     const tx = new TransactionBuilder(account, {
       fee: '100',
       networkPassphrase, // or your network
