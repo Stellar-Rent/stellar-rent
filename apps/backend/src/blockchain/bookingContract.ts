@@ -24,8 +24,28 @@ export async function checkBookingAvailability(
   from: string,
   to: string
 ): Promise<boolean> {
-  const startDate = Math.floor(new Date(from).getTime() / 1000);
-  const endDate = Math.floor(new Date(to).getTime() / 1000);
+export async function checkBookingAvailability(
+  propertyId: string,
+  from: string,
+  to: string
+): Promise<boolean> {
+  // Validate date strings
+  const fromDate = new Date(from);
+  const toDate = new Date(to);
+
+  if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) {
+    throw new Error('Invalid date format provided');
+  }
+
+  if (fromDate >= toDate) {
+    throw new Error('From date must be before to date');
+  }
+
+  const startDate = Math.floor(fromDate.getTime() / 1000);
+  const endDate = Math.floor(toDate.getTime() / 1000);
+
+  // …rest of the implementation…
+}
 
   try {
     const contract = new Contract({
