@@ -28,36 +28,38 @@ export type Database = {
       bookings: {
         Row: {
           id: string;
-          property_id: string;
           user_id: string;
-          dates: { from: string; to: string };
-          guests: number;
-          total: string;
-          deposit: string;
-          status: string;
-          escrow_address: string;
+          property_id: string;
+          amount: number;
+          currency: string;
+          status: 'pending' | 'confirmed' | 'cancelled';
+          start_date: string;
+          end_date: string;
+          escrow_address?: string;
+          transaction_hash?: string;
           created_at: string;
           updated_at: string;
         };
         Insert: {
-          property_id: string;
           user_id: string;
-          dates: { from: string; to: string };
-          guests: number;
-          total: string;
-          deposit: string;
-          status: string;
-          escrow_address: string;
+          property_id: string;
+          amount: number;
+          currency: string;
+          status?: 'pending' | 'confirmed' | 'cancelled';
+          start_date: string;
+          end_date: string;
+          escrow_address?: string;
+          transaction_hash?: string;
         };
         Update: {
-          property_id?: string;
-          user_id?: string;
-          dates?: { from: string; to: string };
-          guests?: number;
-          total?: string;
-          deposit?: string;
-          status?: string;
+          amount?: number;
+          currency?: string;
+          status?: 'pending' | 'confirmed' | 'cancelled';
+          start_date?: string;
+          end_date?: string;
           escrow_address?: string;
+          transaction_hash?: string;
+          updated_at?: string;
         };
       };
 
