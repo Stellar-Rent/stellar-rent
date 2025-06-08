@@ -23,8 +23,7 @@ echo -e "\n6. ✅ Testing auth endpoints availability"
 curl -s -X POST "$BASE_URL/auth/register" -H "Content-Type: application/json" -d '{}' | jq '.error // .message'
 
 # 🔐 Replace with your actual token or load from environment
-AUTH1_TOKEN="eyJhbGciOiJIUzI1NiIsImtpZCI6IjBJMjBNZlg1TGlXSDg4eXEiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2dtcHBrbHl3b3Bna2Jkdmpvb2ZnLnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiJlNjRmNzJkZS01OGFiLTQ3N2QtYTIxMi0xMmNiNGUwMWFlMTEiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzQ5Mzg2NDEwLCJpYXQiOjE3NDkzODI4MTAsImVtYWlsIjoidGVzdDExQGV4YW1wbGUuY29tIiwicGhvbmUiOiIiLCJhcHBfbWV0YWRhdGEiOnsicHJvdmlkZXIiOiJlbWFpbCIsInByb3ZpZGVycyI6WyJlbWFpbCJdfSwidXNlcl9tZXRhZGF0YSI6eyJlbWFpbCI6InRlc3QxMUBleGFtcGxlLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6ImU2NGY3MmRlLTU4YWItNDc3ZC1hMjEyLTEyY2I0ZTAxYWUxMSJ9LCJyb2xlIjoiYXV0aGVudGljYXRlZCIsImFhbCI6ImFhbDEiLCJhbXIiOlt7Im1ldGhvZCI6InBhc3N3b3JkIiwidGltZXN0YW1wIjoxNzQ5MzgyODEwfV0sInNlc3Npb25faWQiOiIzZmFkZmE3Mi1mZDNmLTQyN2UtYmNmMS0wMGM0OTQwOTAxMjkiLCJpc19hbm9ueW1vdXMiOmZhbHNlfQ.vZnnQm7BOkxglxbyvkklRB5xBx__DzF6wEIi_2u-N1o"
-
+AUTH_TOKEN="your_jwt_token_here"
 # 🧪 Profile Endpoints
 echo -e "\n7. 🔐 Testing GET /profiles (authenticated)"
 curl -s -X GET "$BASE_URL/profiles" \
