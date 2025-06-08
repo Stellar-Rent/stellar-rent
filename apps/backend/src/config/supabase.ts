@@ -23,6 +23,43 @@ export type Database = {
           password_hash?: string;
         };
       };
+      bookings: {
+        Row: {
+          id: string;
+          user_id: string;
+          property_id: string;
+          amount: number;
+          currency: string;
+          status: 'pending' | 'confirmed' | 'cancelled';
+          start_date: string;
+          end_date: string;
+          escrow_address?: string;
+          transaction_hash?: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          property_id: string;
+          amount: number;
+          currency: string;
+          status?: 'pending' | 'confirmed' | 'cancelled';
+          start_date: string;
+          end_date: string;
+          escrow_address?: string;
+          transaction_hash?: string;
+        };
+        Update: {
+          amount?: number;
+          currency?: string;
+          status?: 'pending' | 'confirmed' | 'cancelled';
+          start_date?: string;
+          end_date?: string;
+          escrow_address?: string;
+          transaction_hash?: string;
+          updated_at?: string;
+        };
+      };
     };
   };
 };
