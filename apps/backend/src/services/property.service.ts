@@ -510,7 +510,7 @@ export async function searchProperties(
     return {
       success: true,
       data: {
-        properties: properties as Property[],
+        properties: filteredProperties,
         total: count || 0,
         page,
         limit,
