@@ -86,6 +86,10 @@ export async function checkBookingAvailability(
     const scVal = xdr.ScVal.fromXDR(xdrResult, 'base64');
     const available = scValToNative(scVal);
 
+    // Fail open: if result is undefined/null, assume available
+    if (available === undefined || available === null) {
+      return true;
+    }
     return Boolean(available);
   } catch (error) {
     console.error('Blockchain availability check failed:', error);
