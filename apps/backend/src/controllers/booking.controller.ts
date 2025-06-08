@@ -1,12 +1,108 @@
 import type { Response } from 'express';
+import { confirmBookingPayment, getBookingById } from '../services/booking.service';
+import type { AuthRequest } from '../types/auth.types';
 import type { BookingRequest, ConfirmPaymentInput } from '../types/booking.types';
-import { confirmBookingPayment } from '../services/booking.service';
-import {
-  BookingNotFoundError,
-  BookingPermissionError,
-  BookingStatusError,
-  TransactionValidationError
-} from '../errors/booking.errors';
+import { ParamsSchema, ResponseSchema } from '../types/booking.types';
+
+export const getBooking = async (req: AuthRequest, res: Response) => {
+  const parseResult = ParamsSchema.safeParse(req.params);
+  if (!parseResult.success) {
+    return res.status(400).json({
+      success: false,
+      error: {
+        message: 'Bad Request',
+        details: parseResult.error.format(),
+      },
+      data: null,
+    });
+  }
+  const { bookingId } = parseResult.data;
+
+  const requesterUserId = req.user?.id as string;
+  if (!requesterUserId) {
+    return res.status(401).json({
+      success: false,
+      error: {
+        message: 'Unauthorized',
+        details: 'Missing or invalid auth token',
+      },
+      data: null,
+    });
+  }
+
+  try {
+    const bookingDetails = await getBookingById(bookingId, requesterUserId);
+
+    const validResponse = ResponseSchema.safeParse(bookingDetails);
+    if (!validResponse.success) {
+      return res.status(500).json({
+        success: false,
+        error: {
+          message: 'Internal Server Error',
+          details: 'Response data did not match expected schema',
+        },
+        data: null,
+      });
+    }
+
+    // 5) Return wrapped success object
+    return res.status(200).json({
+      success: true,
+      data: validResponse.data,
+    });
+  } catch (err: unknown) {
+    // 6) Narrow error to string
+    let message: string;
+    if (err instanceof Error) {
+      message = err.message;
+    } else {
+      message = String(err);
+    }
+
+    if (message === 'Booking not found') {
+      return res.status(404).json({
+        success: false,
+        error: {
+          message: 'Booking not found',
+          details: 'The booking with the provided ID does not exist.',
+        },
+        data: null,
+      });
+    }
+
+    if (message === 'Property not found' || message === 'Host user not found') {
+      return res.status(404).json({
+        success: false,
+        error: {
+          message: 'Resource not found',
+          details: message,
+        },
+        data: null,
+      });
+    }
+
+    if (message === 'Access denied') {
+      return res.status(403).json({
+        success: false,
+        error: {
+          message: 'Access denied',
+          details: 'You do not have permission to access this booking.',
+        },
+        data: null,
+      });
+    }
+
+    console.error('getBooking error:', err);
+    return res.status(500).json({
+      success: false,
+      error: {
+        message: 'Internal Server Error',
+        details: 'Something went wrong retrieving booking details.',
+      },
+      data: null,
+    });
+  }
+};
 
 export const confirmPayment = async (req: BookingRequest, res: Response) => {
   try {
@@ -16,7 +112,7 @@ export const confirmPayment = async (req: BookingRequest, res: Response) => {
 
     if (!userId) {
       return res.status(401).json({
-        error: 'User authentication required'
+        error: 'User authentication required',
       });
     }
 
@@ -25,9 +121,7 @@ export const confirmPayment = async (req: BookingRequest, res: Response) => {
       console.log('Payment confirmation attempt:', {
         bookingId,
         userId,
-        transactionHash: input.transactionHash.length > 8
-          ? `${input.transactionHash.substring(0, 8)}...`
-          : input.transactionHash
+        transactionHash: `${input.transactionHash.substring(0, 8)}...`,
       });
     } else {
       console.log(`Payment confirmation attempt for booking ${bookingId}`);
@@ -37,41 +131,33 @@ export const confirmPayment = async (req: BookingRequest, res: Response) => {
 
     res.status(200).json(result);
   } catch (error) {
-    console.error('Error confirming payment:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Error confirming payment:', errorMessage);
 
-    // Handle custom error types
-    if (error instanceof BookingNotFoundError) {
+    // Handle specific error types
+    if (errorMessage.includes('not found') || errorMessage.includes('permission')) {
       return res.status(404).json({
-        error: 'Booking not found or access denied'
+        error: 'Booking not found or access denied',
       });
     }
 
-    if (error instanceof BookingPermissionError) {
-      return res.status(403).json({
-        error: error.message
-      });
-    }
-
-    if (error instanceof BookingStatusError) {
+    if (errorMessage.includes('status:') || errorMessage.includes('Cannot confirm')) {
       return res.status(400).json({
-        error: error.message
+        error: errorMessage,
       });
     }
 
-    if (error instanceof TransactionValidationError) {
+    if (errorMessage.includes('Invalid') || errorMessage.includes('failed')) {
       return res.status(400).json({
         error: 'Transaction verification failed',
-        details: [{ message: error.message }]
+        details: [{ message: errorMessage }],
       });
     }
 
-    // Generic server error for unhandled cases
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('Unhandled error in confirmPayment:', errorMessage);
-
+    // Generic server error
     res.status(500).json({
       error: 'Failed to confirm payment',
-      details: [{ message: 'Internal server error' }]
+      details: [{ message: 'Internal server error' }],
     });
   }
 };

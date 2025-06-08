@@ -7,7 +7,6 @@ export const rateLimiter = rateLimit({
   legacyHeaders: false,
   keyGenerator: (req): string => {
     // Handle localhost and development environments
-    // In production, consider checking proxy headers
-    return req.ip || req.headers['x-forwarded-for']?.toString().split(',')[0] || 'localhost';
+    return req.ip || 'localhost';
   },
 });

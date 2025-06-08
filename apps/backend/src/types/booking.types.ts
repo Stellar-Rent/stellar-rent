@@ -14,6 +14,7 @@ export interface Booking {
   user_id: string;
   property_id: string;
   amount: number;
+  currency: string;
   status: 'pending' | 'confirmed' | 'cancelled';
   start_date: string;
   end_date: string;
@@ -22,6 +23,24 @@ export interface Booking {
   created_at: string;
   updated_at: string;
 }
+
+// Validation schemas
+export const ParamsSchema = z.object({
+  bookingId: z.string().uuid('Invalid booking ID format'),
+});
+
+export const ResponseSchema = z.object({
+  id: z.string(),
+  property: z.string(),
+  dates: z.object({
+    from: z.string(),
+    to: z.string(),
+  }),
+  hostContact: z.string(),
+  escrowStatus: z.string(),
+});
+
+export type BookingsResponse = z.infer<typeof ResponseSchema>;
 
 // Confirm payment request schema
 export const confirmPaymentSchema = z.object({
