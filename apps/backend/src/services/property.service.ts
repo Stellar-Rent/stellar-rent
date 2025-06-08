@@ -1,3 +1,4 @@
+import pLimit from 'p-limit';
 import { checkBookingAvailability } from '../blockchain/bookingContract';
 import { supabase } from '../config/supabase';
 import type {
@@ -494,15 +495,27 @@ export async function searchProperties(
       // Use fromDate and toDate as needed, e.g.:
       // - Pass to checkBookingAvailability
       // - Convert to UNIX timestamp if needed
+
+      // Limit concurrency to 10 at a time
+
+      const limit = pLimit(10);
+
       const checked = await Promise.all(
-        filteredProperties.map(async (property) =>
-          (await checkBookingAvailability(
-            property.id,
-            fromDate.toISOString(),
-            toDate.toISOString()
-          ))
-            ? property
-            : null
+        filteredProperties.map((property) =>
+          limit(async () => {
+            try {
+              return (await checkBookingAvailability(
+                property.id,
+                fromDate.toISOString(),
+                toDate.toISOString()
+              ))
+                ? property
+                : null;
+            } catch (e) {
+              // Optionally log or handle error
+              return null;
+            }
+          })
         )
       );
       filteredProperties = checked.filter(Boolean) as Property[];
