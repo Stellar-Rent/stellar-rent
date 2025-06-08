@@ -511,7 +511,7 @@ export async function searchProperties(
       success: true,
       data: {
         properties: filteredProperties,
-        total: count || 0,
+        total: filteredProperties.length,
         page,
         limit,
       },
