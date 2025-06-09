@@ -5,7 +5,9 @@ import { errorMiddleware } from './middleware/error.middleware';
 import { rateLimiter } from './middleware/rateLimiter';
 import authRoutes from './routes/auth';
 import locationRoutes from './routes/location.routes';
+import bookingRoutes from './routes/booking.routes';
 import propertyRoutes from './routes/property.route';
+
 // Environment variables configuration
 dotenv.config();
 
@@ -40,6 +42,7 @@ app.use(rateLimiter);
 
 // Routes
 app.use('/auth', authRoutes);
+app.use('/api/bookings', bookingRoutes);
 app.use('/properties', propertyRoutes);
 app.use('/locations', locationRoutes);
 

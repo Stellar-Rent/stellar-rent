@@ -78,6 +78,30 @@ CREATE INDEX IF NOT EXISTS properties_amenities_idx ON public.properties USING G
 CREATE INDEX IF NOT EXISTS properties_location_idx ON public.properties(city, country);
 
 -- ===============================================
+-- 3.1 BOOKINGS TABLE
+-- ===============================================
+
+CREATE TABLE IF NOT EXISTS public.bookings (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  property_id uuid NOT NULL REFERENCES public.properties(id) ON DELETE CASCADE,
+  user_id uuid NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+  dates jsonb NOT NULL,
+  guests integer NOT NULL CHECK (guests > 0),
+  total numeric NOT NULL CHECK (total >= 0),
+  deposit numeric NOT NULL CHECK (deposit >= 0),
+  status text NOT NULL CHECK (status IN ('pending', 'confirmed', 'cancelled', 'completed')),
+  escrow_address text NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT timezone('utc'::text, now()),
+  updated_at timestamptz NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+-- Indexes to optimize queries on bookings
+CREATE INDEX IF NOT EXISTS bookings_user_id_idx ON public.bookings(user_id);
+CREATE INDEX IF NOT EXISTS bookings_property_id_idx ON public.bookings(property_id);
+CREATE INDEX IF NOT EXISTS bookings_status_idx ON public.bookings(status);
+CREATE INDEX IF NOT EXISTS bookings_created_at_idx ON public.bookings(created_at);
+
+-- ===============================================
 -- 4. FUNCTION TO UPDATE updated_at
 -- ===============================================
 
@@ -99,6 +123,16 @@ CREATE TRIGGER update_users_updated_at
 DROP TRIGGER IF EXISTS update_properties_updated_at ON public.properties;
 CREATE TRIGGER update_properties_updated_at
     BEFORE UPDATE ON public.properties
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+-- ===============================================
+-- 4.1 BOOKINGS updated_at TRIGGER
+-- ===============================================
+
+DROP TRIGGER IF EXISTS update_bookings_updated_at ON public.bookings;
+CREATE TRIGGER update_bookings_updated_at
+    BEFORE UPDATE ON public.bookings
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
@@ -143,6 +177,29 @@ CREATE POLICY "Owners can delete own properties" ON public.properties
 -- Authenticated users can create properties
 CREATE POLICY "Authenticated users can create properties" ON public.properties
     FOR INSERT WITH CHECK (auth.uid() = owner_id);
+
+-- ===============================================
+-- 6.1 BOOKINGS RLS POLICIES
+-- ===============================================
+
+-- Enable Row Level Security on bookings
+ALTER TABLE public.bookings ENABLE ROW LEVEL SECURITY;
+
+-- Users can view their own bookings
+CREATE POLICY "Users can view their own bookings" ON public.bookings
+    FOR SELECT USING (auth.uid() = user_id);
+
+-- Authenticated users can create bookings (must be themselves)
+CREATE POLICY "Authenticated users can create bookings" ON public.bookings
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- Users can update their own bookings
+CREATE POLICY "Users can update own bookings" ON public.bookings
+    FOR UPDATE USING (auth.uid() = user_id);
+
+-- Users can delete their own bookings
+CREATE POLICY "Users can delete own bookings" ON public.bookings
+    FOR DELETE USING (auth.uid() = user_id);
 
 -- ===============================================
 -- 7. STORAGE POLICIES
@@ -220,7 +277,7 @@ SELECT
     tableowner
 FROM pg_tables 
 WHERE schemaname = 'public' 
-AND tablename IN ('users', 'properties');
+  AND tablename IN ('users', 'properties', 'bookings');
 
 -- Verify that the bucket was created
 SELECT name, public FROM storage.buckets WHERE name = 'property-images';
@@ -228,7 +285,7 @@ SELECT name, public FROM storage.buckets WHERE name = 'property-images';
 -- ===============================================
 -- SCRIPT COMPLETED
 -- ===============================================
--- ✅ Tables created: users, properties
+-- ✅ Tables created: users, properties, bookings
 -- ✅ Indexes optimized for queries
 -- ✅ Constraints and validations applied
 -- ✅ Triggers for updated_at configured
