@@ -23,6 +23,7 @@ That's it! Your database will be fully configured.
 - **`users`** - Registered user information
 - **`profiles`** - User profile information
 - **`properties`** - Property listings on the platform
+- **`bookings`** - Booking records with Stellar payment integration
 
 ### **Optimizations**
 - **Indexes** for fast queries
@@ -104,6 +105,21 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
 - security_deposit (decimal)
 - cancellation_policy (jsonb, optional)
 - property_token (text, optional)
+- created_at (timestamp)
+- updated_at (timestamp)
+```
+
+### **Table `bookings`**
+```sql
+- id (uuid, PK)
+- user_id (uuid, FK → users.id)
+- property_id (uuid, FK → properties.id)
+- amount (decimal)
+- status (enum: pending|confirmed|cancelled)
+- start_date (date)
+- end_date (date)
+- escrow_address (text, optional)
+- transaction_hash (varchar, optional)
 - created_at (timestamp)
 - updated_at (timestamp)
 ```
