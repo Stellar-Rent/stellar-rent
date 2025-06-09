@@ -2,20 +2,6 @@
 import type { Request, Response } from 'express';
 import { loginUser, registerUser } from '../services/auth.service';
 
-// export const register = async (req: Request, res: Response) => {
-//   try {
-//     const { user,} = await registerUser(req.body);
-//     res.status(201).json({ user, session });
-//   } catch (error) {
-//     console.error('Register error:', error);
-//     const message = error instanceof Error ? error.message : 'Error desconocido';
-//     if (message.includes('registrado')) {
-//       return res.status(409).json({ error: message });
-//     }
-//     res.status(400).json({ error: message });
-//   }
-// };
-
 export const register = async (req: Request, res: Response) => {
   try {
     const { user, token } = await registerUser(req.body);
