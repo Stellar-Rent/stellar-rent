@@ -21,6 +21,7 @@ That's it! Your database will be fully configured.
 
 ### **Main Tables**
 - **`users`** - Registered user information
+- **`profiles`** - User profile information
 - **`properties`** - Property listings on the platform
 - **`bookings`** - Booking records with Stellar payment integration
 
@@ -31,6 +32,7 @@ That's it! Your database will be fully configured.
 
 ### **Storage**
 - **Bucket `property-images`** for property images
+- **Bucket `profile-avatars`** for property images
 
 ### **Security**
 - **Row Level Security (RLS)** enabled
@@ -66,6 +68,19 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
 - password_hash (text)
 - created_at (timestamp)
 - updated_at (timestamp)
+```
+
+### ** Table `profiles`**
+```sql
+- user_id (uuid,pk)
+- name (text)
+- avatar_url (text)
+- phone (text)
+-  address (JSON object)
+-  preferences (json object)
+-  social_links (json object)
+-  verification_status (text)
+- last_active (timestamp)
 ```
 
 ### **Table `properties`**
@@ -129,7 +144,9 @@ If you need to reset the DB during development:
 -- ⚠️ WARNING: This deletes ALL data
 DROP TABLE IF EXISTS public.properties CASCADE;
 DROP TABLE IF EXISTS public.users CASCADE;
+DROP TABLE IF EXISTS public.profiles CASCADE;
 DELETE FROM storage.buckets WHERE name = 'property-images';
+DELETE FROM storage.buckets WHERE name = 'profile-avaters';
 
 -- Then run setup.sql again
 ```
