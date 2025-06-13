@@ -38,3 +38,8 @@ yarn-error.log*
 
 # Bun
 bun.lockb
+
+# Cursor
+.cursor
+.clinerules
+.roo
