@@ -30,10 +30,11 @@ export type Database = {
           title: string;
           description: string;
           price: number;
-          location_address: string;
-          location_city: string;
-          location_country: string;
-          location_coordinates: { latitude: number; longitude: number } | null;
+          address: string;
+          city: string;
+          country: string;
+          latitude: number | null;
+          longitude: number | null;
           amenities: string[];
           images: string[];
           bedrooms: number;
@@ -41,12 +42,10 @@ export type Database = {
           max_guests: number;
           owner_id: string;
           status: 'available' | 'booked' | 'maintenance';
-          availability: Array<{ from: string; to: string }>;
+          availability: AvailabilityRange[];
           security_deposit: number;
-          cancellation_policy: {
-            daysBefore: number;
-            refundPercentage: number;
-          } | null;
+          cancellation_policy: CancellationPolicy | null;
+          property_token: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -55,10 +54,11 @@ export type Database = {
           title: string;
           description: string;
           price: number;
-          location_address: string;
-          location_city: string;
-          location_country: string;
-          location_coordinates?: { latitude: number; longitude: number } | null;
+          address: string;
+          city: string;
+          country: string;
+          latitude?: number | null;
+          longitude?: number | null;
           amenities?: string[];
           images?: string[];
           bedrooms: number;
@@ -66,36 +66,47 @@ export type Database = {
           max_guests: number;
           owner_id: string;
           status?: 'available' | 'booked' | 'maintenance';
-          availability?: Array<{ from: string; to: string }>;
-          security_deposit: number;
-          cancellation_policy?: {
-            daysBefore: number;
-            refundPercentage: number;
-          } | null;
+          availability?: AvailabilityRange[];
+          security_deposit?: number;
+          cancellation_policy?: CancellationPolicy | null;
+          property_token?: string | null;
           created_at?: string;
           updated_at?: string;
         };
+        Update: Partial<Database['public']['Tables']['properties']['Insert']>;
+      };
+
+      bookings: {
+        Row: {
+          id: string;
+          user_id: string;
+          property_id: string;
+          amount: number;
+          status: 'pending' | 'confirmed' | 'cancelled';
+          start_date: string;
+          end_date: string;
+          escrow_address: string | null;
+          transaction_hash: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          property_id: string;
+          amount: number;
+          status?: 'pending' | 'confirmed' | 'cancelled';
+          start_date: string;
+          end_date: string;
+          escrow_address?: string;
+          transaction_hash?: string;
+        };
         Update: {
-          title?: string;
-          description?: string;
-          price?: number;
-          location_address?: string;
-          location_city?: string;
-          location_country?: string;
-          location_coordinates?: { latitude: number; longitude: number } | null;
-          amenities?: string[];
-          images?: string[];
-          bedrooms?: number;
-          bathrooms?: number;
-          max_guests?: number;
-          owner_id?: string;
-          status?: 'available' | 'booked' | 'maintenance';
-          availability?: Array<{ from: string; to: string }>;
-          security_deposit?: number;
-          cancellation_policy?: {
-            daysBefore: number;
-            refundPercentage: number;
-          } | null;
+          amount?: number;
+          status?: 'pending' | 'confirmed' | 'cancelled';
+          start_date?: string;
+          end_date?: string;
+          escrow_address?: string;
+          transaction_hash?: string;
           updated_at?: string;
         };
       };

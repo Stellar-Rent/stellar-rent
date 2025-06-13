@@ -54,11 +54,16 @@ The project uses:
 
 A quick tutorial on how to run the project locally is available in [USAGE.md](./USAGE.md).
 
+For **quick development setup with Docker**, check out the [Docker Development section](./CONTRIBUTING.md#-docker-development-recommended) in our contributing guide.
+
 ## Contributing
 
 We welcome contributions from the community! Please check out our open issues on GitHub or OnlyDust to find tasks that interest you.
 
-Helpful information for contributors is available in [CONTRIBUTING.md](./CONTRIBUTING.md).
+**Quick Start for Contributors:**
+- 🐳 **Docker Setup**: [Contributing Guide](./CONTRIBUTING.md#-docker-development-recommended) - Easiest way to get started
+- 📖 **Detailed Setup**: [CONTRIBUTING.md](./CONTRIBUTING.md) - Complete contributor guide
+- 🏗️ **Backend Setup**: [Backend README](./apps/backend/README.md) - Backend-specific instructions
 
 We are also registered on [OnlyDust](https://app.onlydust.com/projects/stellarrent).
 

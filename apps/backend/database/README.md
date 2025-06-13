@@ -21,7 +21,9 @@ That's it! Your database will be fully configured.
 
 ### **Main Tables**
 - **`users`** - Registered user information
+- **`profiles`** - User profile information
 - **`properties`** - Property listings on the platform
+- **`bookings`** - Booking records with Stellar payment integration
 
 ### **Optimizations**
 - **Indexes** for fast queries
@@ -30,6 +32,7 @@ That's it! Your database will be fully configured.
 
 ### **Storage**
 - **Bucket `property-images`** for property images
+- **Bucket `profile-avatars`** for property images
 
 ### **Security**
 - **Row Level Security (RLS)** enabled
@@ -67,6 +70,19 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
 - updated_at (timestamp)
 ```
 
+### ** Table `profiles`**
+```sql
+- user_id (uuid,pk)
+- name (text)
+- avatar_url (text)
+- phone (text)
+-  address (JSON object)
+-  preferences (json object)
+-  social_links (json object)
+-  verification_status (text)
+- last_active (timestamp)
+```
+
 ### **Table `properties`**
 ```sql
 - id (uuid, PK)
@@ -93,6 +109,21 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
 - updated_at (timestamp)
 ```
 
+### **Table `bookings`**
+```sql
+- id (uuid, PK)
+- user_id (uuid, FK → users.id)
+- property_id (uuid, FK → properties.id)
+- amount (decimal)
+- status (enum: pending|confirmed|cancelled)
+- start_date (date)
+- end_date (date)
+- escrow_address (text, optional)
+- transaction_hash (varchar, optional)
+- created_at (timestamp)
+- updated_at (timestamp)
+```
+
 ## 🧪 Verify Configuration
 
 Run these commands to verify everything is working:
@@ -113,7 +144,9 @@ If you need to reset the DB during development:
 -- ⚠️ WARNING: This deletes ALL data
 DROP TABLE IF EXISTS public.properties CASCADE;
 DROP TABLE IF EXISTS public.users CASCADE;
+DROP TABLE IF EXISTS public.profiles CASCADE;
 DELETE FROM storage.buckets WHERE name = 'property-images';
+DELETE FROM storage.buckets WHERE name = 'profile-avaters';
 
 -- Then run setup.sql again
 ```
@@ -155,4 +188,4 @@ After configuring the DB:
 3. ✅ Verify authentication
 4. ✅ Create your first property via API
 
-Your database is ready for development! 🚀 
+Your database is ready for development! 🚀

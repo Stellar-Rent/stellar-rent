@@ -4,7 +4,9 @@ import express from 'express';
 import { errorMiddleware } from './middleware/error.middleware';
 import { rateLimiter } from './middleware/rateLimiter';
 import authRoutes from './routes/auth';
-import propertyRoutes from './routes/property.routes';
+import profileRouter from './routes/profile.route';
+import bookingRoutes from './routes/booking.routes';
+import propertyRoutes from './routes/property.route';
 
 // Environment variables configuration
 dotenv.config();
@@ -40,7 +42,19 @@ app.use(rateLimiter);
 
 // Routes
 app.use('/auth', authRoutes);
-app.use('/api/properties', propertyRoutes);
+app.use('/api/bookings', bookingRoutes);
+app.use('/properties', propertyRoutes);
+app.use('/profiles', profileRouter);
+
+// Health check endpoint for Docker
+app.get('/health', (_req, res) => {
+  res.status(200).json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || 'development',
+  });
+});
 
 // Test route
 app.get('/', (_req, res) => {
