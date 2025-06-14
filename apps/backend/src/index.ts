@@ -4,8 +4,8 @@ import express from 'express';
 import { errorMiddleware } from './middleware/error.middleware';
 import { rateLimiter } from './middleware/rateLimiter';
 import authRoutes from './routes/auth';
-import profileRouter from './routes/profile.route';
 import bookingRoutes from './routes/booking.routes';
+import profileRouter from './routes/profile.route';
 import propertyRoutes from './routes/property.route';
 
 // Environment variables configuration
@@ -43,7 +43,7 @@ app.use(rateLimiter);
 // Routes
 app.use('/auth', authRoutes);
 app.use('/api/bookings', bookingRoutes);
-app.use('/properties', propertyRoutes);
+app.use('/api/properties', propertyRoutes);
 app.use('/profiles', profileRouter);
 
 // Health check endpoint for Docker
