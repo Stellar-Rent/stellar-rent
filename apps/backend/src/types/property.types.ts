@@ -30,24 +30,24 @@ export interface Property {
   title: string;
   description: string;
   price: number;
-  address: string;
-  city: string;
-  country: string;
-  latitude: number | null;
-  longitude: number | null;
+  location: {
+    address: string;
+    city: string;
+    country: string;
+    coordinates?: { latitude: number; longitude: number };
+  };
   amenities: string[];
   images: string[];
   bedrooms: number;
   bathrooms: number;
-  max_guests: number;
-  owner_id: string;
+  maxGuests: number;
+  ownerId: string;
   status: 'available' | 'booked' | 'maintenance';
-  availability: AvailabilityRange[];
-  security_deposit: number;
-  cancellation_policy: CancellationPolicy | null;
-  property_token: string | null;
-  created_at: string;
-  updated_at: string;
+  availability: Array<{ from: string; to: string }>;
+  securityDeposit: number;
+  cancellationPolicy?: { daysBefore: number; refundPercentage: number };
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface CreatePropertyInput extends Omit<Property, 'id' | 'created_at' | 'updated_at'> {}

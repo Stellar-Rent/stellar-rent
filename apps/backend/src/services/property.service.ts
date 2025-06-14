@@ -85,7 +85,10 @@ function validateImageUrls(images: string[]): boolean {
   return images.every((url) => urlRegex.test(url));
 }
 
-function validateAmenities(amenities: string[]): { valid: boolean; invalidAmenities: string[] } {
+function validateAmenities(amenities: string[]): {
+  valid: boolean;
+  invalidAmenities: string[];
+} {
   const invalidAmenities = amenities.filter(
     (amenity) => !ALLOWED_AMENITIES.includes(amenity as AllowedAmenity)
   );
@@ -96,12 +99,16 @@ function validateAmenities(amenities: string[]): { valid: boolean; invalidAmenit
   };
 }
 
-function validateAvailabilityRanges(availability: AvailabilityRange[]): boolean {
+function validateAvailabilityRanges(
+  availability: AvailabilityRange[]
+): boolean {
   return availability.every((range) => {
     const startDate = new Date(range.start_date);
     const endDate = new Date(range.end_date);
     return (
-      startDate < endDate && !Number.isNaN(startDate.getTime()) && !Number.isNaN(endDate.getTime())
+      startDate < endDate &&
+      !Number.isNaN(startDate.getTime()) &&
+      !Number.isNaN(endDate.getTime())
     );
   });
 }
@@ -210,7 +217,9 @@ export async function createProperty(
 /**
  * Get property by ID
  */
-export async function getPropertyById(id: string): Promise<ServiceResponse<Property>> {
+export async function getPropertyById(
+  id: string
+): Promise<ServiceResponse<Property>> {
   try {
     const { data: property, error } = await supabase
       .from('properties')
@@ -338,7 +347,9 @@ export async function updateProperty(
 /**
  * Delete property
  */
-export async function deleteProperty(id: string): Promise<ServiceResponse<boolean>> {
+export async function deleteProperty(
+  id: string
+): Promise<ServiceResponse<boolean>> {
   try {
     // Check if property exists
     const existingProperty = await getPropertyById(id);
@@ -382,7 +393,12 @@ export async function getPropertiesByOwner(
   options: PropertySearchOptions = {}
 ): Promise<ServiceResponse<PropertyListResponse>> {
   try {
-    const { page = 1, limit = 10, sort_by = 'created_at', sort_order = 'desc' } = options;
+    const {
+      page = 1,
+      limit = 10,
+      sort_by = 'created_at',
+      sort_order = 'desc',
+    } = options;
     const offset = (page - 1) * limit;
 
     const query = supabase
@@ -430,7 +446,12 @@ export async function searchProperties(
   options: PropertySearchOptions = {}
 ): Promise<ServiceResponse<PropertyListResponse>> {
   try {
-    const { page = 1, limit = 10, sort_by = 'created_at', sort_order = 'desc' } = options;
+    const {
+      page = 1,
+      limit = 10,
+      sort_by = 'created_at',
+      sort_order = 'desc',
+    } = options;
     const offset = (page - 1) * limit;
 
     let query = supabase
