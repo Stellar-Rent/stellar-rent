@@ -1,0 +1,151 @@
+# Project Requirements Document (PRD) - StellarRent
+
+This document outlines the requirements for StellarRent, a decentralized P2P rental platform built on the Stellar blockchain. It is designed to guide the development of a functional MVP that validates the value proposition of renting properties with cryptocurrencies (USDC) instantly and reliably.
+
+---
+
+## Overview
+
+StellarRent is a decentralized peer-to-peer rental platform that addresses the issues of traditional platforms like Airbnb, such as high commissions (10-20%), slow payments, and lack of transparency. Leveraging the Stellar blockchain, StellarRent enables:
+- Instant payments in 5 seconds with USDC.
+- Ultra-low commissions (~0.00001 USD per transaction).
+- Enhanced trust through immutable reviews and smart contracts.
+
+It targets global travelers and digital nomads seeking fast, affordable, and reliable rental options, as well as hosts looking to reduce costs and receive payments more quickly. Its value lies in eliminating intermediaries, reducing friction, and offering a crypto-friendly alternative to the rental market.
+
+---
+
+## Core Features
+
+### 1. Property Listing
+- **What it does**: Allows hosts to create property listings with title, description, price, location, amenities, and images.
+- **Why it's important**: Forms the foundation for guests to find and book properties.
+- **How it works at a high level**: Hosts complete a form in the interface; data is stored in a database, and a hash is recorded on the blockchain to ensure integrity.
+
+### 2. Property Search and Booking
+- **What it does**: Enables guests to search properties with filters (location, dates, guests) and book them.
+- **Why it's important**: Facilitates the primary interaction between guests and hosts.
+- **How it works at a high level**: Guests query available properties through the backend and confirm bookings, managed by smart contracts.
+
+### 3. Instant Payments with USDC
+- **What it does**: Allows guests to pay for bookings instantly using USDC via Stellar wallets.
+- **Why it's important**: It is the core of the value proposition: fast and low-cost payments.
+- **How it works at a high level**: Guests connect a wallet (e.g., Freighter), sign the transaction, and the payment is processed on the Stellar network with temporary custody.
+
+### 4. User Profiles and Authentication
+- **What it does**: Manages registration, login, and profile updates, including wallet integration.
+- **Why it's important**: Ensures secure access and user identity verification.
+- **How it works at a high level**: Registration/login with email/password or Stellar wallet; data is securely stored and sessions are managed with tokens.
+
+### 5. Reservation Management
+- **What it does**: Allows users to view and manage their reservations (guests) or requests (hosts).
+- **Why it's important**: Provides transparency and control over transactions.
+- **How it works at a high level**: Users access their reservations through the interface, with data synchronized between the database and the blockchain.
+
+---
+
+## User Experience
+
+### User Personas
+- **Global Travelers**: Tech-savvy individuals seeking quick and affordable rentals.
+- **Digital Nomads**: Remote workers needing flexible rentals and instant payments.
+- **Hosts**: Property owners wanting lower commissions and faster payments.
+
+### Key User Flows
+- **Guest Flow**: Search properties → View details → Book and pay with USDC → Manage reservation.
+- **Host Flow**: List property → Manage availability → Confirm bookings → Receive payments.
+
+### UI/UX Considerations
+- **Web2 Experience**: Intuitive interface that hides blockchain complexity for non-crypto users.
+- **Wallet Integration**: Simplified connection with clear instructions (e.g., "Connect wallet to pay").
+- **Performance**: Fast load times and immediate feedback on actions like booking confirmations.
+
+---
+
+## Technical Architecture
+
+### System Components
+- **Frontend**: Next.js with TailwindCSS for the interface, integrated with Stellar SDK for wallet interactions.
+- **Backend**: Bun with Express.js for API routing, Supabase for database and authentication.
+- **Blockchain**: Stellar for payments, Soroban for smart contracts (e.g., listings and bookings).
+- **Storage**: Supabase Storage for images and avatars.
+- **Monitoring**: Health checks and structured logs.
+
+### Data Models
+- **Tables in Supabase**:
+  - `users`: id, email, name, password_hash, created_at, updated_at.
+  - `profiles`: user_id, name, avatar_url, phone, address, preferences.
+  - `properties`: id, title, description, price, address, city, amenities, images, owner_id, status.
+  - `bookings`: id, property_id, user_id, dates, guests, total, status, created_at.
+- **Smart Contracts in Soroban**:
+  - `PropertyListing`: id, data_hash, owner, status.
+  - `BookingContract`: id, property_id, user_id, start_date, end_date, total_price, status.
+
+### APIs and Integrations
+- **RESTful API**: Endpoints for authentication, profiles, properties, and bookings.
+- **Stellar SDK**: For wallet interactions and USDC payments.
+- **Freighter**: Wallet integration for transaction signing.
+- **Supabase**: Database, authentication, and file storage.
+
+### Infrastructure Requirements
+- **Containerization**: Docker for consistent environments.
+- **Rate Limiting**: Prevent API abuse.
+- **Monitoring**: Health checks every 30 seconds with automatic restart on failure.
+
+---
+
+## Development Roadmap
+
+### Phase 1: MVP Requirements
+- Authentication with email/password and wallet connection.
+- Property listing (up to 10 images).
+- Basic property search and filtering.
+- Reservation system with USDC payment flow.
+- Basic profile management with avatar upload.
+
+### Phase 2: Future Enhancements
+- Advanced filters (date availability, amenities).
+- Blockchain-stored reviews.
+- Real-time notifications (WebSockets).
+- Full KYC integration.
+- Introduction of a native token (STLRNT) for discounts.
+
+---
+
+## Logical Dependency Chain
+
+1. **Foundation**:
+   - Set up authentication (email/password).
+   - Implement property listing and search.
+2. **Core Functionality**:
+   - Develop reservation system with basic payments.
+   - Integrate wallet for USDC payments.
+3. **Improvements**:
+   - Add payment custody.
+   - Implement profile management.
+4. **Polishing**:
+   - Optimize performance and add pagination.
+
+---
+
+## Risks and Mitigations
+
+- **Technical Challenges**:
+  - **Blockchain Integration**: Use Stellar documentation and community support.
+  - **Security**: Implement access policies and encryption; plan audits.
+- **MVP Scope**:
+  - Prioritize essential features (listings, bookings, payments); defer non-critical ones.
+- **Resource Constraints**:
+  - Follow dependency chain; consider outsourcing secondary tasks.
+
+---
+
+## Appendix
+
+- **Research Findings**:
+  - Stellar’s low commissions and speed are ideal for rentals.
+  - Non-crypto users need a simplified UX.
+- **Technical Specifications**:
+  - Database with security policies.
+  - Smart contracts for decentralized logic.
+  - File storage with public access for images.
