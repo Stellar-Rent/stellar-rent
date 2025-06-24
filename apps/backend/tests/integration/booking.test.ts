@@ -2,9 +2,10 @@ import express from 'express';
 import jwt from 'jsonwebtoken';
 import request from 'supertest';
 
-import { getBooking } from '../controllers/booking.controller';
-import { authenticateToken } from '../middleware/auth.middleware';
-import * as bookingService from '../services/booking.service';
+import { getBooking } from '../../src/controllers/booking.controller';
+import { authenticateToken } from '../../src/middleware/auth.middleware';
+import * as bookingService from '../../src/services/booking.service';
+import type { Booking } from '../../src/types/booking.types';
 
 const JWT_SECRET = 'test-secret-key';
 
@@ -170,7 +171,9 @@ describe('GET /bookings/:bookingId', () => {
       escrowStatus: 'pending',
     };
 
-    jest.spyOn(bookingService, 'getBookingById').mockResolvedValue(fakeBooking);
+    jest
+      .spyOn(bookingService, 'getBookingById')
+      .mockResolvedValue(fakeBooking as unknown as Booking);
 
     const res = await request(app)
       .get(`/bookings/${fakeBooking.id}`)
