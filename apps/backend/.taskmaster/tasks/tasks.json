@@ -1,0 +1,148 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 2,
+        "title": "Implement Authentication and User Profiles",
+        "description": "Develop user registration, login, and profile management with email/password and wallet integration.",
+        "details": "Use Supabase Auth for email/password authentication. Add wallet integration (Freighter) for Stellar wallet login. Create user and profile tables in Supabase as per schema. Implement profile update and avatar upload.",
+        "testStrategy": "Test user registration, login, profile updates, and wallet connection. Verify data integrity in Supabase tables.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 3,
+        "title": "Design and Implement Property Listing System",
+        "description": "Build the property listing feature allowing hosts to create and manage property listings.",
+        "details": "Create property listing form in Next.js. Store property data in Supabase (title, description, price, location, amenities, images). Record a hash of listing data on the Stellar blockchain for integrity. Use Supabase Storage for images.",
+        "testStrategy": "Test property creation, image upload, and blockchain hash recording. Verify listing data integrity and image accessibility.",
+        "priority": "high",
+        "dependencies": [
+          2
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 4,
+        "title": "Develop Property Search and Filtering",
+        "description": "Implement property search and filtering for guests.",
+        "details": "Build search interface in Next.js. Query Supabase for properties with filters (location, dates, guests). Implement pagination for large result sets.",
+        "testStrategy": "Test search with various filters, pagination, and result accuracy. Verify performance and user experience.",
+        "priority": "medium",
+        "dependencies": [
+          3
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 5,
+        "title": "Implement Reservation and Booking System",
+        "description": "Develop reservation management for guests and hosts.",
+        "details": "Create booking interface in Next.js. Store booking data in Supabase (property_id, user_id, dates, guests, total, status). Synchronize booking status with blockchain smart contract (Soroban).",
+        "testStrategy": "Test booking creation, status updates, and blockchain synchronization. Verify data consistency between Supabase and blockchain.",
+        "priority": "high",
+        "dependencies": [
+          3,
+          4
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 6,
+        "title": "Integrate Stellar Wallet and USDC Payment Flow",
+        "description": "Enable instant USDC payments via Stellar wallet.",
+        "details": "Integrate Stellar SDK and Freighter wallet in Next.js. Implement payment flow: guest connects wallet, signs transaction, and payment is processed on Stellar network. Use temporary custody for payments.",
+        "testStrategy": "Test wallet connection, transaction signing, and payment processing. Verify payment status on Stellar network and in Supabase.",
+        "priority": "high",
+        "dependencies": [
+          2,
+          5
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement Freighter Wallet Connection",
+            "description": "Set up Freighter wallet connection in the frontend with proper error handling",
+            "details": "- Add Freighter SDK dependency\\n- Implement wallet connection hook\\n- Add connection status management\\n- Handle connection errors\\n- Add disconnect functionality",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 6
+          },
+          {
+            "id": 2,
+            "title": "Implement USDC Payment Flow",
+            "description": "Set up USDC payment processing with Stellar SDK",
+            "details": "- Add Stellar SDK integration\\n- Implement USDC token handling\\n- Create payment transaction builder\\n- Add payment status tracking\\n- Implement payment confirmation",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 6
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Develop Reservation Management Interface",
+        "description": "Build interfaces for users to view and manage reservations.",
+        "details": "Create reservation dashboard in Next.js. Allow guests to view their bookings and hosts to manage requests. Synchronize data between Supabase and blockchain.",
+        "testStrategy": "Test reservation management, status updates, and data synchronization. Verify user experience and data accuracy.",
+        "priority": "medium",
+        "dependencies": [
+          5,
+          6
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 8,
+        "title": "Implement Smart Contracts for Listings and Bookings",
+        "description": "Develop and deploy Soroban smart contracts for property listings and bookings.",
+        "details": "Write Soroban smart contracts for PropertyListing and BookingContract. Deploy contracts to Stellar testnet. Integrate contract calls in backend for data synchronization.",
+        "testStrategy": "Test contract deployment, function calls, and data synchronization. Verify contract state matches Supabase data.",
+        "priority": "medium",
+        "dependencies": [
+          3,
+          5
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 9,
+        "title": "Set Up Monitoring and Rate Limiting",
+        "description": "Implement monitoring and rate limiting for API and infrastructure.",
+        "details": "Add health checks every 30 seconds with automatic restart on failure. Implement rate limiting for API endpoints to prevent abuse. Set up structured logging.",
+        "testStrategy": "Test health checks, rate limiting, and logging. Verify system resilience and security.",
+        "priority": "low",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 10,
+        "title": "Optimize Performance and User Experience",
+        "description": "Optimize application performance and user experience.",
+        "details": "Implement pagination for large datasets. Optimize image loading and caching. Improve UI/UX for non-crypto users, including clear wallet connection instructions.",
+        "testStrategy": "Test load times, pagination, and user experience. Gather feedback from non-crypto users and iterate.",
+        "priority": "medium",
+        "dependencies": [
+          4,
+          7
+        ],
+        "status": "pending",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2025-06-24T19:19:49.820Z",
+      "updated": "2025-06-24T20:19:43.890Z",
+      "description": "Tasks for master context"
+    }
+  }
+}
