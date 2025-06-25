@@ -1,81 +1,97 @@
-// src/services/auth.service.ts
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 import { supabase } from '../config/supabase';
-import type { AuthResponse, LoginInput, PublicProfile, RegisterInput } from '../types/auth.types';
+import type { AuthResponse, LoginInput, RegisterInput, User } from '../types/auth.types';
 
-export const registerUser = async (input: RegisterInput): Promise<AuthResponse> => {
-  const { email, password, name, avatar_url, phone, address, preferences, social_links } = input;
+export const loginUser = async (input: LoginInput): Promise<AuthResponse> => {
+  const { data: user, error: userError } = await supabase
+    .from('users')
+    .select('*')
+    .eq('email', input.email)
+    .single();
 
-  // Step 1: Register user with Supabase Auth
-  const { data: supabaseAuthData, error } = await supabase.auth.signUp({ email, password });
-
-  if (error || !supabaseAuthData?.user) {
-    console.error('Error registering user:', error);
-    throw new Error('Error registering user');
+  if (userError || !user) {
+    throw new Error('Usuario no encontrado');
   }
 
-  const userId = supabaseAuthData.user.id;
-  const session = supabaseAuthData.session;
+  const isPasswordValid = await bcrypt.compare(input.password, user.password_hash);
+  if (!isPasswordValid) {
+    throw new Error('Contraseña incorrecta');
+  }
 
-  // Step 2: Insert user profile into 'profiles' table
-  const { error: profileError } = await supabase.from('profiles').upsert(
-    [
-      {
-        user_id: userId,
-        name,
-        avatar_url,
-        phone,
-        address,
-        preferences,
-        social_links,
-        verification_status: 'unverified',
-        last_active: new Date().toISOString(),
-      },
-    ],
-    { onConflict: 'user_id' }
+  if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET environment variable is required');
+  }
+
+  const token = jwt.sign(
+    {
+      id: user.id,
+      email: user.email,
+    },
+    process.env.JWT_SECRET,
+    {
+      expiresIn: '1h',
+    }
   );
 
-  if (profileError) {
-    console.error('Error creating user profile:', profileError);
-    throw new Error('Error creating user profile');
-  }
-
-  // Step 3: Return your own AuthResponse
-  return {
-    token: session?.access_token ?? '',
-    user: {
-      id: userId,
-      email,
-      profile: {
-        name,
-        avatar_url,
-        phone,
-        address,
-        preferences,
-        social_links,
-        verification_status: 'unverified',
-        last_active: new Date().toISOString(),
-      },
-    },
+  const userResponse: User = {
+    id: user.id,
+    email: user.email,
+    name: user.name,
   };
+
+  return { token, user: userResponse };
 };
 
-export const loginUser = async (input: LoginInput) => {
-  const { email, password } = input;
+export const registerUser = async (input: RegisterInput): Promise<AuthResponse> => {
+  const { data: existingUser } = await supabase
+    .from('users')
+    .select('email')
+    .eq('email', input.email)
+    .single();
 
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
-
-  if (error) {
-    if (
-      error.message.includes('Invalid login credentials') ||
-      error.message.includes('Invalid email or password')
-    ) {
-      throw new Error('Credenciales inválidas');
-    }
-    throw new Error(error.message);
+  if (existingUser) {
+    throw new Error('El email ya está registrado');
   }
 
-  return { user: data.user, session: data.session };
+  const hashedPassword = await bcrypt.hash(input.password, 10);
+
+  const { data: user, error: insertError } = await supabase
+    .from('users')
+    .insert([
+      {
+        email: input.email,
+        password_hash: hashedPassword,
+        name: input.name,
+      },
+    ])
+    .select()
+    .single();
+
+  if (insertError || !user) {
+    throw new Error('Error al crear usuario');
+  }
+
+  if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET environment variable is required');
+  }
+
+  const token = jwt.sign(
+    {
+      id: user.id,
+      email: user.email,
+    },
+    process.env.JWT_SECRET,
+    {
+      expiresIn: '1h',
+    }
+  );
+
+  const userResponse: User = {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+  };
+
+  return { token, user: userResponse };
 };

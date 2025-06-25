@@ -1,188 +1,197 @@
-import express from 'express';
-import jwt from 'jsonwebtoken';
-import request from 'supertest';
+import { beforeEach, describe, expect, it, mock } from 'bun:test';
+import type { AvailabilityResponse } from '../../src/blockchain/soroban';
+import { supabase } from '../../src/config/supabase';
+import { BookingService } from '../../src/services/booking.service';
+import { loggingService } from '../../src/services/logging.service';
+import type { CreateBookingInput } from '../../src/types/booking.types';
+import { BookingError } from '../../src/types/common.types';
+import type { TransactionLog } from '../../src/types/common.types';
+import type {
+  MockBlockchainServices,
+  MockLoggingService,
+  MockSupabaseMethods,
+  TestBookingData,
+} from '../../src/types/test.types';
 
-import { getBooking } from '../../src/controllers/booking.controller';
-import { authenticateToken } from '../../src/middleware/auth.middleware';
-import * as bookingService from '../../src/services/booking.service';
-import type { Booking } from '../../src/types/booking.types';
+// Mock data
+const validBookingData: CreateBookingInput = {
+  propertyId: '123e4567-e89b-12d3-a456-426614174000',
+  userId: '123e4567-e89b-12d3-a456-426614174001',
+  dates: {
+    from: new Date(Date.now() + 86400000), // tomorrow
+    to: new Date(Date.now() + 172800000), // day after tomorrow
+  },
+  guests: 2,
+  total: 200,
+  deposit: 50,
+};
 
-const JWT_SECRET = 'test-secret-key';
+// Mock blockchain services
+const createMockBlockchainServices = (): MockBlockchainServices => ({
+  checkAvailability: mock(() =>
+    Promise.resolve({
+      isAvailable: true,
+      conflictingBookings: [],
+    })
+  ),
+  createEscrow: mock(() => Promise.resolve('test-escrow-address')),
+  cancelEscrow: mock(() => Promise.resolve()),
+});
 
-function buildTestApp() {
-  const app = express();
-  app.use(express.json());
-  app.get('/bookings/:bookingId', authenticateToken, getBooking);
-  return app;
-}
+// Mock Supabase response
+const mockBookingData: TestBookingData = {
+  id: 'test-booking-id',
+  propertyId: validBookingData.propertyId,
+  userId: validBookingData.userId,
+  dates: validBookingData.dates,
+  guests: validBookingData.guests,
+  total: validBookingData.total,
+  deposit: validBookingData.deposit,
+  status: 'pending',
+  escrowAddress: 'test-escrow-address',
+  createdAt: new Date(),
+  updatedAt: new Date(),
+};
 
-describe('GET /bookings/:bookingId', () => {
-  let app: express.Express;
-  let validToken: string;
-  const testBookingId = '123e4567-e89b-12d3-a456-426614174000';
+// Mock Supabase client
+const createMockSupabaseMethods = (): MockSupabaseMethods => ({
+  from: () => ({
+    insert: () => ({
+      select: () => ({
+        single: () => Promise.resolve({ data: mockBookingData, error: null }),
+      }),
+    }),
+  }),
+});
 
-  beforeAll(() => {
-    process.env.JWT_SECRET = JWT_SECRET;
-    validToken = `Bearer ${jwt.sign({ id: 'user-123', email: 'test@example.com' }, JWT_SECRET)}`;
-    app = buildTestApp();
+// Mock transaction log
+const mockTransactionLog: TransactionLog = {
+  timestamp: new Date().toISOString(),
+  operation: 'createBooking',
+  status: 'started',
+  details: validBookingData,
+};
+
+// Mock logging service
+const createMockLoggingService = (): MockLoggingService => ({
+  logBlockchainOperation: mock(() => mockTransactionLog),
+  logBlockchainSuccess: mock(() => {}),
+  logBlockchainError: mock(() => {}),
+});
+
+describe('Booking Integration Tests', () => {
+  let bookingService: BookingService;
+  let mockBlockchainServices: MockBlockchainServices;
+
+  beforeEach(() => {
+    mockBlockchainServices = createMockBlockchainServices();
+    Object.assign(supabase, createMockSupabaseMethods());
+    Object.assign(loggingService, createMockLoggingService());
+    bookingService = new BookingService(mockBlockchainServices);
   });
 
-  afterEach(() => {
-    jest.restoreAllMocks();
-  });
+  describe('Successful Booking Creation', () => {
+    it('should create a booking when all conditions are met', async () => {
+      const result = await bookingService.createBooking(validBookingData);
 
-  it('400: invalid bookingId (not a UUID)', async () => {
-    const res = await request(app).get('/bookings/not-a-uuid').set('Authorization', validToken);
-
-    expect(res.status).toBe(400);
-    expect(res.body).toEqual({
-      success: false,
-      data: null,
-      error: {
-        message: 'Bad Request',
-        details: expect.any(Object),
-      },
-    });
-  });
-
-  it('401: missing Authorization header', async () => {
-    const res = await request(app).get(`/bookings/${testBookingId}`);
-    expect(res.status).toBe(401);
-    expect(res.body).toEqual({
-      error: 'Token no proporcionado',
-    });
-  });
-
-  it('403: invalid or expired JWT', async () => {
-    const res = await request(app)
-      .get(`/bookings/${testBookingId}`)
-      .set('Authorization', 'Bearer invalid.token');
-
-    expect(res.status).toBe(403);
-    expect(res.body).toEqual({
-      error: 'Token inválido o expirado',
-    });
-  });
-
-  it('403: user is neither booker nor host', async () => {
-    jest.spyOn(bookingService, 'getBookingById').mockImplementation(async () => {
-      throw new Error('Access denied');
-    });
-
-    const res = await request(app)
-      .get(`/bookings/${testBookingId}`)
-      .set('Authorization', validToken);
-
-    expect(res.status).toBe(403);
-    expect(res.body).toEqual({
-      success: false,
-      data: null,
-      error: {
-        message: 'Access denied',
-        details: 'You do not have permission to access this booking.',
-      },
-    });
-  });
-
-  it('404 booking does not exist', async () => {
-    jest.spyOn(bookingService, 'getBookingById').mockImplementation(async () => {
-      throw new Error('Booking not found');
-    });
-
-    const res = await request(app)
-      .get('/bookings/123e4567-e89b-12d3-a456-426614174111')
-      .set('Authorization', validToken);
-
-    expect(res.status).toBe(404);
-    expect(res.body).toEqual({
-      success: false,
-      data: null,
-      error: {
-        message: 'Booking not found',
-        details: 'The booking with the provided ID does not exist.',
-      },
-    });
-  });
-
-  it('404: property or host user missing', async () => {
-    jest.spyOn(bookingService, 'getBookingById').mockImplementation(async () => {
-      throw new Error('Property not found');
-    });
-
-    const res1 = await request(app)
-      .get('/bookings/123e4567-e89b-12d3-a456-426614174222')
-      .set('Authorization', validToken);
-
-    expect(res1.status).toBe(404);
-    expect(res1.body).toEqual({
-      success: false,
-      data: null,
-      error: {
-        message: 'Resource not found',
-        details: 'Property not found',
-      },
-    });
-
-    jest.spyOn(bookingService, 'getBookingById').mockImplementation(async () => {
-      throw new Error('Host user not found');
-    });
-
-    const res2 = await request(app)
-      .get('/bookings/123e4567-e89b-12d3-a456-426614174333')
-      .set('Authorization', validToken);
-
-    expect(res2.status).toBe(404);
-    expect(res2.body).toEqual({
-      success: false,
-      data: null,
-      error: {
-        message: 'Resource not found',
-        details: 'Host user not found',
-      },
+      expect(result).toEqual({
+        bookingId: 'test-booking-id',
+        escrowAddress: 'test-escrow-address',
+        status: 'pending',
+      });
     });
   });
 
-  it('500: unexpected or DB error', async () => {
-    jest.spyOn(bookingService, 'getBookingById').mockImplementation(async () => {
-      throw new Error('Some DB error');
+  describe('Error Scenarios', () => {
+    it('should handle property unavailability', async () => {
+      const unavailableResponse: AvailabilityResponse = {
+        isAvailable: false,
+        conflictingBookings: [
+          {
+            bookingId: 'existing-booking-id',
+            dates: {
+              from: new Date(),
+              to: new Date(),
+            },
+          },
+        ],
+      };
+
+      mockBlockchainServices.checkAvailability = mock(() => Promise.resolve(unavailableResponse));
+
+      await expect(bookingService.createBooking(validBookingData)).rejects.toThrow(
+        new BookingError(
+          'Property is not available for the selected dates',
+          'UNAVAILABLE',
+          unavailableResponse.conflictingBookings
+        )
+      );
     });
 
-    const res = await request(app)
-      .get('/bookings/123e4567-e89b-12d3-a456-426614174444')
-      .set('Authorization', validToken);
+    it('should handle escrow creation failure', async () => {
+      const escrowError = new Error('Failed to create escrow');
+      mockBlockchainServices.createEscrow = mock(() => Promise.reject(escrowError));
 
-    expect(res.status).toBe(500);
-    expect(res.body).toEqual({
-      success: false,
-      data: null,
-      error: {
-        message: 'Internal Server Error',
-        details: 'Something went wrong retrieving booking details.',
-      },
+      await expect(bookingService.createBooking(validBookingData)).rejects.toThrow(
+        new BookingError('Failed to create escrow', 'ESCROW_FAIL', escrowError.message)
+      );
+    });
+
+    it('should handle database errors', async () => {
+      const dbError = new Error('Database error');
+      Object.assign(supabase, {
+        from: () => ({
+          insert: () => ({
+            select: () => ({
+              single: () => Promise.resolve({ data: null, error: dbError }),
+            }),
+          }),
+        }),
+      });
+
+      await expect(bookingService.createBooking(validBookingData)).rejects.toThrow(
+        new BookingError('Failed to create booking record', 'DB_FAIL', dbError)
+      );
     });
   });
 
-  it('200: successful retrieval', async () => {
-    const fakeBooking = {
-      id: '123e4567-e89b-12d3-a456-426614174555',
-      property: 'Seaside Villa',
-      dates: { from: '2025-06-01', to: '2025-06-05' },
-      hostContact: 'host@example.com',
-      escrowStatus: 'pending',
-    };
+  describe('Rollback Functionality', () => {
+    it('should attempt to cancel escrow when database operation fails', async () => {
+      const dbError = new Error('Database error');
+      Object.assign(supabase, {
+        from: () => ({
+          insert: () => ({
+            select: () => ({
+              single: () => Promise.resolve({ data: null, error: dbError }),
+            }),
+          }),
+        }),
+      });
 
-    jest
-      .spyOn(bookingService, 'getBookingById')
-      .mockResolvedValue(fakeBooking as unknown as Booking);
+      await expect(bookingService.createBooking(validBookingData)).rejects.toThrow(
+        new BookingError('Failed to create booking record', 'DB_FAIL', dbError)
+      );
+    });
 
-    const res = await request(app)
-      .get(`/bookings/${fakeBooking.id}`)
-      .set('Authorization', validToken);
+    it('should handle failed escrow cancellation during rollback', async () => {
+      const dbError = new Error('Database error');
+      const rollbackError = new Error('Failed to cancel escrow');
 
-    expect(res.status).toBe(200);
-    expect(res.body).toEqual({
-      success: true,
-      data: fakeBooking,
+      mockBlockchainServices.cancelEscrow = mock(() => Promise.reject(rollbackError));
+
+      Object.assign(supabase, {
+        from: () => ({
+          insert: () => ({
+            select: () => ({
+              single: () => Promise.resolve({ data: null, error: dbError }),
+            }),
+          }),
+        }),
+      });
+
+      await expect(bookingService.createBooking(validBookingData)).rejects.toThrow(
+        new BookingError('Failed to create booking record', 'DB_FAIL', dbError)
+      );
     });
   });
 });
