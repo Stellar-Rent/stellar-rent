@@ -99,16 +99,12 @@ function validateAmenities(amenities: string[]): {
   };
 }
 
-function validateAvailabilityRanges(
-  availability: AvailabilityRange[]
-): boolean {
+function validateAvailabilityRanges(availability: AvailabilityRange[]): boolean {
   return availability.every((range) => {
     const startDate = new Date(range.start_date);
     const endDate = new Date(range.end_date);
     return (
-      startDate < endDate &&
-      !Number.isNaN(startDate.getTime()) &&
-      !Number.isNaN(endDate.getTime())
+      startDate < endDate && !Number.isNaN(startDate.getTime()) && !Number.isNaN(endDate.getTime())
     );
   });
 }
@@ -216,14 +212,36 @@ export async function createProperty(
 
 /**
  * Get property by ID
+ * @param id - The unique identifier of the property
+ * @returns A promise that resolves to a ServiceResponse containing the property data
  */
-export async function getPropertyById(
-  id: string
-): Promise<ServiceResponse<Property>> {
+export async function getPropertyById(id: string): Promise<ServiceResponse<Property>> {
   try {
     const { data: property, error } = await supabase
       .from('properties')
-      .select('*')
+      .select(`
+        id,
+        title,
+        description,
+        price,
+        address,
+        city,
+        country,
+        latitude,
+        longitude,
+        amenities,
+        images,
+        bedrooms,
+        bathrooms,
+        max_guests,
+        owner_id,
+        status,
+        availability,
+        security_deposit,
+        cancellation_policy,
+        created_at,
+        updated_at
+      `)
       .eq('id', id)
       .single();
 
@@ -235,9 +253,42 @@ export async function getPropertyById(
       };
     }
 
+    // Transform the flat structure into the expected Property interface
+    const formattedProperty: Property = {
+      id: property.id,
+      title: property.title,
+      description: property.description,
+      price: property.price,
+      location: {
+        address: property.address,
+        city: property.city,
+        country: property.country,
+        coordinates:
+          property.latitude && property.longitude
+            ? { latitude: property.latitude, longitude: property.longitude }
+            : undefined,
+      },
+      amenities: property.amenities || [],
+      images: property.images || [],
+      bedrooms: property.bedrooms,
+      bathrooms: property.bathrooms,
+      maxGuests: property.max_guests,
+      ownerId: property.owner_id,
+      status: property.status as 'available' | 'booked' | 'maintenance',
+      availability:
+        property.availability?.map((range) => ({
+          from: range.start_date || range.from,
+          to: range.end_date || range.to,
+        })) || [],
+      securityDeposit: property.security_deposit,
+      cancellationPolicy: property.cancellation_policy,
+      createdAt: property.created_at,
+      updatedAt: property.updated_at,
+    };
+
     return {
       success: true,
-      data: property as Property,
+      data: formattedProperty,
     };
   } catch (error) {
     console.error('Get property error:', error);
@@ -347,9 +398,7 @@ export async function updateProperty(
 /**
  * Delete property
  */
-export async function deleteProperty(
-  id: string
-): Promise<ServiceResponse<boolean>> {
+export async function deleteProperty(id: string): Promise<ServiceResponse<boolean>> {
   try {
     // Check if property exists
     const existingProperty = await getPropertyById(id);
@@ -393,12 +442,7 @@ export async function getPropertiesByOwner(
   options: PropertySearchOptions = {}
 ): Promise<ServiceResponse<PropertyListResponse>> {
   try {
-    const {
-      page = 1,
-      limit = 10,
-      sort_by = 'created_at',
-      sort_order = 'desc',
-    } = options;
+    const { page = 1, limit = 10, sort_by = 'created_at', sort_order = 'desc' } = options;
     const offset = (page - 1) * limit;
 
     const query = supabase
@@ -446,12 +490,7 @@ export async function searchProperties(
   options: PropertySearchOptions = {}
 ): Promise<ServiceResponse<PropertyListResponse>> {
   try {
-    const {
-      page = 1,
-      limit = 10,
-      sort_by = 'created_at',
-      sort_order = 'desc',
-    } = options;
+    const { page = 1, limit = 10, sort_by = 'created_at', sort_order = 'desc' } = options;
     const offset = (page - 1) * limit;
 
     let query = supabase
