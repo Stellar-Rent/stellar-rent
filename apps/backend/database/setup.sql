@@ -8,7 +8,7 @@
 -- 1. REQUIRED EXTENSIONS
 -- ===============================================
 
--- Enable UUID extension for generating unique IDs
+-- Enable UUI/* */D extension for generating unique IDs
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- ===============================================
@@ -29,7 +29,27 @@ CREATE INDEX IF NOT EXISTS users_email_idx ON public.users(email);
 CREATE INDEX IF NOT EXISTS users_created_at_idx ON public.users(created_at);
 
 -- ===============================================
--- 3. PROPERTIES TABLE
+-- 3. PROFILES TABLE
+-- ===============================================
+
+CREATE TABLE IF NOT EXISTS public.profiles (
+  user_id uuid PRIMARY KEY REFERENCES public.users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  avatar_url TEXT,
+  phone TEXT,
+  address JSONB,
+  preferences JSONB,
+  social_links JSONB,
+  verification_status TEXT CHECK (verification_status IN ('unverified', 'pending', 'verified')) DEFAULT 'unverified',
+  last_active TIMESTAMPTZ DEFAULT now()
+);
+
+-- Index to quickly look up user profiles
+CREATE INDEX IF NOT EXISTS profiles_user_id_idx ON public.profiles(user_id);
+
+
+-- ===============================================
+-- 4. PROPERTIES TABLE
 -- ===============================================
 
 CREATE TABLE IF NOT EXISTS public.properties (
@@ -78,7 +98,7 @@ CREATE INDEX IF NOT EXISTS properties_amenities_idx ON public.properties USING G
 CREATE INDEX IF NOT EXISTS properties_location_idx ON public.properties(city, country);
 
 -- ===============================================
--- 3.1 BOOKINGS TABLE
+-- 5. BOOKINGS TABLE
 -- ===============================================
 
 CREATE TABLE IF NOT EXISTS public.bookings (
@@ -102,7 +122,7 @@ CREATE INDEX IF NOT EXISTS bookings_status_idx ON public.bookings(status);
 CREATE INDEX IF NOT EXISTS bookings_created_at_idx ON public.bookings(created_at);
 
 -- ===============================================
--- 4. FUNCTION TO UPDATE updated_at
+-- 6. FUNCTION TO UPDATE updated_at
 -- ===============================================
 
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -126,10 +146,7 @@ CREATE TRIGGER update_properties_updated_at
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
--- ===============================================
--- 4.1 BOOKINGS updated_at TRIGGER
--- ===============================================
-
+-- Add trigger for bookings table
 DROP TRIGGER IF EXISTS update_bookings_updated_at ON public.bookings;
 CREATE TRIGGER update_bookings_updated_at
     BEFORE UPDATE ON public.bookings
@@ -137,7 +154,7 @@ CREATE TRIGGER update_bookings_updated_at
     EXECUTE FUNCTION update_updated_at_column();
 
 -- ===============================================
--- 5. STORAGE CONFIGURATION
+-- 7. STORAGE CONFIGURATION
 -- ===============================================
 
 -- Create bucket for property images
@@ -145,8 +162,14 @@ INSERT INTO storage.buckets (id, name, public)
 VALUES ('property-images', 'property-images', true)
 ON CONFLICT (id) DO NOTHING;
 
+-- Create bucket for profile avatar images
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('profiles-avatars', 'profiles-avatars', true)
+ON CONFLICT (id) DO NOTHING;
+
+
 -- ===============================================
--- 6. ROW LEVEL SECURITY (RLS) POLICIES
+-- 8. ROW LEVEL SECURITY (RLS) POLICIES
 -- ===============================================
 
 -- Enable Row Level Security
@@ -179,7 +202,7 @@ CREATE POLICY "Authenticated users can create properties" ON public.properties
     FOR INSERT WITH CHECK (auth.uid() = owner_id);
 
 -- ===============================================
--- 6.1 BOOKINGS RLS POLICIES
+-- 9. BOOKINGS RLS POLICIES
 -- ===============================================
 
 -- Enable Row Level Security on bookings
@@ -202,8 +225,34 @@ CREATE POLICY "Users can delete own bookings" ON public.bookings
     FOR DELETE USING (auth.uid() = user_id);
 
 -- ===============================================
--- 7. STORAGE POLICIES
+-- 10. STORAGE POLICIES
 -- ===============================================
+
+-- Policy to read profile avatars (public)
+CREATE POLICY "Anyone can view profile avatars" ON storage.objects
+    FOR SELECT USING (bucket_id = 'profiles-avatars');
+
+-- Policy to upload avatars (authenticated users only)
+CREATE POLICY "Authenticated users can upload profile avatars" ON storage.objects
+    FOR INSERT WITH CHECK (
+        bucket_id = 'profiles-avatars'
+        AND auth.role() = 'authenticated'
+    );
+
+-- Policy to update avatars (authenticated users only)
+CREATE POLICY "Users can update their profile avatars" ON storage.objects
+    FOR UPDATE USING (
+        bucket_id = 'profiles-avatars'
+        AND auth.role() = 'authenticated'
+    );
+
+-- Policy to delete avatars (authenticated users only)
+CREATE POLICY "Users can delete their profile avatars" ON storage.objects
+    FOR DELETE USING (
+        bucket_id = 'profiles-avatars'
+        AND auth.role() = 'authenticated'
+    );
+
 
 -- Policy to read images (public)
 CREATE POLICY "Anyone can view property images" ON storage.objects
@@ -231,16 +280,30 @@ CREATE POLICY "Users can delete own property images" ON storage.objects
     );
 
 -- ===============================================
--- 8. SAMPLE DATA (OPTIONAL)
+-- 11. SAMPLE DATA (OPTIONAL)
 -- ===============================================
 
 -- Uncomment these lines to insert sample data
 
-/*
+
 -- Sample user
 INSERT INTO public.users (id, email, name, password_hash) VALUES
     ('123e4567-e89b-12d3-a456-426614174000', 'test@stellarrent.com', 'Test User', '$2b$10$example.hash.here')
 ON CONFLICT (email) DO NOTHING;
+
+-- Sample profile (linked to sample user above)
+INSERT INTO public.profiles (
+  user_id, name, avatar_url, phone, address, preferences, social_links, verification_status
+) VALUES (
+  '123e4567-e89b-12d3-a456-426614174000',
+  'Test User',
+  'https://example.com/avatar.jpg',
+  '+541112345678',
+  '{"street": "Av. Corrientes 1234", "zip": "1043"}',
+  '{"notifications": true}',
+  '{"linkedin": "https://linkedin.com/in/testuser"}',
+  'verified'
+) ON CONFLICT (user_id) DO NOTHING;
 
 -- Sample property
 INSERT INTO public.properties (
@@ -264,10 +327,10 @@ INSERT INTO public.properties (
     '123e4567-e89b-12d3-a456-426614174000',
     'available'
 ) ON CONFLICT DO NOTHING;
-*/
+
 
 -- ===============================================
--- 9. VERIFICATION
+-- 12. VERIFICATION
 -- ===============================================
 
 -- Verify that tables were created correctly
@@ -277,15 +340,15 @@ SELECT
     tableowner
 FROM pg_tables 
 WHERE schemaname = 'public' 
-  AND tablename IN ('users', 'properties', 'bookings');
-
+AND tablename IN ('users', 'profiles', 'properties', 'bookings');
 -- Verify that the bucket was created
 SELECT name, public FROM storage.buckets WHERE name = 'property-images';
+SELECT name, public FROM storage.buckets WHERE name = 'profiles-avatars';
 
 -- ===============================================
 -- SCRIPT COMPLETED
 -- ===============================================
--- ✅ Tables created: users, properties, bookings
+-- ✅ Tables created: users,profiles, properties, bookings
 -- ✅ Indexes optimized for queries
 -- ✅ Constraints and validations applied
 -- ✅ Triggers for updated_at configured

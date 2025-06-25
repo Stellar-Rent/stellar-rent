@@ -8,11 +8,21 @@
     "start": "bun run dist/index.js",
     "dev": "bun run --watch src/index.ts",
     "build": "bun build ./src/index.ts --outdir ./dist",
-    "test": "bun test",
+    "test": "bun run test:unit && bun run test:integration",
+    "test:all": "bun run test:api:all && bun run test:docker:all && bun run test",
+    "test:api:all": "bun run test:api:simple && bun run test:api:endpoints && bun run test:api:profile",
+    "test:docker:all": "bun run test:docker:validate && bun run test:docker:integration",
     "docker:build": "docker build -t stellarrent-backend .",
     "docker:run": "docker run -p 3000:3000 stellarrent-backend",
     "docker:dev": "docker-compose up",
-    "docker:stop": "docker-compose down"
+    "docker:stop": "docker-compose down",
+    "test:api:simple": "./tests/api/simple.test.sh",
+    "test:api:endpoints": "./tests/api/endpoints.test.sh",
+    "test:api:profile": "./tests/api/profile.test.sh",
+    "test:docker:integration": "./tests/docker/integration.test.sh",
+    "test:docker:validate": "./tests/docker/validate.test.sh",
+    "test:unit": "jest tests/unit",
+    "test:integration": "jest tests/integration"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",

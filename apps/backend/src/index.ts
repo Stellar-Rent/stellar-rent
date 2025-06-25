@@ -5,6 +5,7 @@ import { errorMiddleware } from './middleware/error.middleware';
 import { rateLimiter } from './middleware/rateLimiter';
 import authRoutes from './routes/auth';
 import locationRoutes from './routes/location.routes';
+import profileRouter from './routes/profile.route';
 import bookingRoutes from './routes/booking.routes';
 import propertyRoutes from './routes/property.route';
 
@@ -45,6 +46,7 @@ app.use('/auth', authRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/properties', propertyRoutes);
 app.use('/locations', locationRoutes);
+app.use('/profiles', profileRouter);
 
 // Health check endpoint for Docker
 app.get('/health', (_req, res) => {

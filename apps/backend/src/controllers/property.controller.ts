@@ -408,6 +408,8 @@ export async function searchPropertiesController(req: Request, res: Response): P
       limit,
       sort_by,
       sort_order,
+      from,
+      to,
     } = queryValidation.data;
 
     const filters: PropertySearchFilters = {
@@ -420,6 +422,8 @@ export async function searchPropertiesController(req: Request, res: Response): P
       max_guests,
       amenities,
       status,
+      from,
+      to,
     };
 
     const options: PropertySearchOptions = {
@@ -433,6 +437,20 @@ export async function searchPropertiesController(req: Request, res: Response): P
     const result = await searchProperties(filters, options);
 
     if (!result.success) {
+      if (
+        result.error?.startsWith('BLOCKCHAIN_') ||
+        (result.details as { type?: string })?.type === 'blockchain'
+      ) {
+        res
+          .status(503)
+          .json(
+            formatErrorResponse(
+              'Unable to verify availability, please try again later',
+              result.details
+            )
+          );
+        return;
+      }
       res.status(500).json(formatErrorResponse(result.error || 'Unknown error', result.details));
       return;
     }

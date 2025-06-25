@@ -22,6 +22,47 @@ curl -s -X POST "$BASE_URL/properties" -H "Content-Type: application/json" -d '{
 echo -e "\n6. ✅ Testing auth endpoints availability"
 curl -s -X POST "$BASE_URL/auth/register" -H "Content-Type: application/json" -d '{}' | jq '.error // .message'
 
+# 🔐 Replace with your actual token or load from environment
+AUTH_TOKEN="your_jwt_token_here"
+# 🧪 Profile Endpoints
+echo -e "\n7. 🔐 Testing GET /profiles (authenticated)"
+curl -s -X GET "$BASE_URL/profiles" \
+  -H "Authorization: Bearer $AUTH_TOKEN" | jq '.user // .error'
+
+echo -e "\n7. 🔐 Testing DELETE /profiles (authenticated)"
+curl -s -X DELETE "$BASE_URL/profiles" \
+  -H "Authorization: Bearer $AUTH_TOKEN" | jq '.success // .error'
+
+
+echo -e "\n8. ✏️ Testing PATCH /profiles (update basic profile)"
+curl -s -X PATCH "$BASE_URL/profiles" \
+  -H "Authorization: Bearer $AUTH_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Bernard Kip",
+    "phone": "+254712345678",
+    "address": {
+      "street": "123 Main Street",
+      "city": "Nairobi",
+      "country": "Kenya",
+      "postal_code": "00100"
+    },
+    "preferences": {
+      "notifications": true,
+      "newsletter": true,
+      "language": "en"
+    },
+    "social_links": {
+      "twitter": "https://twitter.com/bernardev254"
+    }
+  }' | jq '.profile // .error'
+
+echo -e "\n9. 📤 Testing POST /profiles/avatar (upload image)"
+curl -s -X POST "$BASE_URL/profiles/avatar" \
+  -H "Authorization: Bearer $AUTH_TOKEN" \
+  -F "avatar=@./tests/assets/avatar.png" | jq '.avatar_url // .error'
+
+
 echo -e "\n========================"
 echo "🎯 Test Summary:"
 echo "- Endpoints are responding"

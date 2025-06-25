@@ -1,3 +1,5 @@
+import pLimit from 'p-limit';
+import { checkBookingAvailability } from '../blockchain/bookingContract';
 import { supabase } from '../config/supabase';
 import type {
   AvailabilityRange,
@@ -5,6 +7,7 @@ import type {
   Property,
   UpdatePropertyInput,
 } from '../types/property.types';
+// import{ checkB }
 import { propertySchema, updatePropertySchema } from '../types/property.types';
 
 // Allowed amenities list
@@ -65,6 +68,8 @@ export interface PropertySearchFilters {
   max_guests?: number;
   amenities?: string[];
   status?: 'available' | 'booked' | 'maintenance';
+  from?: string;
+  to?: string;
 }
 
 export interface PropertySearchOptions {
@@ -474,11 +479,52 @@ export async function searchProperties(
       };
     }
 
+    let filteredProperties = properties as Property[];
+
+    if (filters.from && filters.to) {
+      const fromDate = new Date(filters.from);
+      const toDate = new Date(filters.to);
+
+      if (Number.isNaN(fromDate.getTime()) || Number.isNaN(toDate.getTime())) {
+        return {
+          success: false,
+          error: 'Invalid date format for from or to',
+        };
+      }
+
+      // Use fromDate and toDate as needed, e.g.:
+      // - Pass to checkBookingAvailability
+      // - Convert to UNIX timestamp if needed
+
+      // Limit concurrency to 10 at a time
+
+      const limit = pLimit(10);
+
+      const checked = await Promise.all(
+        filteredProperties.map((property) =>
+          limit(async () => {
+            try {
+              return (await checkBookingAvailability(
+                property.id,
+                fromDate.toISOString(),
+                toDate.toISOString()
+              ))
+                ? property
+                : null;
+            } catch (e) {
+              // Optionally log or handle error
+              return null;
+            }
+          })
+        )
+      );
+      filteredProperties = checked.filter(Boolean) as Property[];
+    }
     return {
       success: true,
       data: {
-        properties: properties as Property[],
-        total: count || 0,
+        properties: filteredProperties,
+        total: filteredProperties.length,
         page,
         limit,
       },

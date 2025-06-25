@@ -1,0 +1,22 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Implement Freighter Wallet Integration",
+        "description": "Integrate Freighter wallet for USDC payments and transaction signing",
+        "details": "- Add Freighter SDK\\n- Implement wallet connection hook\\n- Add balance display\\n- Create transaction signing interface\\n- Implement error handling\\n- Add connection status management",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2025-06-24T22:07:37.791Z",
+      "updated": "2025-06-24T22:07:37.798Z",
+      "description": "Tasks for master context"
+    }
+  }
+}
