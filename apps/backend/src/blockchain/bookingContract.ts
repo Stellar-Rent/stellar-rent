@@ -2,10 +2,10 @@ import {
   Contract,
   Keypair,
   Networks,
+  SorobanRpc,
   TransactionBuilder,
   nativeToScVal,
   scValToNative,
-  rpc as stellarRpc,
   xdr,
 } from '@stellar/stellar-sdk';
 import * as mockBookingContract from '../__mocks__/bookingContract';
@@ -15,7 +15,7 @@ const useMock = process.env.USE_MOCK === 'true';
 // Initialize blockchain-related variables
 let sourceKeypair: Keypair;
 let contractId: string;
-let server: stellarRpc.Server;
+let server: SorobanRpc.Server;
 let networkPassphrase: string;
 
 if (!useMock) {
@@ -35,7 +35,7 @@ if (!useMock) {
   if (!rpcUrl) {
     throw new Error('SOROBAN_RPC_URL environment variable is required');
   }
-  server = new stellarRpc.Server(rpcUrl);
+  server = new SorobanRpc.Server(rpcUrl);
   networkPassphrase = process.env.SOROBAN_NETWORK_PASSPHRASE || Networks.TESTNET;
 }
 
