@@ -5,6 +5,7 @@ import { errorMiddleware } from './middleware/error.middleware';
 import { rateLimiter } from './middleware/rateLimiter';
 import authRoutes from './routes/auth';
 import bookingRoutes from './routes/booking.routes';
+import locationRoutes from './routes/location.routes';
 import profileRouter from './routes/profile.route';
 import propertyRoutes from './routes/property.route';
 
@@ -21,7 +22,7 @@ if (!process.env.SUPABASE_URL) {
 }
 
 // Debug: verificar variables de entorno
-console.log('Variables de entorno cargadas:', {
+console.log('Environment variables loaded:', {
   supabaseUrl: process.env.SUPABASE_URL ? '✅' : '❌',
   supabaseKey: process.env.SUPABASE_ANON_KEY ? '✅' : '❌',
   jwtSecret: process.env.JWT_SECRET ? '✅' : '❌',
@@ -44,7 +45,8 @@ app.use(rateLimiter);
 app.use('/auth', authRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/properties', propertyRoutes);
-app.use('/profiles', profileRouter);
+app.use('/api/locations', locationRoutes);
+app.use('/api/profiles', profileRouter);
 
 // Health check endpoint for Docker
 app.get('/health', (_req, res) => {
@@ -64,8 +66,13 @@ app.get('/', (_req, res) => {
 // Error handling
 app.use(errorMiddleware);
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`✅ Server running on port ${PORT}`);
-  console.log(`🚀 Environment: ${process.env.NODE_ENV || 'development'}`);
-});
+// Export app for testing
+export { app };
+
+// Start server if not in test environment
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    console.log(`✅ Server running on port ${PORT}`);
+    console.log(`🚀 Environment: ${process.env.NODE_ENV || 'development'}`);
+  });
+}

@@ -1,294 +1,227 @@
-# 🚀 StellarRent Backend
+# StellarRent Backend
 
-Backend API for StellarRent, built with Express, TypeScript and Supabase.
+A decentralized P2P rental platform built on the Stellar blockchain.
 
-## 📋 Prerequisites
+## Quick Start
 
-- **Node.js** (v18+)
-- **Bun** (install with `curl -fsSL https://bun.sh/install | bash`)
-- **Docker & Docker Compose** (for containerized development)
-- **Supabase account** and project created
-
-## 🛠️ Complete Setup
-
-### 1. Install Dependencies
 ```bash
-cd apps/backend
+# Install dependencies
 bun install
-```
 
-### 2. 🗄️ Database Setup
-**IMPORTANT**: Configure the database BEFORE continuing.
+# Set up your environment variables in .env
+cp .env.example .env  # Then edit .env with your values
 
-1. Go to your Supabase dashboard
-2. Open the **SQL Editor**
-3. Execute the complete script: [`database/setup.sql`](./database/setup.sql)
-
-📖 **Detailed guide**: [`database/README.md`](./database/README.md)
-
-### 3. Environment Variables
-Create `.env` in `apps/backend/`:
-
-```env
-PORT=3000
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_ANON_KEY=your_anon_key_here
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
-JWT_SECRET=your_super_secure_jwt_secret
-CORS_ORIGIN=http://localhost:3000
-```
-
-> 💡 **Tip**: Find your keys in Supabase → Settings → API
-
-### 4. Run Server
-
-**Option A: Local Development**
-```bash
+# Start development server
 bun run dev
-```
 
-**Option B: Docker Development (Recommended)**
-```bash
-# Start with Docker Compose
-docker-compose up
-
-# Or in background
-docker-compose up -d
-```
-
-API running at **http://localhost:3000** 🎉
-
-## 🐳 Docker Development
-
-We provide a **simple and clean Docker setup** for development:
-
-### Quick Start
-```bash
-# Build and start the container
-docker-compose up
-
-# Run in background
-docker-compose up -d
-
-# Stop containers
-docker-compose down
-
-# View logs
-docker-compose logs backend
-
-# Follow logs in real-time
-docker-compose logs -f backend
-```
-
-### Health Check
-```bash
-# Test if the API is running
-curl http://localhost:3000/health
-# Expected: {"status":"healthy","timestamp":"...","uptime":...}
-
-# Test main endpoint
-curl http://localhost:3000/
-# Expected: {"message":"Stellar Rent API is running successfully 🚀"}
-```
-
-### Docker Commands
-
-| Command | Description |
-|---------|-------------|
-| `docker-compose up` | Start development environment |
-| `docker-compose up -d` | Start in background |
-| `docker-compose down` | Stop and remove containers |
-| `docker-compose logs backend` | View backend logs |
-| `docker-compose restart backend` | Restart backend service |
-| `docker build -t stellarrent-backend .` | Build image manually |
-
-### Docker Features
-- ✅ **Hot reload**: Code changes automatically restart the server
-- ✅ **Health check**: Built-in `/health` endpoint monitoring
-- ✅ **Volume mounting**: Local changes sync with container
-- ✅ **Simple setup**: Uses Bun for fast TypeScript execution
-- ✅ **Environment variables**: Reads from `.env` file
-
-### Dockerfile Structure
-Our Dockerfile is simple and effective:
-- Uses `oven/bun:1.1.29` for fast TypeScript/JavaScript runtime
-- Installs `curl` for health checks
-- Runs TypeScript directly (no build step needed)
-- Exposes port 3000 with health monitoring
-
-## 📜 Available Scripts
-
-| Script | Description |
-|--------|-------------|
-| `bun dev` | Start development server with hot-reload |
-| `bun build` | Build for production |
-| `bun start` | Start production server |
-| `bun test` | Run test suite |
-
-## 🧪 Testing
-
-### Quick Test
-```bash
-# Test basic endpoint
-curl http://localhost:3000/properties/amenities
-
-# Test health endpoint (Docker)
-curl http://localhost:3000/health
-
-# Run test suite (if exists)
+# Run tests
 bun test
 ```
 
-### Test Script
+## Running with Docker
+
 ```bash
-chmod +x test_endpoints.sh
-./test_endpoints.sh
+# Make sure you have Docker Desktop running
+# and .env file configured (see Environment Variables section)
+
+# Build and start the container
+cd apps/backend
+docker-compose up --build -d
+
+# Check container status
+docker ps
+
+# View logs
+docker logs stellarrent-backend
+
+# Stop the container
+docker-compose down
+
+# For development with live reload
+docker-compose up
+
+# Run commands inside the container
+docker exec -it stellarrent-backend bun test
 ```
 
-## 📡 API Endpoints
-
-### **🔓 Public Endpoints**
-```
-GET    /properties/amenities     # Get allowed amenities
-GET    /properties               # Search properties (with filters)
-GET    /properties/:id           # Get property by ID
-```
-
-### **🔐 Protected Endpoints** (require JWT)
-```
-POST   /properties               # Create new property
-PUT    /properties/:id           # Update property
-DELETE /properties/:id           # Delete property
-PATCH  /properties/:id/status    # Update status
-PATCH  /properties/:id/availability  # Update availability
-GET    /properties/owner/:ownerId    # Properties by owner
-```
-
-### **👤 Auth Endpoints**
-```
-POST   /auth/register            # Register user
-POST   /auth/login               # Login user
-```
-
-## 📝 Examples
-
-### Register User
+The application will be available at `http://localhost:3000`. You can verify it's running by checking the health endpoint:
 ```bash
-curl -X POST http://localhost:3000/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{"email":"test@example.com","password":"password123","name":"Test User"}'
+curl http://localhost:3000/health
 ```
 
-### Create Property
+## Database Setup
+
+1. Create your own Supabase project at [supabase.com](https://supabase.com)
+2. Get your project credentials from Project Settings > API
+3. Add them to your `.env` file:
+   ```env
+   SUPABASE_URL=your_development_project_url
+   SUPABASE_SERVICE_ROLE_KEY=your_development_service_role_key
+   ```
+4. Run migrations:
+   ```bash
+   cd database
+   ./migrate.sh
+   ```
+
+This setup ensures:
+- ✅ Isolated development environment
+- ✅ Safe testing of database changes
+- ✅ Clear tracking of schema changes
+
+### Creating New Migrations
+
+When making database changes:
+1. Create a new migration file:
+   ```bash
+   cd database/migrations
+   touch "$(date +%s)_description.sql"
+   ```
+2. Follow the migration template:
+   ```sql
+   -- Migration: description
+   -- Description: What this migration does
+   -- Created at: YYYY-MM-DD
+   
+   -- Record this migration
+   INSERT INTO migrations (name) VALUES ('description');
+   
+   -- Your changes here
+   CREATE TABLE IF NOT EXISTS example (...);
+   
+   -- Rollback instructions (comment out)
+   -- DROP TABLE IF EXISTS example;
+   ```
+3. Test in your development environment first
+4. Include in your PR with:
+   - Description of changes
+   - Rollback instructions
+   - Testing steps
+
+### Checking Migration Status
+
+```sql
+-- List applied migrations
+SELECT name, executed_at 
+FROM migrations 
+ORDER BY executed_at;
+
+-- Check pending migrations
+SELECT m.name 
+FROM (
+  SELECT unnest(ARRAY[
+    '00001_initial_schema',
+    '00002_storage_and_rls',
+    '00003_triggers'
+    -- Add new migrations here
+  ]) AS name
+) m 
+LEFT JOIN migrations am ON m.name = am.name 
+WHERE am.name IS NULL;
+```
+
+## Testing
+
+The project uses a structured testing approach:
+
+```
+tests/
+├── unit/           # Unit tests for individual components
+├── integration/    # Integration tests between components
+├── api/            # API endpoint tests
+└── scripts/        # Test helper scripts
+```
+
+Run tests:
 ```bash
-curl -X POST http://localhost:3000/properties \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "Modern House",
-    "description": "Beautiful house in Buenos Aires",
-    "price": 150.00,
-    "address": "Av. Corrientes 1234",
-    "city": "Buenos Aires",
-    "country": "Argentina",
-    "amenities": ["wifi", "kitchen", "parking"],
-    "images": ["https://example.com/image1.jpg"],
-    "bedrooms": 3,
-    "bathrooms": 2,
-    "max_guests": 6,
-    "owner_id": "your-user-uuid"
-  }'
+# Run all tests
+bun test
+
+# Run specific test suite
+bun test tests/unit
+bun test tests/integration
+bun test tests/api
+
+# Run specific test file
+bun test tests/unit/location.test.ts
 ```
 
-### Search Properties
-```bash
-curl "http://localhost:3000/properties?city=Buenos%20Aires&min_price=100&max_price=200"
+## Environment Variables
+
+All environment variables should be in the `.env` file:
+
+```env
+# Database
+SUPABASE_URL=your_supabase_url
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+
+# Application
+JWT_SECRET=your_jwt_secret
+CORS_ORIGIN=http://localhost:3001
 ```
 
-## 🏗️ Project Structure
+## API Documentation
+
+### Authentication
+- `POST /auth/login` - Login user
+- `POST /auth/register` - Register new user
+
+### Profile
+- `GET /api/profile` - Get user profile
+- `PATCH /api/profile` - Update profile
+- `DELETE /api/profile` - Delete account
+- `POST /api/profile/avatar` - Upload avatar
+
+### Properties
+- `GET /api/properties` - List properties
+- `POST /api/properties` - Create property
+- `GET /api/properties/:id` - Get property
+- `PUT /api/properties/:id` - Update property
+- `DELETE /api/properties/:id` - Delete property
+
+### Locations
+- `GET /api/locations/autocomplete` - Get location suggestions
+- `GET /api/locations/popular` - Get popular locations
+- `GET /api/locations/health` - Service health check
+
+### Bookings
+- `GET /api/bookings/:id` - Get booking
+- `POST /api/bookings` - Create booking
+- `PATCH /api/bookings/:id` - Update booking
+- `DELETE /api/bookings/:id` - Delete booking
+
+## Project Structure
 
 ```
 apps/backend/
 ├── src/
-│   ├── controllers/     # Request handlers
-│   ├── services/        # Business logic
-│   ├── routes/          # API routes
-│   ├── middleware/      # Auth, validation, etc.
-│   ├── types/           # TypeScript types
-│   ├── validators/      # Input validation
-│   └── config/          # Database, storage config
+│   ├── controllers/    # Request handlers
+│   ├── middleware/     # Express middleware
+│   ├── routes/        # API routes
+│   ├── services/      # Business logic
+│   └── types/         # TypeScript types
+├── tests/
+│   ├── unit/         # Unit tests
+│   ├── integration/  # Integration tests
+│   ├── api/          # API tests
+│   └── scripts/      # Test helpers
 ├── database/
-│   ├── setup.sql        # Database setup script
-│   └── README.md        # Database documentation
-├── test_endpoints.sh    # Quick API testing
-└── package.json
+│   └── migrations/   # Database migrations
+└── docker/          # Docker configuration
 ```
 
-## 🛡️ Security Features
+## Security Features
 
-- **JWT Authentication** for protected endpoints
-- **Input validation** with Zod schemas
-- **Row Level Security** in Supabase
-- **Rate limiting** to prevent abuse
-- **CORS** properly configured
+- JWT authentication
+- Row Level Security (RLS) in Supabase
+- Rate limiting
+- Input validation with Zod
+- CORS protection
+- File upload restrictions
 
-## 🔧 Development
+## Contributing
 
-### Add New Endpoint
-1. Create controller in `src/controllers/`
-2. Add service logic in `src/services/`
-3. Define types in `src/types/`
-4. Add route in `src/routes/`
-5. Add validation if needed
-
-### Database Changes
-1. Update `database/setup.sql`
-2. Test in development
-3. Document changes in `database/README.md`
-
-## 🚨 Troubleshooting
-
-### **Server won't start**
-- ✅ Check environment variables in `.env`
-- ✅ Make sure Supabase is configured
-- ✅ Run `bun install` again
-
-### **Database errors**
-- ✅ Execute `database/setup.sql` in Supabase
-- ✅ Check SUPABASE_URL and keys
-- ✅ Confirm tables exist
-
-### **Auth not working**
-- ✅ Check JWT_SECRET in `.env`
-- ✅ Make sure token is valid
-- ✅ Verify RLS is configured
-
-### **Endpoints return 404**
-- ✅ Confirm server is running
-- ✅ Check URL and HTTP method
-- ✅ Review server logs
-
-## 🤝 Contributing
-
-1. **Fork** the repository
-2. **Create branch**: `git checkout -b feature/amazing-feature`
-3. **Test** your changes locally
-4. **Document** new endpoints/changes
-5. **Submit** pull request
-
-### Contribution Guidelines
-- ✅ Follow TypeScript best practices
-- ✅ Add tests for new functionality
-- ✅ Update documentation
-- ✅ Use conventional commits
-
-## 📚 Resources
-
-- [Express.js Documentation](https://expressjs.com/)
-- [Supabase Documentation](https://supabase.com/docs)
-- [TypeScript Handbook](https://www.typescriptlang.org/docs/)
-- [Zod Schema Validation](https://zod.dev/)
-
----
-
-**Need help?** Open an issue or check the database documentation at [`database/README.md`](./database/README.md) 🚀
+1. Create a feature branch
+2. Make your changes
+3. Add tests
+4. Create a pull request

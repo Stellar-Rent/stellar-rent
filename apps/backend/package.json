@@ -1,14 +1,18 @@
 {
-  "name": "stellar-rent-backend",
+  "name": "@stellar-rent/backend",
   "version": "1.0.0",
+  "type": "module",
   "private": true,
   "description": "Backend para StellarRent",
   "main": "dist/index.js",
   "scripts": {
+    "dev": "bun run src/index.ts",
     "start": "bun run dist/index.js",
-    "dev": "bun run --watch src/index.ts",
-    "build": "bun build ./src/index.ts --outdir ./dist",
-    "test": "bun run test:unit && bun run test:integration",
+    "build": "bun build ./src/index.ts --outdir ./dist --target node",
+    "test": "bun test",
+    "lint": "eslint . --ext .ts",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "typecheck": "tsc --noEmit",
     "test:all": "bun run test:api:all && bun run test:docker:all && bun run test",
     "test:api:all": "bun run test:api:simple && bun run test:api:endpoints && bun run test:api:profile",
     "test:docker:all": "bun run test:docker:validate && bun run test:docker:integration",
@@ -25,7 +29,9 @@
     "test:integration": "jest tests/integration"
   },
   "dependencies": {
+    "@stellar/stellar-sdk": "^11.2.2",
     "@supabase/supabase-js": "^2.39.0",
+    "@types/supertest": "^6.0.3",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
@@ -33,6 +39,7 @@
     "express-rate-limit": "^7.1.5",
     "jsonwebtoken": "^9.0.2",
     "multer": "^1.4.5-lts.1",
+    "supertest": "^7.1.1",
     "zod": "^3.22.4"
   },
   "devDependencies": {
@@ -42,10 +49,15 @@
     "@types/jest": "^29.5.11",
     "@types/jsonwebtoken": "^9.0.5",
     "@types/multer": "^1.4.11",
-    "@types/node": "^20.10.5",
+    "@types/node": "^20.10.4",
     "@types/supertest": "^6.0.3",
+    "@typescript-eslint/eslint-plugin": "^6.13.2",
+    "@typescript-eslint/parser": "^6.13.2",
+    "bun-types": "latest",
+    "eslint": "^8.55.0",
+    "eslint-config-prettier": "^9.1.0",
     "jest": "^29.7.0",
-    "supertest": "^7.1.1",
+    "prettier": "^3.1.0",
     "ts-jest": "^29.1.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
