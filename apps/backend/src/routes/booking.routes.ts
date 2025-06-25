@@ -1,9 +1,10 @@
 import { Router } from 'express';
-import { postBooking } from '../controllers/bookingControllers';
+import { confirmPayment, getBooking } from '../controllers/booking.controller';
 import { authenticateToken } from '../middleware/auth.middleware';
 
 const router = Router();
 
-router.post('/api/bookings', authenticateToken, postBooking);
+router.get('/:bookingId', authenticateToken, getBooking);
+router.post('/:bookingId/confirm-payment', authenticateToken, confirmPayment);
 
 export default router;
