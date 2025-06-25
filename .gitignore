@@ -2,7 +2,6 @@
 node_modules
 .pnp
 .pnp.js
-package-lock.json
 
 # Testing
 coverage
@@ -39,8 +38,7 @@ yarn-error.log*
 # Bun
 bun.lockb
 
-# Cursor
-.cursorignore
-.clinerules
-.roo
-.cursor
+# Cursor IDE
+.cursor/
+**/.cursor/
+.cursorignore 

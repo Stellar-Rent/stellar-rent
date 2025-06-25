@@ -1,65 +1,33 @@
-import type { Request } from 'express';
 import { z } from 'zod';
-import type { AuthRequest } from './auth.types';
-
-export interface BookingRequest extends AuthRequest {
-  params: {
-    bookingId: string;
-  };
-}
-
-// Database booking interface
 export interface Booking {
   id: string;
-  user_id: string;
-  property_id: string;
-  amount: number;
-  currency: string;
-  status: 'pending' | 'confirmed' | 'cancelled';
-  start_date: string;
-  end_date: string;
-  escrow_address?: string;
-  transaction_hash?: string;
-  created_at: string;
-  updated_at: string;
+  propertyId: string;
+  userId: string;
+  dates: { from: Date; to: Date };
+  guests: number;
+  total: number;
+  deposit: number;
+  escrowAddress: string;
+  status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
+  createdAt: Date;
+  updatedAt: Date;
 }
-
-// Validation schemas
-export const ParamsSchema = z.object({
-  bookingId: z.string().uuid('Invalid booking ID format'),
+export const createBookingSchema = z.object({
+  propertyId: z.string().uuid('Invalid property ID'),
+  userId: z.string().uuid('Invalid user ID'),
+  dates: z
+    .object({
+      from: z.date().refine((date) => date >= new Date(), {
+        message: 'The start date must be in the future',
+      }),
+      to: z.date(),
+    })
+    .refine((data) => data.to > data.from, {
+      message: 'The end date must be later than the start date',
+    }),
+  guests: z.number().int('Guests must be an integer').positive('Guests must be positive'),
+  total: z.number().positive('Total cost must be positive'),
+  deposit: z.number().nonnegative('Deposit must be non-negative'),
 });
 
-export const ResponseSchema = z.object({
-  id: z.string(),
-  property: z.string(),
-  dates: z.object({
-    from: z.string(),
-    to: z.string(),
-  }),
-  hostContact: z.string(),
-  escrowStatus: z.string(),
-});
-
-export type BookingsResponse = z.infer<typeof ResponseSchema>;
-
-// Confirm payment request schema
-export const confirmPaymentSchema = z.object({
-  transactionHash: z
-    .string()
-    .min(1, 'Transaction hash is required')
-    .regex(/^[A-Fa-f0-9]{64}$/, 'Invalid Stellar transaction hash format'),
-});
-
-export type ConfirmPaymentInput = z.infer<typeof confirmPaymentSchema>;
-
-// Response interfaces
-export interface ConfirmPaymentResponse {
-  bookingId: string;
-  status: string;
-  message: string;
-}
-
-export interface BookingErrorResponse {
-  error: string;
-  details?: Array<{ path?: string; message: string }>;
-}
+export type CreateBookingInput = z.infer<typeof createBookingSchema>;
