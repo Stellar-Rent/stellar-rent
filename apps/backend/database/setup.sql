@@ -98,8 +98,7 @@ CREATE INDEX IF NOT EXISTS properties_amenities_idx ON public.properties USING G
 CREATE INDEX IF NOT EXISTS properties_location_idx ON public.properties(city, country);
 
 -- ===============================================
--- 5. FUNCTION TO UPDATE updated_at
--- 3.1 BOOKINGS TABLE
+-- 5. BOOKINGS TABLE
 -- ===============================================
 
 CREATE TABLE IF NOT EXISTS public.bookings (
@@ -123,7 +122,7 @@ CREATE INDEX IF NOT EXISTS bookings_status_idx ON public.bookings(status);
 CREATE INDEX IF NOT EXISTS bookings_created_at_idx ON public.bookings(created_at);
 
 -- ===============================================
--- 4. FUNCTION TO UPDATE updated_at
+-- 6. FUNCTION TO UPDATE updated_at
 -- ===============================================
 
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -147,11 +146,7 @@ CREATE TRIGGER update_properties_updated_at
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
--- ===============================================
--- 6. STORAGE CONFIGURATION
--- 4.1 BOOKINGS updated_at TRIGGER
--- ===============================================
-
+-- Add trigger for bookings table
 DROP TRIGGER IF EXISTS update_bookings_updated_at ON public.bookings;
 CREATE TRIGGER update_bookings_updated_at
     BEFORE UPDATE ON public.bookings
@@ -159,7 +154,7 @@ CREATE TRIGGER update_bookings_updated_at
     EXECUTE FUNCTION update_updated_at_column();
 
 -- ===============================================
--- 5. STORAGE CONFIGURATION
+-- 7. STORAGE CONFIGURATION
 -- ===============================================
 
 -- Create bucket for property images
@@ -174,7 +169,7 @@ ON CONFLICT (id) DO NOTHING;
 
 
 -- ===============================================
--- 7. ROW LEVEL SECURITY (RLS) POLICIES
+-- 8. ROW LEVEL SECURITY (RLS) POLICIES
 -- ===============================================
 
 -- Enable Row Level Security
@@ -207,8 +202,7 @@ CREATE POLICY "Authenticated users can create properties" ON public.properties
     FOR INSERT WITH CHECK (auth.uid() = owner_id);
 
 -- ===============================================
--- 8. STORAGE POLICIES
--- 6.1 BOOKINGS RLS POLICIES
+-- 9. BOOKINGS RLS POLICIES
 -- ===============================================
 
 -- Enable Row Level Security on bookings
@@ -231,7 +225,7 @@ CREATE POLICY "Users can delete own bookings" ON public.bookings
     FOR DELETE USING (auth.uid() = user_id);
 
 -- ===============================================
--- 7. STORAGE POLICIES
+-- 10. STORAGE POLICIES
 -- ===============================================
 
 -- Policy to read profile avatars (public)
@@ -286,7 +280,7 @@ CREATE POLICY "Users can delete own property images" ON storage.objects
     );
 
 -- ===============================================
--- 9. SAMPLE DATA (OPTIONAL)
+-- 11. SAMPLE DATA (OPTIONAL)
 -- ===============================================
 
 -- Uncomment these lines to insert sample data
@@ -336,7 +330,7 @@ INSERT INTO public.properties (
 
 
 -- ===============================================
--- 10. VERIFICATION
+-- 12. VERIFICATION
 -- ===============================================
 
 -- Verify that tables were created correctly
@@ -346,7 +340,7 @@ SELECT
     tableowner
 FROM pg_tables 
 WHERE schemaname = 'public' 
-AND tablename IN ('users', 'profiles','properties', 'properties');
+AND tablename IN ('users', 'profiles', 'properties', 'bookings');
 -- Verify that the bucket was created
 SELECT name, public FROM storage.buckets WHERE name = 'property-images';
 SELECT name, public FROM storage.buckets WHERE name = 'profiles-avatars';
