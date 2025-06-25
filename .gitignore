@@ -36,4 +36,9 @@ yarn-error.log*
 .turbo
 
 # Bun
-bun.lockb 
+bun.lockb
+
+# Cursor IDE
+.cursor/
+**/.cursor/
+.cursorignore 
