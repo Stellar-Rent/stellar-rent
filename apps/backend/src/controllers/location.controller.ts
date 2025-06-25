@@ -1,29 +1,12 @@
 import type { Request, Response } from 'express';
 import { z } from 'zod';
 import { LocationService, locationService } from '../services/location.service';
-import { autocompleteQuerySchema } from '../types/location.types';
-
-interface ApiResponse<T = unknown> {
-  success: boolean;
-  data?: T;
-  error?: string;
-  details?: unknown;
-}
-
-function formatSuccessResponse<T>(data: T): ApiResponse<T> {
-  return {
-    success: true,
-    data,
-  };
-}
-
-function formatErrorResponse(error: string, details?: unknown): ApiResponse {
-  return {
-    success: false,
-    error,
-    details,
-  };
-}
+import {
+  formatErrorResponse,
+  formatSuccessResponse,
+  locationQuerySchema,
+  paginationSchema,
+} from '../types/shared.types';
 
 export class LocationController {
   private locationService: LocationService;
@@ -38,8 +21,7 @@ export class LocationController {
    */
   async getLocationSuggestions(req: Request, res: Response): Promise<void> {
     try {
-      // Validate query parameters
-      const validationResult = autocompleteQuerySchema.safeParse(req.query);
+      const validationResult = locationQuerySchema.merge(paginationSchema).safeParse(req.query);
 
       if (!validationResult.success) {
         res.status(400).json(
@@ -55,19 +37,14 @@ export class LocationController {
       }
 
       const { query, limit } = validationResult.data;
-
-      // Get suggestions from service
       const result = await this.locationService.getLocationSuggestions(query, limit);
 
       if (!result.success) {
         const statusCode = result.error?.includes('Failed to fetch') ? 503 : 500;
-        res
-          .status(statusCode)
-          .json(formatErrorResponse(result.error || 'Unknown error', result.details));
+        res.status(statusCode).json(formatErrorResponse(result.error || 'Unknown error'));
         return;
       }
 
-      // Return successful response
       res.status(200).json(formatSuccessResponse(result.data));
     } catch (error) {
       console.error('Location controller error:', error);
@@ -81,15 +58,7 @@ export class LocationController {
    */
   async getPopularLocations(req: Request, res: Response): Promise<void> {
     try {
-      const limitSchema = z.object({
-        limit: z
-          .string()
-          .optional()
-          .transform((val) => (val ? Number.parseInt(val, 10) : 10))
-          .refine((val) => val >= 1 && val <= 20, 'Limit must be between 1 and 20'),
-      });
-
-      const validationResult = limitSchema.safeParse(req.query);
+      const validationResult = paginationSchema.safeParse(req.query);
 
       if (!validationResult.success) {
         res.status(400).json(
@@ -105,19 +74,14 @@ export class LocationController {
       }
 
       const { limit } = validationResult.data;
-
-      // Get popular locations from service
       const result = await this.locationService.getPopularLocations(limit);
 
       if (!result.success) {
         const statusCode = result.error?.includes('Failed to fetch') ? 503 : 500;
-        res
-          .status(statusCode)
-          .json(formatErrorResponse(result.error || 'Unknown error', result.details));
+        res.status(statusCode).json(formatErrorResponse(result.error || 'Unknown error'));
         return;
       }
 
-      // Return successful response
       res.status(200).json(formatSuccessResponse(result.data));
     } catch (error) {
       console.error('Popular locations controller error:', error);
@@ -131,7 +95,6 @@ export class LocationController {
    */
   async healthCheck(_req: Request, res: Response): Promise<void> {
     try {
-      // Simple health check - try to get one location
       const result = await this.locationService.getPopularLocations(1);
 
       if (result.success) {

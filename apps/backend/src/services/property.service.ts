@@ -85,7 +85,10 @@ function validateImageUrls(images: string[]): boolean {
   return images.every((url) => urlRegex.test(url));
 }
 
-function validateAmenities(amenities: string[]): { valid: boolean; invalidAmenities: string[] } {
+function validateAmenities(amenities: string[]): {
+  valid: boolean;
+  invalidAmenities: string[];
+} {
   const invalidAmenities = amenities.filter(
     (amenity) => !ALLOWED_AMENITIES.includes(amenity as AllowedAmenity)
   );
@@ -209,12 +212,36 @@ export async function createProperty(
 
 /**
  * Get property by ID
+ * @param id - The unique identifier of the property
+ * @returns A promise that resolves to a ServiceResponse containing the property data
  */
 export async function getPropertyById(id: string): Promise<ServiceResponse<Property>> {
   try {
     const { data: property, error } = await supabase
       .from('properties')
-      .select('*')
+      .select(`
+        id,
+        title,
+        description,
+        price,
+        address,
+        city,
+        country,
+        latitude,
+        longitude,
+        amenities,
+        images,
+        bedrooms,
+        bathrooms,
+        max_guests,
+        owner_id,
+        status,
+        availability,
+        security_deposit,
+        cancellation_policy,
+        created_at,
+        updated_at
+      `)
       .eq('id', id)
       .single();
 
@@ -226,9 +253,42 @@ export async function getPropertyById(id: string): Promise<ServiceResponse<Prope
       };
     }
 
+    // Transform the flat structure into the expected Property interface
+    const formattedProperty: Property = {
+      id: property.id,
+      title: property.title,
+      description: property.description,
+      price: property.price,
+      location: {
+        address: property.address,
+        city: property.city,
+        country: property.country,
+        coordinates:
+          property.latitude && property.longitude
+            ? { latitude: property.latitude, longitude: property.longitude }
+            : undefined,
+      },
+      amenities: property.amenities || [],
+      images: property.images || [],
+      bedrooms: property.bedrooms,
+      bathrooms: property.bathrooms,
+      maxGuests: property.max_guests,
+      ownerId: property.owner_id,
+      status: property.status as 'available' | 'booked' | 'maintenance',
+      availability:
+        property.availability?.map((range) => ({
+          from: range.start_date || range.from,
+          to: range.end_date || range.to,
+        })) || [],
+      securityDeposit: property.security_deposit,
+      cancellationPolicy: property.cancellation_policy,
+      createdAt: property.created_at,
+      updatedAt: property.updated_at,
+    };
+
     return {
       success: true,
-      data: property as Property,
+      data: formattedProperty,
     };
   } catch (error) {
     console.error('Get property error:', error);

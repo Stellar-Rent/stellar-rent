@@ -328,9 +328,8 @@ describe('LocationService', () => {
   let locationService: LocationService;
 
   beforeEach(() => {
-    // Type assertion is necessary here due to mock limitations
-    // biome-ignore lint/suspicious/noExplicitAny: Mock object requires any type
-    locationService = new LocationService(mockSupabase as any);
+    // Create a properly typed mock object
+    locationService = new LocationService(mockSupabase as MockSupabase);
     jest.clearAllMocks();
   });
 
