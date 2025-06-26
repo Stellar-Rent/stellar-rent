@@ -52,3 +52,7 @@ node_modules/
 *.sw?
 # OS specific
 .cursor
+
+# Task files
+# tasks.json
+# tasks/ 
