@@ -1,3 +1,4 @@
+// src/services/api.ts
 import type {
   ConfirmPaymentInput,
   ConfirmPaymentResponse,
@@ -8,6 +9,7 @@ import type {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
 
+// Define the expected shape of the backend response
 interface BackendBooking {
   id: string;
   user_id?: string;
@@ -106,6 +108,7 @@ function transformProfile(backendProfile: BackendProfile): UserProfile {
   };
 }
 
+// Utility function for file downloads
 function downloadFile(blob: Blob, filename: string): void {
   const url = window.URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -159,7 +162,7 @@ export const bookingAPI = {
       return rawBookings.map(transformBooking);
     } catch (error) {
       console.error('Failed to fetch bookings:', error);
-      throw error;
+      throw error; // Let the calling code handle the error
     }
   },
 
@@ -218,7 +221,7 @@ export const profileAPI = {
       return transformProfile(rawProfile);
     } catch (error) {
       console.error('Failed to fetch profile:', error);
-      throw error;
+      throw error; // Let the calling code handle the error
     }
   },
 
@@ -287,7 +290,7 @@ export const walletAPI = {
       return await apiCall<{ balance: number; pendingTransactions: number }>('/wallet/info');
     } catch (error) {
       console.error('Failed to fetch wallet info:', error);
-      throw error;
+      throw error; // Let the calling code handle the error
     }
   },
 
@@ -296,7 +299,7 @@ export const walletAPI = {
       return await apiCall<Transaction[]>('/wallet/transactions');
     } catch (error) {
       console.error('Failed to fetch transactions:', error);
-      throw error;
+      throw error; // Let the calling code handle the error
     }
   },
 
@@ -323,7 +326,7 @@ export const walletAPI = {
 
       if (response.ok) {
         const blob = await response.blob();
-        downloadFile(blob, 'transactions.csv');
+        downloadFile(blob, 'transactions.csv'); // Use the utility function
       }
     } catch (error) {
       console.error('Failed to export transactions:', error);
