@@ -1,14 +1,5 @@
+import type { Transaction } from '@/types';
 import { Clock, CreditCard, Download, Wallet } from 'lucide-react';
-
-interface Transaction {
-  id: number;
-  date: string;
-  description: string;
-  amount: number;
-  type: 'payment' | 'refund' | 'deposit';
-  status: 'completed' | 'pending' | 'failed';
-  bookingId?: number;
-}
 
 interface PaymentMethod {
   type: string;
