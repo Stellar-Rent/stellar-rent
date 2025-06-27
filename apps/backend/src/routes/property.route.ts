@@ -3,6 +3,7 @@ import {
   createPropertyController,
   deletePropertyController,
   getAllowedAmenitiesController,
+  getFeaturedPropertiesController,
   getPropertiesByOwnerController,
   getPropertyByIdController,
   searchPropertiesController,
@@ -23,6 +24,7 @@ const router = Router();
 router.get('/amenities', getAllowedAmenitiesController);
 router.get('/', searchPropertiesController);
 router.get('/:id', validatePropertyId, getPropertyByIdController);
+router.get('/featured', getFeaturedPropertiesController);
 
 // Protected routes (require token)
 router.post(

@@ -3,7 +3,9 @@ import { checkBookingAvailability } from '../blockchain/bookingContract';
 import { supabase } from '../config/supabase';
 import type {
   AvailabilityRange,
+  AvailabilityRangeInput,
   CreatePropertyInput,
+  FeaturedProperty,
   Property,
   UpdatePropertyInput,
 } from '../types/property.types';
@@ -153,7 +155,12 @@ export async function createProperty(
 
     // Validate availability ranges
     if (input.availability && input.availability.length > 0) {
-      if (!validateAvailabilityRanges(input.availability)) {
+      const mappedAvailability = input.availability.map((range: AvailabilityRangeInput) => ({
+        start_date: (range.start_date ?? range.from) || '',
+        end_date: (range.end_date ?? range.to) || '',
+        is_available: range.is_available ?? true,
+      }));
+      if (!validateAvailabilityRanges(mappedAvailability)) {
         return {
           success: false,
           error:
@@ -166,7 +173,7 @@ export async function createProperty(
     const { data: owner, error: ownerError } = await supabase
       .from('users')
       .select('id')
-      .eq('id', input.owner_id)
+      .eq('id', input.ownerId)
       .single();
 
     if (ownerError || !owner) {
@@ -276,7 +283,7 @@ export async function getPropertyById(id: string): Promise<ServiceResponse<Prope
       ownerId: property.owner_id,
       status: property.status as 'available' | 'booked' | 'maintenance',
       availability:
-        property.availability?.map((range) => ({
+        property.availability?.map((range: { from?: string; to?: string; start_date?: string; end_date?: string; is_available?: boolean }) => ({
           from: range.start_date || range.from,
           to: range.end_date || range.to,
         })) || [],
@@ -346,7 +353,12 @@ export async function updateProperty(
 
     // Validate availability ranges if provided
     if (input.availability && input.availability.length > 0) {
-      if (!validateAvailabilityRanges(input.availability)) {
+      const mappedAvailability = input.availability.map((range: AvailabilityRangeInput) => ({
+        start_date: (range.start_date ?? range.from) || '',
+        end_date: (range.end_date ?? range.to) || '',
+        is_available: range.is_available ?? true,
+      }));
+      if (!validateAvailabilityRanges(mappedAvailability)) {
         return {
           success: false,
           error:
@@ -394,6 +406,49 @@ export async function updateProperty(
     };
   }
 }
+
+/**
+ * get getFeaturedProperties property
+ */
+export async function getFeaturedProperties(): Promise<ServiceResponse<FeaturedProperty[]>> {
+  try {
+    const { data, error } = await supabase
+      .from('properties')
+      .select('id, title, price, city, country, images, availability')
+      .order('created_at', { ascending: false })
+      .limit(8);
+
+    if (error) {
+      return {
+        success: false,
+        error: 'Failed to fetch featured properties',
+        details: error,
+      };
+    }
+
+    const formatted = (data || []).map((property) => ({
+      ...property,
+      image: property.images?.[0] ?? null,
+      location: {
+        city: property.city,
+        country: property.country,
+      },
+    }));
+
+    return {
+      success: true,
+      data: formatted,
+    };
+  } catch (err) {
+    console.error('getFeaturedProperties error:', err);
+    return {
+      success: false,
+      error: 'Internal server error',
+      details: err,
+    };
+  }
+}
+
 
 /**
  * Delete property
@@ -622,28 +677,13 @@ export async function updatePropertyAvailability(
       };
     }
 
-    return await updateProperty(id, { availability });
+    const mappedAvailability = availability.map((range: AvailabilityRangeInput) => ({
+        from: (range.start_date ?? range.from) || '',
+        to: (range.end_date ?? range.to) || '',
+      }));
+    return await updateProperty(id, { availability: mappedAvailability });
   } catch (error) {
-    console.error('Update availability error:', error);
-    return {
-      success: false,
-      error: 'Internal server error',
-      details: error,
-    };
-  }
-}
-
-/**
- * Update property status
- */
-export async function updatePropertyStatus(
-  id: string,
-  status: 'available' | 'booked' | 'maintenance'
-): Promise<ServiceResponse<Property>> {
-  try {
-    return await updateProperty(id, { status });
-  } catch (error) {
-    console.error('Update status error:', error);
+    console.error('Update property availability error:', error);
     return {
       success: false,
       error: 'Internal server error',

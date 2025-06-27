@@ -30,4 +30,23 @@ export const createBookingSchema = z.object({
   deposit: z.number().nonnegative('Deposit must be non-negative'),
 });
 
+export const ParamsSchema = z.object({
+  bookingId: z.string().uuid(),
+});
+
+export const ResponseSchema = z.object({
+  id: z.string().uuid(),
+  user_id: z.string().uuid(),
+  property_id: z.string().uuid(),
+  dates: z.array(z.string()),
+  guests: z.number(),
+  total: z.number(),
+  deposit: z.number(),
+  status: z.string(),
+  escrow_address: z.string().nullable().optional(),
+  created_at: z.string(),
+  // Add other fields returned by getBookingById if necessary
+});
+
+
 export type CreateBookingInput = z.infer<typeof createBookingSchema>;

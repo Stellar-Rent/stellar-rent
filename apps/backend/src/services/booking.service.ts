@@ -96,3 +96,37 @@ export class BookingService {
     }
   }
 }
+
+export async function confirmBookingPayment(escrowAddress: string) {
+  try {
+    // Example logic: update booking status from escrow confirmation
+    const { data, error } = await supabase
+      .from('bookings')
+      .update({ status: 'confirmed' })
+      .eq('escrow_address', escrowAddress)
+      .select()
+      .single();
+
+    if (error || !data) {
+      throw new BookingError('Failed to confirm booking', 'CONFIRM_FAIL', error);
+    }
+
+    return data;
+  } catch (error) {
+    throw new BookingError('Confirmation error', 'CONFIRM_FAIL', error);
+  }
+}
+
+export async function getBookingById(id: string) {
+  const { data, error } = await supabase
+    .from('bookings')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error || !data) {
+    throw new BookingError('Booking not found', 'NOT_FOUND', error);
+  }
+
+  return data;
+}
