@@ -3,6 +3,7 @@ import {
   createPropertyController,
   deletePropertyController,
   getAllowedAmenitiesController,
+  getFeaturedPropertiesController,
   getPropertiesByOwnerController,
   getPropertyByIdController,
   searchPropertiesController,
@@ -45,6 +46,8 @@ router.put(
 router.delete('/:id', authenticateToken, validatePropertyId, deletePropertyController);
 
 router.get('/owner/:ownerId', authenticateToken, validateOwnerId, getPropertiesByOwnerController);
+
+router.get('/featured', getFeaturedPropertiesController);
 
 router.patch(
   '/:id/availability',

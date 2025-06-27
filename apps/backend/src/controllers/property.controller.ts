@@ -10,6 +10,7 @@ import {
   createProperty,
   deleteProperty,
   getAllowedAmenities,
+  getFeaturedProperties,
   getPropertiesByOwner,
   getPropertyById,
   searchProperties,
@@ -22,6 +23,7 @@ import {
   propertySchema,
   searchPropertiesQuerySchema,
   updatePropertySchema,
+  type CreatePropertyInput,
 } from '../types/property.types';
 
 const createPropertyRequestSchema = propertySchema;
@@ -158,21 +160,63 @@ export async function createPropertyController(
       propertyData.images = imageUploadResult.uploadedUrls || [];
     }
 
-    const propertyInput = {
-      ...propertyData,
-      latitude:
-        propertyData.latitude === undefined ? null : propertyData.latitude,
-      longitude:
-        propertyData.longitude === undefined ? null : propertyData.longitude,
-      cancellation_policy:
-        propertyData.cancellation_policy === undefined
-          ? null
-          : propertyData.cancellation_policy,
-      property_token:
-        propertyData.property_token === undefined
-          ? null
-          : propertyData.property_token,
+    const propertyInput: CreatePropertyInput = {
+      title: propertyData.title,
+      description: propertyData.description,
+      price: propertyData.price,
+      location: {
+        address: propertyData.address,
+        city: propertyData.city,
+        country: propertyData.country,
+        coordinates:
+          typeof propertyData.latitude === 'number' &&
+          typeof propertyData.longitude === 'number'
+            ? {
+                latitude: propertyData.latitude,
+                longitude: propertyData.longitude,
+              }
+            : undefined,
+      },
+      amenities: propertyData.amenities,
+      images: propertyData.images,
+      bedrooms: propertyData.bedrooms,
+      bathrooms: propertyData.bathrooms,
+      maxGuests: propertyData.max_guests,
+      ownerId: propertyData.owner_id,
+      availability: propertyData.availability
+        .filter((range) => range.start_date && range.end_date)
+        .map((range) => ({
+          from: range.start_date,
+          to: range.end_date,
+        })),
+      securityDeposit: propertyData.security_deposit,
+      cancellationPolicy: propertyData.cancellation_policy
+        ? {
+            daysBefore: propertyData.cancellation_policy.refundable_until_days,
+            refundPercentage:
+              propertyData.cancellation_policy.refund_percentage,
+          }
+        : undefined,
+
+      propertyToken: propertyData.property_token ?? null,
+      status: propertyData.status,
     };
+
+    // const propertyInput = {
+    //   ...propertyData,
+    //   latitude:
+    //     propertyData.latitude === undefined ? null : propertyData.latitude,
+    //   longitude:
+    //     propertyData.longitude === undefined ? null : propertyData.longitude,
+    //   cancellation_policy:
+    //     propertyData.cancellation_policy === undefined
+    //       ? null
+    //       : propertyData.cancellation_policy,
+    //   property_token:
+    //     propertyData.property_token === undefined
+    //       ? null
+    //       : propertyData.property_token,
+    // };
 
     // Create property using service
     const result = await createProperty(propertyInput);
@@ -304,6 +348,12 @@ export async function updatePropertyController(
         updateData.property_token === undefined
           ? null
           : updateData.property_token,
+      availability: Array.isArray(updateData.availability)
+        ? updateData.availability.map((range: any) => ({
+            from: range.start_date ?? range.from,
+            to: range.end_date ?? range.to,
+          }))
+        : undefined,
     };
 
     // Update property using service
@@ -738,6 +788,44 @@ export async function updatePropertyStatusController(
       );
   } catch (error) {
     console.error('Update property status controller error:', error);
+    res.status(500).json(formatErrorResponse('Internal server error'));
+  }
+}
+
+export async function getFeaturedPropertiesController(
+  req: Request,
+  res: Response
+): Promise<void> {
+  try {
+    const result = await getFeaturedProperties();
+
+    if (!result.success) {
+      res
+        .status(500)
+        .json(
+          formatErrorResponse(
+            result.error ?? 'Unknown error occurred',
+            result.details
+          )
+        );
+      return;
+    }
+
+    const response = result.data!.map((property: any) => ({
+      id: property.id,
+      title: property.title,
+      price: property.price,
+      location: {
+        city: property.location?.city ?? '',
+        country: property.location?.country ?? '',
+      },
+      image: property.image ?? '',
+      availability: property.availability ?? [],
+    }));
+
+    res.json(formatSuccessResponse(response));
+  } catch (error) {
+    console.error('getFeaturedPropertiesController error:', error);
     res.status(500).json(formatErrorResponse('Internal server error'));
   }
 }
