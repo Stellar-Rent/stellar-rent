@@ -23,6 +23,7 @@ import {
   propertySchema,
   searchPropertiesQuerySchema,
   updatePropertySchema,
+  type AvailabilityRangeInput,
   type CreatePropertyInput,
 } from '../types/property.types';
 
@@ -349,10 +350,16 @@ export async function updatePropertyController(
           ? null
           : updateData.property_token,
       availability: Array.isArray(updateData.availability)
-        ? updateData.availability.map((range: any) => ({
-            from: range.start_date ?? range.from,
-            to: range.end_date ?? range.to,
-          }))
+        ? updateData.availability
+            .filter(
+              (range: AvailabilityRangeInput) =>
+                (range.start_date ?? range.from) &&
+                (range.end_date ?? range.to)
+            )
+            .map((range: AvailabilityRangeInput) => ({
+              from: (range.start_date ?? range.from) as string,
+              to: (range.end_date ?? range.to) as string,
+            }))
         : undefined,
     };
 

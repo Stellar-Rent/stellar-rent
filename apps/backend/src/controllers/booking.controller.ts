@@ -1,7 +1,6 @@
 import type { Response } from 'express';
 import { confirmBookingPayment, getBookingById } from '../services/booking.service';
 import type { AuthRequest } from '../types/auth.types';
-// import type { BookingRequest, ConfirmPaymentInput } from '../types/booking.types';
 import { ParamsSchema, ResponseSchema } from '../types/booking.types';
 
 export const getBooking = async (req: AuthRequest, res: Response) => {

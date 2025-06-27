@@ -24,6 +24,7 @@ const router = Router();
 router.get('/amenities', getAllowedAmenitiesController);
 router.get('/', searchPropertiesController);
 router.get('/:id', validatePropertyId, getPropertyByIdController);
+router.get('/featured', getFeaturedPropertiesController);
 
 // Protected routes (require token)
 router.post(
@@ -46,8 +47,6 @@ router.put(
 router.delete('/:id', authenticateToken, validatePropertyId, deletePropertyController);
 
 router.get('/owner/:ownerId', authenticateToken, validateOwnerId, getPropertiesByOwnerController);
-
-router.get('/featured', getFeaturedPropertiesController);
 
 router.patch(
   '/:id/availability',
