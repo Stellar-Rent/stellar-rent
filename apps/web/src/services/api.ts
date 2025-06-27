@@ -1,4 +1,3 @@
-// src/services/api.ts
 import type {
   ConfirmPaymentInput,
   ConfirmPaymentResponse,
