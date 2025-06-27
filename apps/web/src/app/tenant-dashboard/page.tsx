@@ -39,7 +39,6 @@ const TenantDashboard: React.FC = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Toast notification state
   const [toast, setToast] = useState<{
     show: boolean;
     message: string;
@@ -77,7 +76,6 @@ const TenantDashboard: React.FC = () => {
     { value: 'cancelled', label: 'Cancelled' },
   ];
 
-  // Toast notification function
   const showToast = (message: string, type: 'success' | 'error') => {
     setToast({ show: true, message, type });
     setTimeout(() => {

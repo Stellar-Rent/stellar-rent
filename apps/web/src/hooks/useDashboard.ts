@@ -16,8 +16,6 @@ export const useDashboard = () => {
   const [bookingsError, setBookingsError] = useState<string | null>(null);
   const [profileError, setProfileError] = useState<string | null>(null);
   const [walletError, setWalletError] = useState<string | null>(null);
-
-  // Use useCallback to stabilize function references for useEffect dependencies
   const fetchBookings = useCallback(async () => {
     setIsLoadingBookings(true);
     setBookingsError(null);
@@ -37,7 +35,6 @@ export const useDashboard = () => {
     try {
       const result = await bookingAPI.cancelBooking(bookingId);
       if (result.success) {
-        // Update local state
         setBookings((prevBookings) =>
           prevBookings.map((booking) =>
             booking.id === bookingId
@@ -158,7 +155,6 @@ export const useDashboard = () => {
     }
   };
 
-  // Fixed: Removed unused parameters with underscore prefix to indicate they're intentionally unused
   const login = async (_email: string, _password: string): Promise<boolean> => {
     try {
       // TODO: Implement actual login API call
@@ -186,7 +182,6 @@ export const useDashboard = () => {
     }
   };
 
-  // Fixed useEffect with proper dependencies
   useEffect(() => {
     if (!apiUtils.isAuthenticated()) {
       console.log('User not authenticated - skipping data fetch');
@@ -198,7 +193,7 @@ export const useDashboard = () => {
     };
 
     initializeDashboard();
-  }, [fetchBookings, fetchProfile, fetchWalletData]); // Added dependencies
+  }, [fetchBookings, fetchProfile, fetchWalletData]);
 
   const refetchAll = useCallback(async () => {
     await Promise.all([fetchBookings(), fetchProfile(), fetchWalletData()]);
