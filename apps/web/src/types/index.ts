@@ -11,15 +11,8 @@ export interface DashboardBooking {
   bookingDate: string;
   hostName: string;
   canCancel: boolean;
-  property_title?: string;
-  property_location?: string;
-  property_image?: string;
-  check_in?: string;
-  check_out?: string;
-  total_amount?: number;
-  host_name?: string;
   guests: number;
-  status: "pending" | "confirmed" | "ongoing" | "completed" | "cancelled";
+  status: 'pending' | 'confirmed' | 'ongoing' | 'completed' | 'cancelled';
   rating?: number;
   transaction_hash?: string;
   escrow_address?: string;
@@ -36,7 +29,7 @@ export interface LegacyBooking {
   checkOut: string;
   guests: number;
   totalAmount: number;
-  status: "upcoming" | "ongoing" | "completed" | "cancelled";
+  status: 'upcoming' | 'ongoing' | 'completed' | 'cancelled';
   bookingDate: string;
   hostName: string;
   rating?: number;
@@ -60,7 +53,6 @@ export interface UserProfile {
   };
 }
 
-
 export interface LegacyUserProfile {
   id: number;
   name: string;
@@ -78,14 +70,13 @@ export interface LegacyUserProfile {
   };
 }
 
-
 export interface Transaction {
   id: number;
   date: string;
   description: string;
   amount: number;
-  type: "payment" | "refund" | "deposit";
-  status: "completed" | "pending" | "failed";
+  type: 'payment' | 'refund' | 'deposit';
+  status: 'completed' | 'pending' | 'failed';
   bookingId?: number;
 }
 
@@ -107,8 +98,12 @@ export interface ConfirmPaymentResponse {
 }
 
 export function transformToLegacyBooking(booking: DashboardBooking): LegacyBooking {
+  if (!booking) {
+    throw new Error('Invalid booking data');
+  }
+
   return {
-    id: parseInt(booking.id) || 0,
+    id: Number.parseInt(booking.id) || 0,
     propertyTitle: booking.propertyTitle,
     propertyLocation: booking.propertyLocation,
     propertyImage: booking.propertyImage,
@@ -116,9 +111,12 @@ export function transformToLegacyBooking(booking: DashboardBooking): LegacyBooki
     checkOut: booking.checkOut,
     guests: booking.guests,
     totalAmount: booking.totalAmount,
-    status: booking.status === 'pending' ? 'upcoming' : 
-           booking.status === 'confirmed' ? 'upcoming' :
-           booking.status as "upcoming" | "ongoing" | "completed" | "cancelled",
+    status:
+      booking.status === 'pending'
+        ? 'upcoming'
+        : booking.status === 'confirmed'
+          ? 'upcoming'
+          : (booking.status as 'upcoming' | 'ongoing' | 'completed' | 'cancelled'),
     bookingDate: booking.bookingDate,
     hostName: booking.hostName,
     rating: booking.rating,
@@ -127,13 +125,21 @@ export function transformToLegacyBooking(booking: DashboardBooking): LegacyBooki
 }
 
 export function transformToLegacyUser(user: UserProfile): LegacyUserProfile {
+  if (!user) {
+    throw new Error('Invalid user data');
+  }
+
   return {
     ...user,
-    id: parseInt(user.id) || 1,
+    id: Number.parseInt(user.id) || 1,
   };
 }
 
 export function transformFromLegacyUser(user: LegacyUserProfile): UserProfile {
+  if (!user) {
+    throw new Error('Invalid user data');
+  }
+
   return {
     ...user,
     id: user.id.toString(),
