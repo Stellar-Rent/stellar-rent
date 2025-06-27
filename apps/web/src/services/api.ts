@@ -1,37 +1,80 @@
 // src/services/api.ts
-import type { 
-  DashboardBooking, 
-  UserProfile, 
-  Transaction, 
+import type {
+  ConfirmPaymentInput,
   ConfirmPaymentResponse,
-  ConfirmPaymentInput 
+  DashboardBooking,
+  Transaction,
+  UserProfile,
 } from '../types';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
 
-function transformBooking(backendBooking: any): DashboardBooking {
+interface BackendBooking {
+  id: string;
+  user_id?: string;
+  property_id?: string;
+  property_title?: string;
+  propertyTitle?: string;
+  property_location?: string;
+  propertyLocation?: string;
+  property_image?: string;
+  propertyImage?: string;
+  check_in?: string;
+  checkIn?: string;
+  check_out?: string;
+  checkOut?: string;
+  total_amount?: number;
+  totalAmount?: number;
+  created_at?: string;
+  bookingDate?: string;
+  status?: string;
+  host_name?: string;
+  hostName?: string;
+  guests?: number;
+  rating?: number;
+  transaction_hash?: string;
+  escrow_address?: string;
+  updated_at?: string;
+}
+
+interface BackendProfile {
+  user_id?: string;
+  id?: string;
+  full_name?: string;
+  name?: string;
+  email?: string;
+  phone?: string;
+  avatar_url?: string;
+  avatar?: string;
+  created_at?: string;
+  location?: string;
+  bio?: string;
+}
+
+function transformBooking(backendBooking: BackendBooking): DashboardBooking {
   return {
     id: backendBooking.id,
     user_id: backendBooking.user_id,
     property_id: backendBooking.property_id,
     propertyTitle: backendBooking.property_title || backendBooking.propertyTitle || 'Property',
-    propertyLocation: backendBooking.property_location || backendBooking.propertyLocation || 'Location not specified',
-    propertyImage: backendBooking.property_image || backendBooking.propertyImage || 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400',
-    checkIn: backendBooking.check_in || backendBooking.checkIn,
-    checkOut: backendBooking.check_out || backendBooking.checkOut,
-    totalAmount: backendBooking.total_amount || backendBooking.totalAmount,
-    bookingDate: backendBooking.created_at || backendBooking.bookingDate,
+    propertyLocation:
+      backendBooking.property_location ||
+      backendBooking.propertyLocation ||
+      'Location not specified',
+    propertyImage:
+      backendBooking.property_image ||
+      backendBooking.propertyImage ||
+      'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400',
+    checkIn: backendBooking.check_in || backendBooking.checkIn || '',
+    checkOut: backendBooking.check_out || backendBooking.checkOut || '',
+    totalAmount: backendBooking.total_amount || backendBooking.totalAmount || 0,
+    bookingDate: backendBooking.created_at || backendBooking.bookingDate || '',
     hostName: backendBooking.host_name || backendBooking.hostName || 'Host',
     canCancel: backendBooking.status === 'pending' || backendBooking.status === 'confirmed',
-    property_title: backendBooking.property_title,
-    property_location: backendBooking.property_location,
-    property_image: backendBooking.property_image,
-    check_in: backendBooking.check_in,
-    check_out: backendBooking.check_out,
-    total_amount: backendBooking.total_amount,
-    host_name: backendBooking.host_name,
-    guests: backendBooking.guests,
-    status: backendBooking.status,
+    guests: backendBooking.guests || 1,
+    status:
+      (backendBooking.status as 'pending' | 'confirmed' | 'ongoing' | 'completed' | 'cancelled') ||
+      'pending',
     rating: backendBooking.rating,
     transaction_hash: backendBooking.transaction_hash,
     escrow_address: backendBooking.escrow_address,
@@ -40,14 +83,19 @@ function transformBooking(backendBooking: any): DashboardBooking {
   };
 }
 
-function transformProfile(backendProfile: any): UserProfile {
+function transformProfile(backendProfile: BackendProfile): UserProfile {
   return {
     id: backendProfile.user_id || backendProfile.id || '1',
     name: backendProfile.full_name || backendProfile.name || 'User',
     email: backendProfile.email || '',
     phone: backendProfile.phone || '',
-    avatar: backendProfile.avatar_url || backendProfile.avatar || 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100',
-    memberSince: backendProfile.created_at ? new Date(backendProfile.created_at).getFullYear().toString() : '2023',
+    avatar:
+      backendProfile.avatar_url ||
+      backendProfile.avatar ||
+      'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100',
+    memberSince: backendProfile.created_at
+      ? new Date(backendProfile.created_at).getFullYear().toString()
+      : '2023',
     verified: true,
     location: backendProfile.location,
     bio: backendProfile.bio,
@@ -55,14 +103,25 @@ function transformProfile(backendProfile: any): UserProfile {
       currency: 'USD',
       language: 'English',
       notifications: true,
-    }
+    },
   };
 }
 
+function downloadFile(blob: Blob, filename: string): void {
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.style.display = 'none';
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  window.URL.revokeObjectURL(url);
+}
 
 async function apiCall<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
-  
+
   const defaultHeaders = {
     'Content-Type': 'application/json',
     ...(token && { Authorization: `Bearer ${token}` }),
@@ -97,46 +156,17 @@ async function apiCall<T>(endpoint: string, options: RequestInit = {}): Promise<
 export const bookingAPI = {
   getBookings: async (): Promise<DashboardBooking[]> => {
     try {
-      const rawBookings = await apiCall<any[]>('/api/bookings');
+      const rawBookings = await apiCall<BackendBooking[]>('/api/bookings');
       return rawBookings.map(transformBooking);
     } catch (error) {
       console.error('Failed to fetch bookings:', error);
-      return [
-        {
-          id: "1",
-          propertyTitle: "Luxury Downtown Apartment",
-          propertyLocation: "New York, NY",
-          propertyImage: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400",
-          checkIn: "2025-07-15",
-          checkOut: "2025-07-20",
-          guests: 2,
-          totalAmount: 1250,
-          status: "pending",
-          bookingDate: "2025-06-20",
-          hostName: "John Smith",
-          canCancel: true,
-        } as DashboardBooking,
-        {
-          id: "2",
-          propertyTitle: "Cozy Beach House",
-          propertyLocation: "Miami, FL",
-          propertyImage: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400",
-          checkIn: "2025-06-10",
-          checkOut: "2025-06-15",
-          guests: 4,
-          totalAmount: 900,
-          status: "completed",
-          bookingDate: "2025-05-25",
-          hostName: "Sarah Johnson",
-          rating: 4.8,
-          canCancel: false,
-        } as DashboardBooking,
-      ];
+      throw error;
     }
   },
+
   getBooking: async (id: string): Promise<DashboardBooking> => {
     try {
-      const rawBooking = await apiCall<any>(`/api/bookings/${id}`);
+      const rawBooking = await apiCall<BackendBooking>(`/api/bookings/${id}`);
       return transformBooking(rawBooking);
     } catch (error) {
       console.error('Failed to fetch booking:', error);
@@ -152,7 +182,11 @@ export const bookingAPI = {
       return { success: false, message: 'Failed to cancel booking' };
     }
   },
-  confirmPayment: async (bookingId: string, transactionHash: string): Promise<ConfirmPaymentResponse> => {
+
+  confirmPayment: async (
+    bookingId: string,
+    transactionHash: string
+  ): Promise<ConfirmPaymentResponse> => {
     try {
       return await apiCall<ConfirmPaymentResponse>(`/api/bookings/${bookingId}/confirm-payment`, {
         method: 'POST',
@@ -163,9 +197,10 @@ export const bookingAPI = {
       throw error;
     }
   },
+
   updateBooking: async (id: string, data: Partial<DashboardBooking>): Promise<DashboardBooking> => {
     try {
-      const rawBooking = await apiCall<any>(`/api/bookings/${id}`, {
+      const rawBooking = await apiCall<BackendBooking>(`/api/bookings/${id}`, {
         method: 'PUT',
         body: JSON.stringify(data),
       });
@@ -176,29 +211,15 @@ export const bookingAPI = {
     }
   },
 };
+
 export const profileAPI = {
   getProfile: async (): Promise<UserProfile> => {
     try {
-      const rawProfile = await apiCall<any>('/profiles/me');
+      const rawProfile = await apiCall<BackendProfile>('/profiles/me');
       return transformProfile(rawProfile);
     } catch (error) {
       console.error('Failed to fetch profile:', error);
-      return {
-        id: '1',
-        name: 'Emily Rodriguez',
-        email: 'emily@example.com',
-        phone: '+1 (555) 123-4567',
-        avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100',
-        memberSince: '2023',
-        verified: true,
-        location: 'San Francisco, CA',
-        bio: 'Passionate traveler and digital nomad.',
-        preferences: {
-          currency: 'USD',
-          language: 'English',
-          notifications: true,
-        }
-      };
+      throw error;
     }
   },
 
@@ -212,7 +233,7 @@ export const profileAPI = {
         location: data.location,
       };
 
-      const rawProfile = await apiCall<any>('/profiles/me', {
+      const rawProfile = await apiCall<BackendProfile>('/profiles/me', {
         method: 'PUT',
         body: JSON.stringify(backendData),
       });
@@ -223,6 +244,7 @@ export const profileAPI = {
       throw error;
     }
   },
+
   uploadAvatar: async (file: File): Promise<{ avatarUrl: string }> => {
     try {
       const formData = new FormData();
@@ -261,13 +283,12 @@ export const profileAPI = {
 };
 
 export const walletAPI = {
-
   getWalletInfo: async (): Promise<{ balance: number; pendingTransactions: number }> => {
     try {
       return await apiCall<{ balance: number; pendingTransactions: number }>('/wallet/info');
     } catch (error) {
-      console.error('Wallet endpoint not available, using mock data:', error);
-      return { balance: 1250.0, pendingTransactions: 0 };
+      console.error('Failed to fetch wallet info:', error);
+      throw error;
     }
   },
 
@@ -275,26 +296,8 @@ export const walletAPI = {
     try {
       return await apiCall<Transaction[]>('/wallet/transactions');
     } catch (error) {
-      console.error('Wallet transactions endpoint not available, using mock data:', error);
-      return [
-        {
-          id: 1,
-          date: "2025-06-22",
-          description: "Booking Payment",
-          amount: -1250,
-          type: "payment",
-          status: "completed",
-          bookingId: 1,
-        },
-        {
-          id: 2,
-          date: "2025-06-20",
-          description: "Refund - Cancelled Booking",
-          amount: 450,
-          type: "refund",
-          status: "completed",
-        },
-      ];
+      console.error('Failed to fetch transactions:', error);
+      throw error;
     }
   },
 
@@ -318,17 +321,10 @@ export const walletAPI = {
           ...(token && { Authorization: `Bearer ${token}` }),
         },
       });
-      
+
       if (response.ok) {
         const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.style.display = 'none';
-        a.href = url;
-        a.download = 'transactions.csv';
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
+        downloadFile(blob, 'transactions.csv');
       }
     } catch (error) {
       console.error('Failed to export transactions:', error);
@@ -338,10 +334,9 @@ export const walletAPI = {
 };
 
 export const authAPI = {
-  // Login
   login: async (email: string, password: string): Promise<{ token: string; user: UserProfile }> => {
     try {
-      const response = await apiCall<{ token: string; user: any }>('/auth/login', {
+      const response = await apiCall<{ token: string; user: BackendProfile }>('/auth/login', {
         method: 'POST',
         body: JSON.stringify({ email, password }),
       });
@@ -363,7 +358,7 @@ export const authAPI = {
     phone?: string;
   }): Promise<{ token: string; user: UserProfile }> => {
     try {
-      const response = await apiCall<{ token: string; user: any }>('/auth/register', {
+      const response = await apiCall<{ token: string; user: BackendProfile }>('/auth/register', {
         method: 'POST',
         body: JSON.stringify(userData),
       });
@@ -383,11 +378,11 @@ export const authAPI = {
       const result = await apiCall<{ success: boolean }>('/auth/logout', {
         method: 'POST',
       });
-      
+
       if (typeof window !== 'undefined') {
         localStorage.removeItem('authToken');
       }
-      
+
       return result;
     } catch (error) {
       console.error('Failed to logout:', error);
@@ -411,14 +406,17 @@ export const authAPI = {
 };
 
 export const apiUtils = {
-  handleError: (error: any): string => {
-    if (error.message.includes('401')) {
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('authToken');
-        window.location.href = '/login';
+  handleError: (error: Error | { message?: string }): string => {
+    if (error && typeof error === 'object' && 'message' in error) {
+      if (error.message?.includes('401')) {
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('authToken');
+          window.location.href = '/login';
+        }
       }
+      return error.message || 'An unexpected error occurred';
     }
-    return error.message || 'An unexpected error occurred';
+    return 'An unexpected error occurred';
   },
 
   formatDate: (date: Date): string => {
