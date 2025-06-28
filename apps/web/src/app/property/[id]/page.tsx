@@ -1,5 +1,5 @@
-import type { Metadata } from 'next';
 import PropertyDetail from '@/components/features/properties/PropertyDetail';
+import type { Metadata } from 'next';
 
 // This would typically come from an API
 const getPropertyById = async (id: string) => {
@@ -9,24 +9,26 @@ const getPropertyById = async (id: string) => {
 };
 
 type Props = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params;
+
   // Fetch property details to use in metadata
   // In a real app, this would come from an API
   return {
-    title: `Property ${params.id} | StellarRent`,
-    description: `View details and book property ${params.id} with cryptocurrency on StellarRent.`,
+    title: `Property ${id} | StellarRent`,
+    description: `View details and book property ${id} with cryptocurrency on StellarRent.`,
   };
 }
 
 export default async function PropertyPage({ params }: Props) {
-  const { id } = params;
-  
+  const { id } = await params;
+
   // In a real app, this would fetch property data from an API
   // and pass it to the PropertyDetail component
   await getPropertyById(id);
-  
+
   return <PropertyDetail id={id} />;
 }
