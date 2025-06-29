@@ -1,0 +1,22 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Implement USDC Payment Flow",
+        "description": "Create a seamless USDC payment experience for property bookings",
+        "details": "- Implement USDC token handling\\n- Create payment transaction builder\\n- Add payment status tracking\\n- Implement payment confirmation\\n- Add transaction history view",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2025-06-24T22:07:50.950Z",
+      "updated": "2025-06-24T22:07:51.256Z",
+      "description": "Tasks for master context"
+    }
+  }
+}

@@ -42,6 +42,8 @@ SUPABASE_URL="your supabase url"
 SUPABASE_ANON_KEY="your supabase anon key" 
 JWT_SECRET="your jwt secret"
 SUPABASE_SERVICE_ROLE_KEY="your supabase service role key" 
+
+USE_MOCK=true
 ```
 
 # Running the projects

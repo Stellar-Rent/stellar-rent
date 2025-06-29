@@ -12,7 +12,7 @@ const ownerIdSchema = z.object({
 /**
  * Middleware to validate property ID in request parameters
  */
-export function validatePropertyId(req: Request, res: Response, next: NextFunction): void {
+export function validatePropertyId(req: Request, _res: Response, next: NextFunction): void {
   try {
     propertyIdSchema.parse(req.params);
     next();
@@ -24,7 +24,7 @@ export function validatePropertyId(req: Request, res: Response, next: NextFuncti
 /**
  * Middleware to validate owner ID in request parameters
  */
-export function validateOwnerId(req: Request, res: Response, next: NextFunction): void {
+export function validateOwnerId(req: Request, _res: Response, next: NextFunction): void {
   try {
     ownerIdSchema.parse(req.params);
     next();

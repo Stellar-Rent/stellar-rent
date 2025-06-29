@@ -13,29 +13,41 @@ export interface CancellationPolicy {
   description?: string;
 }
 
+export interface SearchProperties {
+  location?: string;
+  from?: string;
+  to?: string;
+  guests?: number;
+  minPrice?: number;
+  maxPrice?: number;
+  amenities?: string[];
+  page?: number;
+  limit?: number;
+}
+
 export interface Property {
   id: string;
   title: string;
   description: string;
   price: number;
-  address: string;
-  city: string;
-  country: string;
-  latitude: number | null;
-  longitude: number | null;
+  location: {
+    address: string;
+    city: string;
+    country: string;
+    coordinates?: { latitude: number; longitude: number };
+  };
   amenities: string[];
   images: string[];
   bedrooms: number;
   bathrooms: number;
-  max_guests: number;
-  owner_id: string;
+  maxGuests: number;
+  ownerId: string;
   status: 'available' | 'booked' | 'maintenance';
-  availability: AvailabilityRange[];
-  security_deposit: number;
-  cancellation_policy: CancellationPolicy | null;
-  property_token: string | null;
-  created_at: string;
-  updated_at: string;
+  availability: Array<{ from: string; to: string }>;
+  securityDeposit: number;
+  cancellationPolicy?: { daysBefore: number; refundPercentage: number };
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface CreatePropertyInput extends Omit<Property, 'id' | 'created_at' | 'updated_at'> {}
@@ -98,6 +110,8 @@ export const searchPropertiesQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(10),
   sort_by: z.enum(['price', 'created_at', 'title']).default('created_at'),
   sort_order: z.enum(['asc', 'desc']).default('desc'),
+  from: z.string().date('Invalid date format').optional(),
+  to: z.string().date('Invalid date format').optional(),
 });
 
 export const updatePropertySchema = propertySchema.partial();
