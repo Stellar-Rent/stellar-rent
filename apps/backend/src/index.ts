@@ -31,7 +31,7 @@ app.use(rateLimiter);
 
 // Routes
 app.use('/auth', authRoutes);
-app.use('/auth', walletAuthRoutes);
+app.use('/api/auth', walletAuthRoutes);
 // app.use('/api/bookings', bookingRoutes);
 
 // Test route
