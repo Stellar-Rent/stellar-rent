@@ -110,6 +110,9 @@ export type Database = {
           updated_at?: string;
         };
       };
+      //===================
+      // Wallet challenge schema
+      //===================
       wallet_challenges: {
         Row: {
           id: string;
