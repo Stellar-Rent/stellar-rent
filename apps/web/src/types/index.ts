@@ -42,6 +42,7 @@ export interface UserProfile {
   email: string;
   phone: string;
   avatar: string;
+  publicKey?: string;
   memberSince: string;
   verified: boolean;
   location?: string;

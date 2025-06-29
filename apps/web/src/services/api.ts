@@ -52,6 +52,31 @@ interface BackendProfile {
   bio?: string;
 }
 
+// ====================
+// Wallet auth types
+// ====================
+interface ChallengeResponse {
+  challenge: string;
+  expiresAt: string;
+}
+
+interface WalletAuthResponse {
+  token: string;
+  user: {
+    id: string;
+    publicKey: string;
+    profile?: {
+      name?: string;
+      avatar_url?: string;
+      phone?: string;
+      address?: string;
+      preferences?: Record<string, unknown>;
+      social_links?: Record<string, unknown>;
+      verification_status: string;
+      last_active: string;
+    };
+  };
+}
 function transformBooking(backendBooking: BackendBooking): DashboardBooking {
   return {
     id: backendBooking.id,
@@ -107,7 +132,32 @@ function transformProfile(backendProfile: BackendProfile): UserProfile {
     },
   };
 }
-
+// ====================
+// Transform wallet user to UserProfile
+// ====================
+function transformWalletUser(walletUser: WalletAuthResponse['user']): UserProfile {
+  return {
+    id: walletUser.id,
+    name: walletUser.profile?.name || 'Wallet User',
+    email: '',
+    phone: walletUser.profile?.phone || '',
+    avatar:
+      walletUser.profile?.avatar_url ||
+      'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100',
+    memberSince: walletUser.profile?.last_active
+      ? new Date(walletUser.profile.last_active).getFullYear().toString()
+      : new Date().getFullYear().toString(),
+    verified: walletUser.profile?.verification_status === 'verified',
+    location: walletUser.profile?.address,
+    bio: '',
+    preferences: {
+      currency: 'USD',
+      language: 'English',
+      notifications: true,
+    },
+    publicKey: walletUser.publicKey,
+  };
+}
 // Utility function for file downloads
 function downloadFile(blob: Blob, filename: string): void {
   const url = window.URL.createObjectURL(blob);
@@ -371,6 +421,41 @@ export const authAPI = {
       };
     } catch (error) {
       console.error('Failed to register:', error);
+      throw error;
+    }
+  },
+  // ====================
+  // Wallet authentication methods
+  // ====================
+  requestChallenge: async (publicKey: string): Promise<ChallengeResponse> => {
+    try {
+      return await apiCall<ChallengeResponse>('/auth/challenge', {
+        method: 'POST',
+        body: JSON.stringify({ publicKey }),
+      });
+    } catch (error) {
+      console.error('Failed to request challenge:', error);
+      throw error;
+    }
+  },
+
+  authenticateWallet: async (
+    publicKey: string,
+    signature: string,
+    challenge: string
+  ): Promise<{ token: string; user: UserProfile }> => {
+    try {
+      const response = await apiCall<WalletAuthResponse>('/auth/wallet', {
+        method: 'POST',
+        body: JSON.stringify({ publicKey, signature, challenge }),
+      });
+
+      return {
+        token: response.token,
+        user: transformWalletUser(response.user),
+      };
+    } catch (error) {
+      console.error('Failed to authenticate wallet:', error);
       throw error;
     }
   },
