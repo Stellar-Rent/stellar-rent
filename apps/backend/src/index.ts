@@ -30,7 +30,7 @@ app.use(rateLimiter);
 
 // Routes
 app.use('/auth', authRoutes);
-app.use('/api/bookings', bookingRoutes);
+// app.use('/api/bookings', bookingRoutes);
 
 // Test route
 app.get('/', (_req, res) => {

@@ -110,6 +110,42 @@ export type Database = {
           updated_at?: string;
         };
       };
+      wallet_challenges: {
+        Row: {
+          id: string;
+          public_key: string;
+          challenge: string;
+          expires_at: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          public_key: string;
+          challenge: string;
+          expires_at: string;
+          created_at?: string;
+        };
+        Update: {
+          expires_at?: string;
+        };
+      };
+      wallet_users: {
+        Row: {
+          id: string;
+          public_key: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          public_key: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          updated_at?: string;
+        };
+      };
     };
   };
 };
