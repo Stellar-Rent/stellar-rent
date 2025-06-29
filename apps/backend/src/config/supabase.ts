@@ -24,6 +24,47 @@ export type Database = {
           password_hash?: string;
         };
       };
+      profiles: {
+        Row: {
+          id: string;
+          user_id: string;
+          name?: string;
+          avatar_url?: string;
+          phone?: string;
+          address?: string;
+          preferences?: Record<string, unknown>;
+          social_links?: Record<string, unknown>;
+          verification_status: 'verified' | 'unverified' | 'pending';
+          last_active: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          name?: string;
+          avatar_url?: string;
+          phone?: string;
+          address?: string;
+          preferences?: Record<string, unknown>;
+          social_links?: Record<string, unknown>;
+          verification_status?: 'verified' | 'unverified' | 'pending';
+          last_active?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          name?: string;
+          avatar_url?: string;
+          phone?: string;
+          address?: string;
+          preferences?: Record<string, unknown>;
+          social_links?: Record<string, unknown>;
+          verification_status?: 'verified' | 'unverified' | 'pending';
+          last_active?: string;
+          updated_at?: string;
+        };
+      };
       properties: {
         Row: {
           id: string;
