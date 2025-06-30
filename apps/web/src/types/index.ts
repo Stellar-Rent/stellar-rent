@@ -146,3 +146,16 @@ export function transformFromLegacyUser(user: LegacyUserProfile): UserProfile {
     id: user.id.toString(),
   };
 }
+
+declare global {
+  interface Window {
+    freighterApi?: {
+      isConnected: () => Promise<boolean>;
+      connect: () => Promise<void>;
+      disconnect: () => Promise<void>;
+      getPublicKey: () => Promise<string>;
+      getNetwork: () => Promise<string>;
+      signTransaction: (transaction: string) => Promise<string>;
+    };
+  }
+}

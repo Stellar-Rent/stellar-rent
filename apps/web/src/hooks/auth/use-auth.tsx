@@ -1,8 +1,8 @@
 'use client';
 
-import { Account, Memo, Networks, TransactionBuilder } from '@stellar/stellar-sdk';
-import { createContext, useContext, useEffect, useState } from 'react';
-import { apiUtils, authAPI } from '~/services/api';
+import { type ReactNode, createContext, useContext, useEffect, useState } from 'react';
+import { signTransactionWithFreighter } from '~/lib/freighter-utils';
+import { apiUtils, authAPI } from '../../services/api';
 import { useWallet } from '../useWallet';
 
 interface User {
@@ -33,11 +33,11 @@ const AuthContext = createContext<AuthContextType>({
   authType: null,
 });
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [authType, setAuthType] = useState<'email' | 'wallet' | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const { connect, publicKey, isConnected } = useWallet();
+  const [authType, setAuthType] = useState<'email' | 'wallet' | null>(null);
+  const { connect, publicKey, isConnected, network, networkPassphrase } = useWallet();
 
   useEffect(() => {
     const checkAuth = () => {
@@ -66,12 +66,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true);
     try {
       const response = await authAPI.login(email, password);
+
       const userData: User = {
         id: response.user.id,
         email: response.user.email,
         name: response.user.name,
         authType: 'email',
       };
+
       setUser(userData);
       setAuthType('email');
 
@@ -97,26 +99,61 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!walletPublicKey) {
         throw new Error('Failed to get public key from wallet');
       }
+
+      console.log('🔑 Using public key:', walletPublicKey);
+
       const challengeResponse = await authAPI.requestChallenge(walletPublicKey);
 
-      if (typeof window === 'undefined' || !window.freighterApi) {
-        throw new Error('Freighter wallet not found');
-      }
-
       try {
+        const { TransactionBuilder, Networks, Account, Memo, Operation } = await import(
+          '@stellar/stellar-sdk'
+        );
+
+        let targetNetworkPassphrase =
+          process.env.NODE_ENV === 'production' ? Networks.TESTNET : Networks.PUBLIC;
+        if (network === 'PUBLIC') {
+          targetNetworkPassphrase = Networks.PUBLIC;
+        } else if (network === 'FUTURENET') {
+          targetNetworkPassphrase = Networks.FUTURENET;
+        }
+
+        const challengeText = challengeResponse.challenge;
+        if (challengeText.length > 28) {
+          throw new Error('Challenge too long for transaction memo');
+        }
         const account = new Account(walletPublicKey, '0');
 
         const transaction = new TransactionBuilder(account, {
           fee: '100',
-          networkPassphrase: Networks.TESTNET,
+          networkPassphrase: targetNetworkPassphrase,
         })
-          .addMemo(Memo.text(challengeResponse.challenge))
+          .addOperation(
+            Operation.manageData({
+              name: 'auth',
+              value: 'stellar-rent-auth',
+            })
+          )
+          .addMemo(Memo.text(challengeText))
           .setTimeout(30)
           .build();
-        const signedTransactionXDR = await window.freighterApi.signTransaction(transaction.toXDR());
+
+        const signResult = await signTransactionWithFreighter(transaction.toXDR(), {
+          network: network || 'TESTNET',
+          networkPassphrase: networkPassphrase || undefined,
+          address: walletPublicKey,
+        });
+
+        if (signResult.error) {
+          throw new Error(signResult.error);
+        }
+
+        if (!signResult.signedTxXdr) {
+          throw new Error('No signed transaction returned');
+        }
+
         const authResponse = await authAPI.authenticateWallet(
           walletPublicKey,
-          signedTransactionXDR,
+          signResult.signedTxXdr,
           challengeResponse.challenge
         );
 
@@ -151,7 +188,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await authAPI.logout();
     } catch (error) {
       console.error('Logout failed:', error);
-      throw error;
     } finally {
       setUser(null);
       setAuthType(null);
@@ -166,7 +202,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, isLoading, login, loginWithWallet, logout, isAuthenticated, authType }}
+      value={{
+        user,
+        isLoading,
+        login,
+        loginWithWallet,
+        logout,
+        isAuthenticated,
+        authType,
+      }}
     >
       {children}
     </AuthContext.Provider>
