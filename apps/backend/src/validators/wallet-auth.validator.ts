@@ -2,6 +2,9 @@ import type { NextFunction, Request, Response } from 'express';
 import { z } from 'zod';
 import { challengeRequestSchema, walletLoginSchema } from '../types/wallet-auth.types';
 
+//===================
+// Validate challenge request
+//===================
 export const validateChallengeRequest = (req: Request, res: Response, next: NextFunction) => {
   try {
     challengeRequestSchema.parse(req.body);
@@ -17,6 +20,9 @@ export const validateChallengeRequest = (req: Request, res: Response, next: Next
   }
 };
 
+//===================
+// Validate wallet login request
+//===================
 export const validateWalletLogin = (req: Request, res: Response, next: NextFunction) => {
   try {
     walletLoginSchema.parse(req.body);

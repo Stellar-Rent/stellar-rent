@@ -1,36 +1,14 @@
-import { v4 as uuidv4 } from 'uuid';
+import { randomBytes } from 'node:crypto';
 import { supabase } from '../config/supabase';
 import type { Challenge, ChallengeResponse } from '../types/wallet-auth.types';
 
-const CHALLENGE_EXPIRY_MINUTES = 5;
-
 //===================
-//Clean up expired challenges for a public key
-//===================
-async function cleanupExpiredChallenges(publicKey?: string): Promise<void> {
-  let query = supabase
-    .from('wallet_challenges')
-    .delete()
-    .lt('expires_at', new Date().toISOString());
-
-  if (publicKey) {
-    query = query.eq('public_key', publicKey);
-  }
-
-  const { error } = await query;
-
-  if (error) {
-    console.error('Error cleaning up expired challenges:', error);
-  }
-}
-
-//===================
-//Generate a unique challenge for a given public key
+// Generate a unique challenge for a given public key
 //===================
 export async function generateChallenge(publicKey: string): Promise<ChallengeResponse> {
-  const challenge = uuidv4();
+  const CHALLENGE_EXPIRY_MINUTES = 5;
+  const challenge = randomBytes(12).toString('hex');
   const expiresAt = new Date(Date.now() + CHALLENGE_EXPIRY_MINUTES * 60 * 1000);
-
   await cleanupExpiredChallenges(publicKey);
 
   const { error } = await supabase.from('wallet_challenges').insert({
@@ -51,7 +29,7 @@ export async function generateChallenge(publicKey: string): Promise<ChallengeRes
 }
 
 //===================
-//Retrieve and validate a challenge for a given public key
+// Retrieve and validate a challenge for a given public key
 //===================
 export async function getValidChallenge(
   publicKey: string,
@@ -73,7 +51,7 @@ export async function getValidChallenge(
 }
 
 //===================
-//Remove a used challenge
+// Remove a used challenge
 //===================
 export async function removeChallenge(challengeId: string): Promise<void> {
   const { error } = await supabase.from('wallet_challenges').delete().eq('id', challengeId);
@@ -84,7 +62,27 @@ export async function removeChallenge(challengeId: string): Promise<void> {
 }
 
 //===================
-//Periodic cleanup of all expired challenges
+// Clean up expired challenges for a public key
+//===================
+async function cleanupExpiredChallenges(publicKey?: string): Promise<void> {
+  let query = supabase
+    .from('wallet_challenges')
+    .delete()
+    .lt('expires_at', new Date().toISOString());
+
+  if (publicKey) {
+    query = query.eq('public_key', publicKey);
+  }
+
+  const { error } = await query;
+
+  if (error) {
+    console.error('Error cleaning up expired challenges:', error);
+  }
+}
+
+//===================
+// Periodic cleanup of all expired challenges
 //===================
 export async function cleanupAllExpiredChallenges(): Promise<void> {
   await cleanupExpiredChallenges();

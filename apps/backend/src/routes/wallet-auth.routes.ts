@@ -1,5 +1,8 @@
 import { Router } from 'express';
-import { authenticateWallet, generateChallenge } from '../controllers/wallet-auth.controller';
+import {
+  authenticateWalletController,
+  generateChallenge,
+} from '../controllers/wallet-auth.controller';
 import { challengeRateLimit, walletAuthRateLimit } from '../middleware/rateLimiter';
 import { validateChallengeRequest, validateWalletLogin } from '../validators/wallet-auth.validator';
 
@@ -13,6 +16,6 @@ router.post('/challenge', challengeRateLimit, validateChallengeRequest, generate
 //===================
 // Authenticate with wallet signature route
 //===================
-router.post('/wallet', walletAuthRateLimit, validateWalletLogin, authenticateWallet);
+router.post('/wallet', walletAuthRateLimit, validateWalletLogin, authenticateWalletController);
 
 export default router;

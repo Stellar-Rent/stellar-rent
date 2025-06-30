@@ -1,33 +1,60 @@
-import { Keypair, StrKey } from '@stellar/stellar-sdk';
+import { Networks, StrKey, Transaction } from '@stellar/stellar-sdk';
 import jwt from 'jsonwebtoken';
 import { supabase } from '../config/supabase';
 import type { WalletAuthResponse, WalletLoginRequest } from '../types/wallet-auth.types';
 import { getValidChallenge, removeChallenge } from './wallet-challenge.service';
 
 //===================
-//Verify the signature using Stellar SDK
+// Verify the signed transaction contains the correct challenge and is signed by the correct key
 //===================
-async function verifySignature(
+async function verifySignedTransaction(
   publicKey: string,
   challenge: string,
-  signature: string
+  signedTransactionXDR: string
 ): Promise<boolean> {
   try {
+    const transaction = new Transaction(
+      signedTransactionXDR,
+      process.env.NODE_ENV === 'production' ? Networks.TESTNET : Networks.PUBLIC
+    );
+    if (transaction.signatures.length === 0) {
+      return false;
+    }
+    const memo = transaction.memo;
+    if (!memo || memo.type !== 'text') {
+      return false;
+    }
+
+    let memoValue: string;
+    if (Buffer.isBuffer(memo.value)) {
+      memoValue = memo.value.toString('utf8');
+    } else {
+      memoValue = memo.value as string;
+    }
+
+    if (memoValue !== challenge) {
+      return false;
+    }
+    const transactionHash = transaction.hash();
+    const signature = transaction.signatures[0];
+
+    const { Keypair } = await import('@stellar/stellar-sdk');
     const keypair = Keypair.fromPublicKey(publicKey);
 
-    const challengeBuffer = Buffer.from(challenge, 'utf8');
+    const isValid = keypair.verify(transactionHash, signature.signature());
 
-    const signatureBuffer = Buffer.from(signature, 'base64');
+    if (!isValid) {
+    } else {
+    }
 
-    return keypair.verify(challengeBuffer, signatureBuffer);
+    return isValid;
   } catch (error) {
-    console.error('Signature verification error:', error);
     return false;
   }
 }
 
 //===================
-//Get or create wallet user
+// Get or create wallet user
 //===================
 async function getOrCreateWalletUser(publicKey: string) {
   const { data: existingUser, error: fetchError } = await supabase
@@ -54,21 +81,24 @@ async function getOrCreateWalletUser(publicKey: string) {
     .single();
 
   if (createError || !newUser) {
-    console.error('Error creating wallet user:', createError);
     throw new Error('Failed to create wallet user');
   }
 
-  await supabase.from('profiles').insert({
+  const { error: profileError } = await supabase.from('profiles').insert({
     user_id: newUser.id,
+    name: 'Wallet User',
     verification_status: 'unverified',
     last_active: new Date().toISOString(),
   });
+
+  if (profileError) {
+  }
 
   return newUser;
 }
 
 //===================
-//Get user profile
+// Get user profile
 //===================
 async function getUserProfile(userId: string) {
   const { data: profile } = await supabase
@@ -81,7 +111,7 @@ async function getUserProfile(userId: string) {
 }
 
 //===================
-//Generate JWT token
+// Generate JWT token
 //===================
 function generateJWT(userId: string, publicKey: string): string {
   if (!process.env.JWT_SECRET) {
@@ -102,25 +132,29 @@ function generateJWT(userId: string, publicKey: string): string {
 }
 
 //===================
-//Verify wallet signature and authenticate user
+// Verify wallet signature and authenticate user
 //===================
 export async function authenticateWallet(input: WalletLoginRequest): Promise<WalletAuthResponse> {
-  const { publicKey, signature, challenge } = input;
-
+  const { publicKey, signedTransaction, challenge } = input;
   if (!StrKey.isValidEd25519PublicKey(publicKey)) {
     throw new Error('Invalid public key format');
   }
+
   const storedChallenge = await getValidChallenge(publicKey, challenge);
   if (!storedChallenge) {
     throw new Error('Invalid or expired challenge');
   }
-  const isValidSignature = await verifySignature(publicKey, challenge, signature);
-  if (!isValidSignature) {
-    throw new Error('Invalid signature');
+
+  const isValidTransaction = await verifySignedTransaction(publicKey, challenge, signedTransaction);
+  if (!isValidTransaction) {
+    throw new Error('Invalid signed transaction');
   }
+
   await removeChallenge(storedChallenge.id);
   const walletUser = await getOrCreateWalletUser(publicKey);
+
   const token = generateJWT(walletUser.id, publicKey);
+
   const profile = await getUserProfile(walletUser.id);
 
   return {
