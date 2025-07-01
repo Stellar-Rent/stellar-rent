@@ -13,15 +13,15 @@ async function verifySignedTransaction(
   signedTransactionXDR: string
 ): Promise<boolean> {
   try {
-    const transaction = new Transaction(
-      signedTransactionXDR,
-      process.env.NODE_ENV === 'production' ? Networks.TESTNET : Networks.PUBLIC
-    );
+    const transaction = new Transaction(signedTransactionXDR, Networks.TESTNET);
     if (transaction.signatures.length === 0) {
+      console.error('No signatures found in transaction');
       return false;
     }
+    // Verify the transaction memo contains our challenge
     const memo = transaction.memo;
     if (!memo || memo.type !== 'text') {
+      console.error('Invalid memo type:', memo?.type);
       return false;
     }
 
@@ -33,6 +33,8 @@ async function verifySignedTransaction(
     }
 
     if (memoValue !== challenge) {
+      console.error('Memo mismatch!');
+      console.error('   Expected:', challenge);
       return false;
     }
     const transactionHash = transaction.hash();
@@ -41,14 +43,18 @@ async function verifySignedTransaction(
     const { Keypair } = await import('@stellar/stellar-sdk');
     const keypair = Keypair.fromPublicKey(publicKey);
 
+    // Verify the signature
     const isValid = keypair.verify(transactionHash, signature.signature());
 
     if (!isValid) {
+      console.error('Signature verification failed');
     } else {
+      console.log('Signature verification successful');
     }
 
     return isValid;
   } catch (error) {
+    console.error('Transaction verification error:', error);
     return false;
   }
 }
@@ -57,6 +63,8 @@ async function verifySignedTransaction(
 // Get or create wallet user
 //===================
 async function getOrCreateWalletUser(publicKey: string) {
+  console.log('Getting or creating wallet user for:', `${publicKey.substring(0, 10)}...`);
+
   const { data: existingUser, error: fetchError } = await supabase
     .from('wallet_users')
     .select('*')
@@ -81,8 +89,11 @@ async function getOrCreateWalletUser(publicKey: string) {
     .single();
 
   if (createError || !newUser) {
+    console.error('Error creating wallet user:', createError);
     throw new Error('Failed to create wallet user');
   }
+
+  console.log('New user created:', newUser.id);
 
   const { error: profileError } = await supabase.from('profiles').insert({
     user_id: newUser.id,
@@ -92,6 +103,9 @@ async function getOrCreateWalletUser(publicKey: string) {
   });
 
   if (profileError) {
+    console.error('Warning: Failed to create profile:', profileError.message || profileError);
+  } else {
+    console.log('Profile created for user');
   }
 
   return newUser;
@@ -136,26 +150,44 @@ function generateJWT(userId: string, publicKey: string): string {
 //===================
 export async function authenticateWallet(input: WalletLoginRequest): Promise<WalletAuthResponse> {
   const { publicKey, signedTransaction, challenge } = input;
+
+  // Validate public key format
   if (!StrKey.isValidEd25519PublicKey(publicKey)) {
+    console.error(' Invalid public key format');
     throw new Error('Invalid public key format');
   }
 
+  console.log('Public key format is valid');
+
+  // Retrieve and validate challenge
+  console.log('Validating challenge...');
   const storedChallenge = await getValidChallenge(publicKey, challenge);
   if (!storedChallenge) {
+    console.error('Invalid or expired challenge');
     throw new Error('Invalid or expired challenge');
   }
 
+  console.log('Challenge is valid');
+
+  // Verify signed transaction
   const isValidTransaction = await verifySignedTransaction(publicKey, challenge, signedTransaction);
   if (!isValidTransaction) {
     throw new Error('Invalid signed transaction');
   }
 
+  console.log('Transaction verification successful');
+
   await removeChallenge(storedChallenge.id);
+
   const walletUser = await getOrCreateWalletUser(publicKey);
 
+  // Generate JWT token
+  console.log('Generating JWT token...');
   const token = generateJWT(walletUser.id, publicKey);
 
   const profile = await getUserProfile(walletUser.id);
+
+  console.log('Wallet authentication completed successfully!');
 
   return {
     token,
