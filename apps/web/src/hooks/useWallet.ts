@@ -1,9 +1,24 @@
-import { useState, useEffect } from 'react';
+'use client';
+
+import { useEffect, useState } from 'react';
+
+import {
+  checkFreighterConnection,
+  checkFreighterPermission,
+  connectFreighter,
+  getFreighterAddress,
+  getFreighterNetwork,
+} from '../lib/freighter-utils';
 
 interface WalletState {
   isConnected: boolean;
   publicKey: string | null;
   network: string | null;
+  networkPassphrase: string | null;
+  isInstalled: boolean;
+  isAllowed: boolean;
+  isLoading: boolean;
+  error: string | null;
 }
 
 export function useWallet() {
@@ -11,66 +26,160 @@ export function useWallet() {
     isConnected: false,
     publicKey: null,
     network: null,
+    networkPassphrase: null,
+    isInstalled: false,
+    isAllowed: false,
+    isLoading: true,
+    error: null,
   });
 
   useEffect(() => {
-    // Check if Freighter is installed
-    const checkFreighter = async () => {
-      if (typeof window !== 'undefined' && window.freighterApi) {
-        try {
-          const isConnected = await window.freighterApi.isConnected();
-          if (isConnected) {
-            const publicKey = await window.freighterApi.getPublicKey();
-            const network = await window.freighterApi.getNetwork();
-            setWalletState({
-              isConnected: true,
-              publicKey,
-              network,
-            });
-          }
-        } catch (error) {
-          console.error('Error checking Freighter connection:', error);
+    let mounted = true;
+
+    const initializeWallet = async () => {
+      try {
+        const connectionStatus = await checkFreighterConnection();
+
+        if (!mounted) return;
+
+        if (!connectionStatus.isInstalled) {
+          setWalletState((prev) => ({
+            ...prev,
+            isInstalled: false,
+            isLoading: false,
+            error: connectionStatus.error || 'Freighter not installed',
+          }));
+          return;
+        }
+
+        const permissionStatus = await checkFreighterPermission();
+
+        if (!mounted) return;
+
+        const isAllowed = permissionStatus.isAllowed;
+        const isConnected = connectionStatus.isConnected && isAllowed;
+
+        if (isConnected) {
+          const [addressResult, networkResult] = await Promise.all([
+            getFreighterAddress(),
+            getFreighterNetwork(),
+          ]);
+
+          if (!mounted) return;
+
+          setWalletState({
+            isConnected: true,
+            publicKey: addressResult.address || null,
+            network: networkResult.network || null,
+            networkPassphrase: networkResult.networkPassphrase || null,
+            isInstalled: true,
+            isAllowed: true,
+            isLoading: false,
+            error: null,
+          });
+        } else {
+          setWalletState((prev) => ({
+            ...prev,
+            isConnected: false,
+            isInstalled: true,
+            isAllowed,
+            isLoading: false,
+            error: null,
+          }));
+        }
+      } catch (error) {
+        console.error('Error initializing wallet:', error);
+        if (mounted) {
+          setWalletState((prev) => ({
+            ...prev,
+            isInstalled: false,
+            isLoading: false,
+            error: error instanceof Error ? error.message : 'Unknown error',
+          }));
         }
       }
     };
 
-    checkFreighter();
+    initializeWallet();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const connect = async () => {
-    if (typeof window === 'undefined' || !window.freighterApi) {
-      throw new Error('Freighter wallet not found');
-    }
-
     try {
-      await window.freighterApi.connect();
-      const publicKey = await window.freighterApi.getPublicKey();
-      const network = await window.freighterApi.getNetwork();
-      setWalletState({
+      setWalletState((prev) => ({ ...prev, isLoading: true, error: null }));
+
+      const connectResult = await connectFreighter();
+
+      if (connectResult.error) {
+        throw new Error(connectResult.error);
+      }
+
+      if (!connectResult.address) {
+        throw new Error('No address returned from Freighter');
+      }
+
+      const networkResult = await getFreighterNetwork();
+
+      setWalletState((prev) => ({
+        ...prev,
         isConnected: true,
-        publicKey,
-        network,
-      });
+        publicKey: connectResult.address || null,
+        network: networkResult.network || null,
+        networkPassphrase: networkResult.networkPassphrase || null,
+        isInstalled: true,
+        isAllowed: true,
+        isLoading: false,
+        error: null,
+      }));
     } catch (error) {
       console.error('Error connecting to Freighter:', error);
+      setWalletState((prev) => ({
+        ...prev,
+        isLoading: false,
+        error: error instanceof Error ? error.message : 'Failed to connect',
+      }));
       throw error;
     }
   };
 
   const disconnect = async () => {
-    if (typeof window === 'undefined' || !window.freighterApi) {
-      return;
-    }
+    setWalletState((prev) => ({
+      ...prev,
+      isConnected: false,
+      publicKey: null,
+      network: null,
+      networkPassphrase: null,
+    }));
+  };
 
+  const refreshConnection = async () => {
+    setWalletState((prev) => ({ ...prev, isLoading: true }));
     try {
-      await window.freighterApi.disconnect();
+      const [connectionStatus, addressResult, networkResult] = await Promise.all([
+        checkFreighterConnection(),
+        getFreighterAddress(),
+        getFreighterNetwork(),
+      ]);
+
       setWalletState({
-        isConnected: false,
-        publicKey: null,
-        network: null,
+        isConnected: connectionStatus.isConnected && !!addressResult.address,
+        publicKey: addressResult.address || null,
+        network: networkResult.network || null,
+        networkPassphrase: networkResult.networkPassphrase || null,
+        isInstalled: connectionStatus.isInstalled,
+        isAllowed: !!addressResult.address,
+        isLoading: false,
+        error: null,
       });
     } catch (error) {
-      console.error('Error disconnecting from Freighter:', error);
+      setWalletState((prev) => ({
+        ...prev,
+        isLoading: false,
+        error: error instanceof Error ? error.message : 'Failed to refresh connection',
+      }));
     }
   };
 
@@ -78,19 +187,6 @@ export function useWallet() {
     ...walletState,
     connect,
     disconnect,
+    refreshConnection,
   };
 }
-
-// Add Freighter types to the window object
-declare global {
-  interface Window {
-    freighterApi?: {
-      isConnected: () => Promise<boolean>;
-      connect: () => Promise<void>;
-      disconnect: () => Promise<void>;
-      getPublicKey: () => Promise<string>;
-      getNetwork: () => Promise<string>;
-      signTransaction: (transaction: string) => Promise<string>;
-    };
-  }
-} 

@@ -1,15 +1,9 @@
-// src/services/api.ts
-import type {
-  ConfirmPaymentInput,
-  ConfirmPaymentResponse,
-  DashboardBooking,
-  Transaction,
-  UserProfile,
-} from '../types';
+import type { ConfirmPaymentResponse, DashboardBooking, Transaction, UserProfile } from '../types';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
 
 // Define the expected shape of the backend response
+
 interface BackendBooking {
   id: string;
   user_id?: string;
@@ -50,6 +44,29 @@ interface BackendProfile {
   created_at?: string;
   location?: string;
   bio?: string;
+}
+
+interface ChallengeResponse {
+  challenge: string;
+  expiresAt: string;
+}
+
+interface WalletAuthResponse {
+  token: string;
+  user: {
+    id: string;
+    publicKey: string;
+    profile?: {
+      name?: string;
+      avatar_url?: string;
+      phone?: string;
+      address?: string;
+      preferences?: Record<string, null>;
+      social_links?: Record<string, null>;
+      verification_status: string;
+      last_active: string;
+    };
+  };
 }
 
 function transformBooking(backendBooking: BackendBooking): DashboardBooking {
@@ -108,6 +125,33 @@ function transformProfile(backendProfile: BackendProfile): UserProfile {
   };
 }
 
+// ===========================
+// Transform wallet user to UserProfile
+// ===========================
+function transformWalletUser(walletUser: WalletAuthResponse['user']): UserProfile {
+  return {
+    id: walletUser.id,
+    name: walletUser.profile?.name || 'Wallet User',
+    email: '',
+    phone: walletUser.profile?.phone || '',
+    avatar:
+      walletUser.profile?.avatar_url ||
+      'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100',
+    memberSince: walletUser.profile?.last_active
+      ? new Date(walletUser.profile.last_active).getFullYear().toString()
+      : new Date().getFullYear().toString(),
+    verified: walletUser.profile?.verification_status === 'verified',
+    location: walletUser.profile?.address,
+    bio: '',
+    preferences: {
+      currency: 'USD',
+      language: 'English',
+      notifications: true,
+    },
+    publicKey: walletUser.publicKey,
+  };
+}
+
 // Utility function for file downloads
 function downloadFile(blob: Blob, filename: string): void {
   const url = window.URL.createObjectURL(blob);
@@ -123,36 +167,47 @@ function downloadFile(blob: Blob, filename: string): void {
 
 async function apiCall<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
-
   const defaultHeaders = {
     'Content-Type': 'application/json',
     ...(token && { Authorization: `Bearer ${token}` }),
   };
 
-  try {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      ...options,
-      headers: {
-        ...defaultHeaders,
-        ...options.headers,
-      },
-    });
+  console.log(`🌐 API Call: ${options.method || 'GET'} ${API_BASE_URL}${endpoint}`);
+  if (options.body) {
+    console.log('📤 Request body:', options.body);
+  }
 
-    if (!response.ok) {
-      if (response.status === 401) {
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('authToken');
-          window.location.href = '/login';
-        }
-      }
-      throw new Error(`HTTP error! status: ${response.status}`);
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    ...options,
+    credentials: 'include',
+    headers: {
+      ...defaultHeaders,
+      ...options.headers,
+    },
+  });
+
+  if (!response.ok) {
+    let errorMessage = `HTTP error! status: ${response.status}`;
+    try {
+      const errorData = await response.json();
+      errorMessage = errorData.error || errorData.message || errorMessage;
+    } catch {
+      const errorText = await response.text();
+      errorMessage = errorText || errorMessage;
     }
 
-    return await response.json();
-  } catch (error) {
-    console.error(`API call failed for ${endpoint}:`, error);
-    throw error;
+    if (response.status === 401) {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('authToken');
+        window.location.href = '/login';
+      }
+    }
+
+    throw new Error(errorMessage);
   }
+
+  const result = await response.json();
+  return result;
 }
 
 export const bookingAPI = {
@@ -162,7 +217,7 @@ export const bookingAPI = {
       return rawBookings.map(transformBooking);
     } catch (error) {
       console.error('Failed to fetch bookings:', error);
-      throw error; // Let the calling code handle the error
+      throw error;
     }
   },
 
@@ -221,7 +276,7 @@ export const profileAPI = {
       return transformProfile(rawProfile);
     } catch (error) {
       console.error('Failed to fetch profile:', error);
-      throw error; // Let the calling code handle the error
+      throw error;
     }
   },
 
@@ -253,6 +308,7 @@ export const profileAPI = {
       formData.append('avatar', file);
 
       const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+
       const response = await fetch(`${API_BASE_URL}/profiles/avatar`, {
         method: 'POST',
         headers: {
@@ -318,6 +374,7 @@ export const walletAPI = {
   exportTransactions: async (): Promise<void> => {
     try {
       const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+
       const response = await fetch(`${API_BASE_URL}/wallet/export`, {
         headers: {
           ...(token && { Authorization: `Bearer ${token}` }),
@@ -371,6 +428,44 @@ export const authAPI = {
       };
     } catch (error) {
       console.error('Failed to register:', error);
+      throw error;
+    }
+  },
+
+  // ===========================
+  // Wallet authentication methods
+  // ===========================
+  requestChallenge: async (publicKey: string): Promise<ChallengeResponse> => {
+    try {
+      return await apiCall<ChallengeResponse>('/auth/challenge', {
+        method: 'POST',
+        body: JSON.stringify({ publicKey }),
+      });
+    } catch (error) {
+      console.error('Failed to request challenge:', error);
+      throw error;
+    }
+  },
+  // ===========================
+  // Authenticate wallet
+  // ===========================
+  authenticateWallet: async (
+    publicKey: string,
+    signedTransaction: string,
+    challenge: string
+  ): Promise<{ token: string; user: UserProfile }> => {
+    try {
+      const response = await apiCall<WalletAuthResponse>('/auth/wallet', {
+        method: 'POST',
+        body: JSON.stringify({ publicKey, signedTransaction, challenge }),
+      });
+
+      return {
+        token: response.token,
+        user: transformWalletUser(response.user),
+      };
+    } catch (error) {
+      console.error('Failed to authenticate wallet:', error);
       throw error;
     }
   },
