@@ -17,7 +17,7 @@ import {
 } from '@trustless-work/escrow';
 
 /**
- * When you want to create a contract between client and freelancer, you need to deploy an escrow contract by using this hook. You just need to pass the payload.
+ * When you want to create a contract between house owner and tenant, you need to deploy an escrow contract by using this hook. You just need to pass the payload.
  */
 export const useInitializeContract = () => {
   const { deployEscrow } = useInitializeEscrow();
@@ -89,7 +89,7 @@ export const useInitializeContract = () => {
      */
     if (data && data.status === 'SUCCESS') {
       /**
-       * - Here you can save the escrow in your database as the contract between client and freelancer
+       * - Here you can save the escrow in your database as the contract between house owner and tenant
        * - You can also save in your global state
        * - You can also show a success toast or something like that
        */
