@@ -61,9 +61,10 @@ export function Providers({ children }: ProvidersProps) {
       }}
     >
       <StellarProvider>
-        <AuthProvider>
-          <TrustlessWorkProvider>{children}</TrustlessWorkProvider>
-        </AuthProvider>
+        {/* You can envolve a tanstak provider one layer up of TW in order to use mutations or whatever you need */}
+        <TrustlessWorkProvider>
+          <AuthProvider>{children}</AuthProvider>
+        </TrustlessWorkProvider>
       </StellarProvider>
     </ThemeProvider>
   );
