@@ -1,10 +1,10 @@
-import { FeaturedProperties } from '@/components/features/properties/FeaturedProperties';
-import { SearchBar } from '@/components/features/search/SearchBar';
-import { HowItWorks } from '@/components/shared/HowItWorks';
-import { Testimonials } from '@/components/shared/Testimonials';
-import { Footer } from '@/components/shared/layout/Footer';
-import { HeroSection } from '@/components/shared/layout/HeroSection';
-import { Suspense } from 'react';
+import { FeaturedProperties } from "@/components/features/properties/FeaturedProperties";
+import { SearchBar } from "@/components/features/search/SearchBar";
+import { HowItWorks } from "@/components/shared/HowItWorks";
+import { Testimonials } from "@/components/shared/Testimonials";
+import { Footer } from "@/components/shared/layout/Footer";
+import { HeroSection } from "@/components/shared/layout/HeroSection";
+import { Suspense } from "react";
 
 export default function Home() {
   return (
@@ -18,7 +18,11 @@ export default function Home() {
       </section>
 
       {/* Featured Properties Section */}
-      <Suspense fallback={<div className="py-16 text-center">Loading properties...</div>}>
+      <Suspense
+        fallback={
+          <div className="py-16 text-center">Loading properties...</div>
+        }
+      >
         <FeaturedProperties />
       </Suspense>
 
