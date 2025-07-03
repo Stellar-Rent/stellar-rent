@@ -1,23 +1,23 @@
-'use client';
+"use client";
 
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { ExternalLink, MapPin, Navigation } from 'lucide-react';
-import { useState } from 'react';
-
-interface PropertyMapProps {
-  address: string;
-  coordinates?: {
-    lat: number;
-    lng: number;
-  };
-  className?: string;
-}
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import type { PropertyMapProps } from "@/lib/types/property";
+import { ExternalLink, MapPin, Navigation } from "lucide-react";
+import { useState } from "react";
 
 export function PropertyMap({
   address,
   coordinates = { lat: -34.6037, lng: -58.3816 }, // Default to Buenos Aires
-  className = '',
+  neighborhoodInfo = {
+    walkability: "Very Walkable",
+    transitScore: "Excellent",
+    bikeScore: "Bikeable",
+    restaurants: "5 min walk",
+    grocery: "3 min walk",
+    publicTransit: "2 min walk",
+  },
+  className = "",
 }: PropertyMapProps) {
   const [mapError, _setMapError] = useState(false);
 
@@ -32,17 +32,6 @@ export function PropertyMap({
     return `https://www.google.com/maps/dir/?api=1&destination=${query}`;
   };
 
-  //   // Generate static map URL (using Google Static Maps API)
-  //   const getStaticMapUrl = () => {
-  //     const { lat, lng } = coordinates
-  //     const zoom = 15
-  //     const size = "600x400"
-  //     const marker = `color:red|${lat},${lng}`
-
-  //     // Note: In production, you would use your Google Maps API key
-  //     return `https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=${zoom}&size=${size}&markers=${marker}&key=YOUR_API_KEY`
-  //   }
-
   return (
     <Card className={`overflow-hidden ${className}`}>
       <div className="p-6">
@@ -55,7 +44,7 @@ export function PropertyMap({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => window.open(getDirectionsUrl(), '_blank')}
+              onClick={() => window.open(getDirectionsUrl(), "_blank")}
               className="flex items-center gap-2"
             >
               <Navigation className="w-4 h-4" />
@@ -64,7 +53,7 @@ export function PropertyMap({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => window.open(getGoogleMapsUrl(), '_blank')}
+              onClick={() => window.open(getGoogleMapsUrl(), "_blank")}
               className="flex items-center gap-2"
             >
               <ExternalLink className="w-4 h-4" />
@@ -89,7 +78,7 @@ export function PropertyMap({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => window.open(getGoogleMapsUrl(), '_blank')}
+                  onClick={() => window.open(getGoogleMapsUrl(), "_blank")}
                   className="mt-2"
                 >
                   View on Google Maps
@@ -104,7 +93,7 @@ export function PropertyMap({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => window.open(getGoogleMapsUrl(), '_blank')}
+                  onClick={() => window.open(getGoogleMapsUrl(), "_blank")}
                 >
                   View on Google Maps
                 </Button>
@@ -120,29 +109,39 @@ export function PropertyMap({
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Walkability</span>
-                <span className="font-medium">Very Walkable</span>
+                <span className="font-medium">
+                  {neighborhoodInfo.walkability}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Transit Score</span>
-                <span className="font-medium">Excellent</span>
+                <span className="font-medium">
+                  {neighborhoodInfo.transitScore}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Bike Score</span>
-                <span className="font-medium">Bikeable</span>
+                <span className="font-medium">
+                  {neighborhoodInfo.bikeScore}
+                </span>
               </div>
             </div>
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Restaurants</span>
-                <span className="font-medium">5 min walk</span>
+                <span className="font-medium">
+                  {neighborhoodInfo.restaurants}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Grocery</span>
-                <span className="font-medium">3 min walk</span>
+                <span className="font-medium">{neighborhoodInfo.grocery}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Public Transit</span>
-                <span className="font-medium">2 min walk</span>
+                <span className="font-medium">
+                  {neighborhoodInfo.publicTransit}
+                </span>
               </div>
             </div>
           </div>

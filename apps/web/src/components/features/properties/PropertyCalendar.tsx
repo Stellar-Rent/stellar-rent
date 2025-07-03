@@ -1,27 +1,24 @@
-'use client';
+"use client";
 
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp } from 'lucide-react';
-import { useMemo, useState } from 'react';
-import type { DateRange } from 'react-day-picker';
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import type { PropertyCalendarProps } from "@/lib/types/property";
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp,
+} from "lucide-react";
+import { useMemo, useState } from "react";
 
-interface PropertyCalendarProps {
-  unavailableDates?: Date[];
-  onDateSelect?: (dateRange: DateRange | undefined) => void;
-  selectedDates?: DateRange;
-  minNights?: number;
-  className?: string;
-}
-
-type AvailabilityStatus = 'available' | 'unavailable' | 'selected' | 'in-range';
+type AvailabilityStatus = "available" | "unavailable" | "selected" | "in-range";
 
 export function PropertyCalendar({
   unavailableDates = [],
   onDateSelect,
   selectedDates,
   minNights = 1,
-  className = '',
+  className = "",
 }: PropertyCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [isExpanded, setIsExpanded] = useState(false);
@@ -71,7 +68,7 @@ export function PropertyCalendar({
       normalizedFrom.setHours(0, 0, 0, 0);
 
       if (normalizedDate.getTime() === normalizedFrom.getTime()) {
-        return 'selected';
+        return "selected";
       }
     }
 
@@ -80,7 +77,7 @@ export function PropertyCalendar({
       normalizedTo.setHours(0, 0, 0, 0);
 
       if (normalizedDate.getTime() === normalizedTo.getTime()) {
-        return 'selected';
+        return "selected";
       }
     }
 
@@ -91,20 +88,20 @@ export function PropertyCalendar({
       normalizedTo.setHours(0, 0, 0, 0);
 
       if (normalizedDate > normalizedFrom && normalizedDate < normalizedTo) {
-        return 'in-range';
+        return "in-range";
       }
     }
 
     if (isDateUnavailable(date) || normalizedDate < today) {
-      return 'unavailable';
+      return "unavailable";
     }
 
-    return 'available';
+    return "available";
   };
 
   // Handle date click
   const handleDateClick = (date: Date) => {
-    if (getDateStatus(date) === 'unavailable') return;
+    if (getDateStatus(date) === "unavailable") return;
 
     const normalizedDate = new Date(date);
     normalizedDate.setHours(0, 0, 0, 0);
@@ -134,7 +131,8 @@ export function PropertyCalendar({
 
       // If clicking a date after check-in, check minimum nights and set as check-out
       const daysDiff = Math.ceil(
-        (normalizedDate.getTime() - normalizedFrom.getTime()) / (1000 * 60 * 60 * 24)
+        (normalizedDate.getTime() - normalizedFrom.getTime()) /
+          (1000 * 60 * 60 * 24)
       );
       if (daysDiff >= minNights) {
         onDateSelect?.({ from: normalizedFrom, to: normalizedDate });
@@ -147,29 +145,33 @@ export function PropertyCalendar({
 
   // Navigation functions
   const goToPreviousMonth = () => {
-    setCurrentMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
+    setCurrentMonth(
+      (prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1)
+    );
   };
 
   const goToNextMonth = () => {
-    setCurrentMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
+    setCurrentMonth(
+      (prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1)
+    );
   };
 
   const monthNames = [
-    'January',
-    'February',
-    'March',
-    'April',
-    'May',
-    'June',
-    'July',
-    'August',
-    'September',
-    'October',
-    'November',
-    'December',
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
   ];
 
-  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
   return (
     <Card className={`p-6 ${className}`}>
@@ -183,8 +185,12 @@ export function PropertyCalendar({
             onClick={() => setIsExpanded(!isExpanded)}
             className="flex items-center gap-2"
           >
-            <span>{isExpanded ? 'Hide Calendar' : 'Show Calendar'}</span>
-            {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            <span>{isExpanded ? "Hide Calendar" : "Show Calendar"}</span>
+            {isExpanded ? (
+              <ChevronUp className="h-4 w-4" />
+            ) : (
+              <ChevronDown className="h-4 w-4" />
+            )}
           </Button>
         </div>
 
@@ -202,9 +208,15 @@ export function PropertyCalendar({
                 <ChevronLeft className="h-4 w-4" />
               </Button>
               <span className="text-sm font-medium min-w-[120px] text-center">
-                {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
+                {monthNames[currentMonth.getMonth()]}{" "}
+                {currentMonth.getFullYear()}
               </span>
-              <Button variant="outline" size="icon" onClick={goToNextMonth} aria-label="Next month">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={goToNextMonth}
+                aria-label="Next month"
+              >
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
@@ -227,7 +239,8 @@ export function PropertyCalendar({
               <div className="grid grid-cols-7 gap-1">
                 {calendarDays.map((date) => {
                   const status = getDateStatus(date);
-                  const isCurrentMonth = date.getMonth() === currentMonth.getMonth();
+                  const isCurrentMonth =
+                    date.getMonth() === currentMonth.getMonth();
                   const isToday = date.toDateString() === today.toDateString();
                   // Create a unique key using the date's timestamp
                   const dateKey = date.getTime();
@@ -237,19 +250,31 @@ export function PropertyCalendar({
                       type="button"
                       key={dateKey}
                       onClick={() => handleDateClick(date)}
-                      disabled={status === 'unavailable'}
+                      disabled={status === "unavailable"}
                       className={`
                     relative p-2 text-sm rounded-md transition-all duration-200 min-h-[40px]
-                    ${!isCurrentMonth ? 'text-muted-foreground/50' : ''}
-                    ${isToday ? 'ring-2 ring-primary ring-offset-2' : ''}
-                    ${status === 'available' && isCurrentMonth ? 'hover:bg-primary/10 text-foreground' : ''}
+                    ${!isCurrentMonth ? "text-muted-foreground/50" : ""}
+                    ${isToday ? "ring-2 ring-primary ring-offset-2" : ""}
                     ${
-                      status === 'unavailable'
-                        ? 'text-muted-foreground/30 cursor-not-allowed line-through'
-                        : 'cursor-pointer'
+                      status === "available" && isCurrentMonth
+                        ? "hover:bg-primary/10 text-foreground"
+                        : ""
                     }
-                    ${status === 'selected' ? 'bg-primary text-primary-foreground font-semibold' : ''}
-                    ${status === 'in-range' ? 'bg-primary/20 text-primary-foreground' : ''}
+                    ${
+                      status === "unavailable"
+                        ? "text-muted-foreground/30 cursor-not-allowed line-through"
+                        : "cursor-pointer"
+                    }
+                    ${
+                      status === "selected"
+                        ? "bg-primary text-primary-foreground font-semibold"
+                        : ""
+                    }
+                    ${
+                      status === "in-range"
+                        ? "bg-primary/20 text-primary-foreground"
+                        : ""
+                    }
                   `}
                       aria-label={`${date.toLocaleDateString()} - ${status}`}
                     >
@@ -296,7 +321,7 @@ export function PropertyCalendar({
                 {Math.ceil(
                   (selectedDates.to.getTime() - selectedDates.from.getTime()) /
                     (1000 * 60 * 60 * 24)
-                )}{' '}
+                )}{" "}
                 nights
               </div>
             )}

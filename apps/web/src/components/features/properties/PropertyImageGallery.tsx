@@ -1,18 +1,17 @@
-'use client';
+"use client";
 
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
-import { ChevronLeft, ChevronRight, X, ZoomIn } from 'lucide-react';
-import Image from 'next/image';
-import { useCallback, useEffect, useState } from 'react';
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import type { PropertyImageGalleryProps } from "@/lib/types/property";
+import { ChevronLeft, ChevronRight, X, ZoomIn } from "lucide-react";
+import Image from "next/image";
+import { useCallback, useEffect, useState } from "react";
 
-interface PropertyImageGalleryProps {
-  images: string[];
-  title: string;
-  className?: string;
-}
-
-export function PropertyImageGallery({ images, title, className = '' }: PropertyImageGalleryProps) {
+export function PropertyImageGallery({
+  images,
+  title,
+  className = "",
+}: PropertyImageGalleryProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
@@ -31,23 +30,23 @@ export function PropertyImageGallery({ images, title, className = '' }: Property
       if (!isModalOpen) return;
 
       switch (event.key) {
-        case 'ArrowLeft':
+        case "ArrowLeft":
           event.preventDefault();
           goToPrevious();
           break;
-        case 'ArrowRight':
+        case "ArrowRight":
           event.preventDefault();
           goToNext();
           break;
-        case 'Escape':
+        case "Escape":
           event.preventDefault();
           setIsModalOpen(false);
           break;
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isModalOpen, goToNext, goToPrevious]);
 
   const handleImageError = (index: number) => {
@@ -56,7 +55,7 @@ export function PropertyImageGallery({ images, title, className = '' }: Property
 
   const getImageSrc = (image: string, index: number) => {
     if (imageErrors.has(index)) {
-      return '/placeholder.svg?height=400&width=600';
+      return "/images/house1.jpg?height=400&width=600";
     }
     return image;
   };
@@ -82,7 +81,10 @@ export function PropertyImageGallery({ images, title, className = '' }: Property
         {/* Main Image */}
         <div className="relative h-[400px] lg:h-[500px] rounded-lg overflow-hidden group cursor-pointer">
           <Image
-            src={getImageSrc(images[currentIndex], currentIndex) || '/placeholder.svg'}
+            src={
+              getImageSrc(images[currentIndex], currentIndex) ||
+              "/images/house1.jpg"
+            }
             alt={`${title} - Image ${currentIndex + 1}`}
             fill
             className="object-cover transition-transform duration-300 group-hover:scale-105"
@@ -153,29 +155,31 @@ export function PropertyImageGallery({ images, title, className = '' }: Property
           <div className="flex gap-2 mt-4 overflow-x-auto pb-2">
             {images.map((image, index) => {
               // Create a unique key using image URL hash or fallback to index
-              const imageKey = `thumbnail-${image.replace(/[^a-zA-Z0-9]/g, '')}-${index}`;
+              // const imageKey = `thumbnail-${image.replace(/[^a-zA-Z0-9]/g, "")}-${index}`
 
               return (
                 <button
-                  key={imageKey}
+                  key={index}
                   type="button"
                   className={`relative flex-shrink-0 w-20 h-16 rounded-md overflow-hidden border-2 transition-all duration-200 ${
                     index === currentIndex
-                      ? 'border-primary ring-2 ring-primary/20'
-                      : 'border-transparent hover:border-muted-foreground/30'
+                      ? "border-primary ring-2 ring-primary/20"
+                      : "border-transparent hover:border-muted-foreground/30"
                   }`}
                   onClick={() => setCurrentIndex(index)}
                   aria-label={`View image ${index + 1}`}
                 >
                   <Image
-                    src={getImageSrc(image, index) || '/placeholder.svg'}
+                    src={getImageSrc(image, index) || "/images/house1.jpg"}
                     alt={`${title} thumbnail ${index + 1}`}
                     fill
                     className="object-cover"
                     sizes="80px"
                     onError={() => handleImageError(index)}
                   />
-                  {index === currentIndex && <div className="absolute inset-0 bg-primary/20" />}
+                  {index === currentIndex && (
+                    <div className="absolute inset-0 bg-primary/20" />
+                  )}
                 </button>
               );
             })}
@@ -193,7 +197,10 @@ export function PropertyImageGallery({ images, title, className = '' }: Property
 
           <div className="relative w-full h-[90vh]">
             <Image
-              src={getImageSrc(images[currentIndex], currentIndex) || '/placeholder.svg'}
+              src={
+                getImageSrc(images[currentIndex], currentIndex) ||
+                "/images/house1.jpg"
+              }
               alt={`${title} - Full size image ${currentIndex + 1}`}
               fill
               className="object-contain"
