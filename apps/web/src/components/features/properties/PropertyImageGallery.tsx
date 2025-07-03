@@ -194,17 +194,6 @@ export function PropertyImageGallery({ images, title, className = '' }: Property
               onError={() => handleImageError(currentIndex)}
             />
 
-            {/* Modal Controls */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute top-4 right-4 bg-black/50 hover:bg-black/70 text-white"
-              onClick={() => setIsModalOpen(false)}
-              aria-label="Close full screen view"
-            >
-              <X className="h-6 w-6" />
-            </Button>
-
             {images.length > 1 && (
               <>
                 <Button

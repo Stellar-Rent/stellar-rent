@@ -29,6 +29,7 @@ import {
 import Link from 'next/link';
 import { useState } from 'react';
 import type { DateRange } from 'react-day-picker';
+import { toast } from 'sonner';
 import { PropertyCalendar } from './PropertyCalendar';
 import { PropertyImageGallery } from './PropertyImageGallery';
 import { PropertyMap } from './PropertyMap';
@@ -96,7 +97,22 @@ export const PropertyDetail = ({ id }: PropertyDetailProps) => {
     };
     return iconMap[amenity] || <Shield className="w-5 h-5" />;
   };
-
+  const handleShare = async () => {
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: property.title,
+          url: window.location.href,
+        });
+      } else if (navigator.clipboard) {
+        await navigator.clipboard.writeText(window.location.href);
+        toast.success('Link copied to clipboard!');
+      }
+    } catch (error) {
+      console.error('Share failed:', error);
+      toast.error('Failed to share link');
+    }
+  };
   const costs = calculateTotal();
 
   return (
@@ -128,25 +144,7 @@ export const PropertyDetail = ({ id }: PropertyDetailProps) => {
           </div>
 
           <div className="flex items-center gap-2 mt-4 lg:mt-0">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={async () => {
-                try {
-                  if (navigator.share) {
-                    await navigator.share({
-                      title: property.title,
-                      url: window.location.href,
-                    });
-                  } else if (navigator.clipboard) {
-                    await navigator.clipboard.writeText(window.location.href);
-                    alert('Link copied to clipboard!');
-                  }
-                } catch (error) {
-                  console.error('Share failed:', error);
-                }
-              }}
-            >
+            <Button variant="outline" size="sm" onClick={handleShare}>
               <Share className="w-4 h-4 mr-2" />
               Share
             </Button>
