@@ -1,5 +1,7 @@
 #![no_std]
-use soroban_sdk::{contract, contracterror, contractimpl, contracttype, Env, Map, String, Symbol, Vec};
+use soroban_sdk::{
+    contract, contracterror, contractimpl, contracttype, Env, Map, String, Symbol, Vec,
+};
 
 #[contracttype]
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -39,6 +41,7 @@ pub enum ReviewError {
     InvalidRating = 1,
     DuplicateReview = 2,
     UnauthorizedReviewer = 3,
+    InvalidInput = 4,
 }
 
 #[contract]
@@ -55,16 +58,23 @@ impl ReviewContract {
         comment: String,
     ) -> Result<Symbol, ReviewError> {
         // Validate input
-        if rating < 1 || rating > 5 {
+        (if rating < 1 || rating > 5 {
             return Err(ReviewError::InvalidRating);
+        });
+        // Validate comment length (e.g., max 500 characters)
+        if comment.len() > 500 {
+            return Err(ReviewError::InvalidInput);
         }
         let empty = Symbol::new(env, "");
         if booking_id == empty || reviewer_did == empty || target_did == empty {
-            return Err(ReviewError::UnauthorizedReviewer); // Use as generic input error for now
+            return Err(ReviewError::InvalidInput);
         }
         // Prevent duplicate review (same reviewer, booking, and target)
         let map_key = StorageKey::ReviewMap(target_did.clone());
-        let mut reviews: Vec<Review> = env.storage().persistent().get(&map_key)
+        let mut reviews: Vec<Review> = env
+            .storage()
+            .persistent()
+            .get(&map_key)
             .unwrap_or_else(|| Vec::new(env));
         for review in reviews.iter() {
             if review.booking_id == booking_id && review.reviewer_did == reviewer_did {
@@ -87,7 +97,10 @@ impl ReviewContract {
 
     pub fn get_reviews_for_user(env: &Env, user_did: Symbol) -> Vec<Review> {
         let key = StorageKey::ReviewMap(user_did);
-        env.storage().persistent().get(&key).unwrap_or_else(|| Vec::new(env))
+        env.storage()
+            .persistent()
+            .get(&key)
+            .unwrap_or_else(|| Vec::new(env))
     }
 
     pub fn get_reputation(env: &Env, user_did: Symbol) -> u32 {

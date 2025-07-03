@@ -1,7 +1,7 @@
 #![cfg(test)]
 
 use super::*;
-use soroban_sdk::{Env, Symbol, String};
+use soroban_sdk::{Env, String, Symbol};
 
 #[test]
 fn test_submit_review_success() {
