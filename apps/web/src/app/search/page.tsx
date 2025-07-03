@@ -1,4 +1,3 @@
-// app/search/page.tsx
 "use client";
 import PropertyGrid from "@/components/search/PropertyGrid";
 import { useEffect, useState } from "react";
@@ -25,6 +24,7 @@ type Property = {
   image: string;
   rating: number;
   distance: string | number;
+  amenities: string[];
 };
 
 type searchProps = {
@@ -47,7 +47,8 @@ const MOCK_PROPERTIES: Property[] = [
     price: 2500,
     image: "/images/house1.jpg",
     rating: 4.1,
-    distance: "30km"
+    distance: "30km",
+    amenities: ["pool", "wifi"]
     // lat: -34.61,
     // lng: -58.39
   },
@@ -58,7 +59,8 @@ const MOCK_PROPERTIES: Property[] = [
     price: 6000,
     image: "/images/house2.jpg",
     rating: 4.8,
-    distance: "6km"
+    distance: "6km",
+    amenities: ["wifi", "pet friendly"]
     // lat: -34.61,
     // lng: -58.39
   },
@@ -69,7 +71,8 @@ const MOCK_PROPERTIES: Property[] = [
     price: 4500,
     image: "/images/house3.jpg",
     rating: 3.9,
-    distance: "14km"
+    distance: "14km",
+    amenities: ["pool", "wifi"]
   },
   {
     id: "4",
@@ -78,7 +81,8 @@ const MOCK_PROPERTIES: Property[] = [
     price: 5600,
     image: "/images/house4.jpg",
     rating: 4.5,
-    distance: "8km"
+    distance: "8km",
+    amenities: ["pool", "wifi", "garden"]
   },
   {
     id: "5",
@@ -87,7 +91,8 @@ const MOCK_PROPERTIES: Property[] = [
     price: 2100,
     image: "/images/house5.jpg",
     rating: 4.2,
-    distance: "12km"
+    distance: "12km",
+    amenities: ["parking space", "wifi"]
   },
   {
     id: "6",
@@ -96,7 +101,8 @@ const MOCK_PROPERTIES: Property[] = [
     price: 6500,
     image: "/images/house.jpg",
     rating: 4.7,
-    distance: "10km"
+    distance: "10km",
+    amenities: ["wifi", "garden"]
   },
   {
     id: "7",
@@ -105,15 +111,21 @@ const MOCK_PROPERTIES: Property[] = [
     price: 2500,
     image: "/property1.jpg",
     rating: 4.1,
-    distance: "30km"
+    distance: "30km",
+    amenities: ["pool", "parking space", "pet friendly"]
   }
 ];
 
 export default function SearchPage() {
   const [properties, setProperties] = useState(MOCK_PROPERTIES);
-  const [filters, setFilters] = useState({});
   const [sort, setSort] = useState("price_asc");
   const [isLoading, setIsLoading] = useState(false);
+  const [minMax, setMinMax] = useState<[number, number]>([0, 0]);
+  const [filters, setFilters] = useState({
+    price: minMax[0],
+    amenities: {},
+    rating: 0
+  });
   const searchParams = useSearchParams();
   const router = useRouter();
   const [ref, inView] = useInView();
@@ -144,24 +156,36 @@ export default function SearchPage() {
     }
   }, [inView]);
 
-  const handleSearch = (data: searchProps) => {
-    if (!data.location) {
-      setProperties(MOCK_PROPERTIES);
-    } else {
-      const filteredProperties = MOCK_PROPERTIES.filter((property) =>
-        property.location.toLowerCase().includes(data.location.toLowerCase())
-      );
+  const onSortChange = (sortValue: string) => setSort(sortValue);
 
-      setProperties(filteredProperties);
+  const handleFilter = () => {
+    let filtered = MOCK_PROPERTIES;
+
+    // Price filter
+    filtered = filtered.filter((p) => p.price >= filters.price);
+
+    // Amenities filter
+    const selectedAmenities = Object.entries(filters.amenities)
+      .filter(([_, isChecked]) => isChecked)
+      .map(([key]) => key);
+
+    if (selectedAmenities.length > 0) {
+      filtered = filtered.filter((p) =>
+        selectedAmenities.every((amenity) =>
+          p.amenities.map((a) => a.toLowerCase()).includes(amenity)
+        )
+      );
     }
+
+    // Rating filter
+    if (filters.rating > 0) {
+      filtered = filtered.filter((p) => p.rating >= filters.rating);
+    }
+
+    setProperties(filtered);
   };
 
   const handleSort = () => {
-    //     { label: "Price: Low to High", value: "price_asc" },
-    // { label: "Price: High to Low", value: "price_desc" },
-    // { label: "Rating", value: "rating" },
-    // { label: "Distance", value: "distance" },
-    // { label: "Newest", value: "newest" }
     if (sort === "price_asc") {
       properties.sort((prev, cur) => prev.price - cur.price);
     }
@@ -189,21 +213,38 @@ export default function SearchPage() {
       console.log({ sortedByDistance });
       setProperties(sortedByDistance);
     }
-
-    // console.log(properties);
   };
 
-  // console.log({
-  //   mapped: properties
-  //     .map((property) => ({
-  //       ...property,
-  //       distance:
-  //         typeof property.distance === "string"
-  //           ? Number(property.distance.split("k")[0])
-  //           : property.distance
-  //     }))
-  //     .sort((prev, cur) => prev.distance - cur.distance)
-  // });
+  const getMinAndMaxPrices = () => {
+    const sortedProperties = MOCK_PROPERTIES.sort(
+      (prev, cur) => prev.price - cur.price
+    );
+
+    return setMinMax([
+      sortedProperties[0].price,
+      sortedProperties[sortedProperties.length - 1].price
+    ]);
+  };
+
+  const handleSearch = (data: searchProps) => {
+    if (!data.location) {
+      setProperties(MOCK_PROPERTIES);
+    } else {
+      const filteredProperties = MOCK_PROPERTIES.filter((property) =>
+        property.location.toLowerCase().includes(data.location.toLowerCase())
+      );
+
+      setProperties(filteredProperties);
+    }
+  };
+
+  useEffect(() => {
+    getMinAndMaxPrices();
+  }, []);
+
+  useEffect(() => {
+    handleFilter();
+  }, [filters]);
 
   useEffect(() => {
     handleSort();
@@ -225,21 +266,27 @@ export default function SearchPage() {
     handleSearch(newData);
   }, [searchParams]);
 
+  console.log({ filters });
+
   return (
-    <main className="px-4 py-6 mt-10 bg-[#CFF0FF] dark:bg-[#0B1D39] text-[#182A47] dark:text-[#C2F2FF] space-y-6">
+    <main className="px-4 py-6 mt-10 bg-[#CFF0FF] dark:bg-[#0B1D39] text-[#182A47] dark:text-[#C2F2FF] space-y-6 ">
       <div>
         <div className="flex flex-col lg:flex-row gap-6">
-          <FilterSidebar filters={filters} onFiltersChange={setFilters} />
+          <FilterSidebar
+            filters={filters}
+            minAndMaxPrice={minMax}
+            onFiltersChange={setFilters}
+          />
 
-          <div className="flex-1 space-y-4">
-            <div className="flex justify-between gap-4 items-center border mt-6 px-2  py-2 flex-col md:flex-row">
+          <div className="flex-1 my-4 ml-72">
+            <div className="flex justify-between gap-4 items-center border mt-5 p-1 flex-col  md:flex-row">
               <SearchBar />
-              <SortOptions sort={sort} onSortChange={setSort} />
+              <SortOptions onSortChange={onSortChange} />
             </div>
             <PropertyGrid
               properties={properties}
-              filters={filters}
-              sort={sort}
+              // filters={filters}
+              // sort={sort}
             />
           </div>
         </div>

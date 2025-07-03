@@ -20,7 +20,11 @@ const sortOptions = [
   { label: "Newest", value: "newest" }
 ];
 
-export function SortOptions({ onSortChange }) {
+export function SortOptions({
+  onSortChange
+}: {
+  onSortChange: (sortValue: string) => void;
+}) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const defaultSort = searchParams.get("sort") || "price_asc";
