@@ -11,7 +11,7 @@ type Props = {
   location: string;
   price: number;
   rating: number;
-  distance: string;
+  distance: string | number;
 };
 
 export default function PropertyCard({
@@ -23,7 +23,7 @@ export default function PropertyCard({
   distance
 }: Props) {
   return (
-    <div className="relative rounded-2xl overflow-hidden shadow-md bg-white dark:bg-[#0B1D39] duration-500 transition-all ease-in-out hover:scale-[1.01]">
+    <div className="relative rounded-2xl overflow-hidden shadow-md bg-white dark:bg-[#0B1D39] duration-500 transition-all min-h-[300px] ease-in-out hover:scale-[1.01]">
       <div className="relative w-full h-60">
         <Image src={image} alt={title} fill className="object-cover" />
         <div className="absolute top-3 right-3 bg-white/70 dark:bg-white/10 backdrop-blur-sm p-1 rounded-full cursor-pointer">

@@ -7,7 +7,7 @@ type Property = {
   price: number;
   image: string;
   rating: number;
-  distance: string;
+  distance: string | number;
 };
 
 export default function PropertyGrid({
@@ -24,7 +24,7 @@ export default function PropertyGrid({
     );
   }
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-4 overflow-y-scroll md:mt-8 md:h-[90vh] md:pb-32">
       {properties.map((property, i) => (
         <PropertyCard key={i} {...property} />
       ))}
