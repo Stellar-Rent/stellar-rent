@@ -8,6 +8,7 @@ import { Card } from '@/components/ui/card';
 import { getPropertyById } from '@/lib/data/properties';
 import type { PropertyDetailProps } from '@/lib/types/property';
 import {
+  Bath,
   Car,
   ChevronDown,
   ChevronUp,
@@ -130,14 +131,21 @@ export const PropertyDetail = ({ id }: PropertyDetailProps) => {
             <Button
               variant="outline"
               size="sm"
-              onClick={() =>
-                navigator.share
-                  ? navigator.share({
+              onClick={async () => {
+                try {
+                  if (navigator.share) {
+                    await navigator.share({
                       title: property.title,
                       url: window.location.href,
-                    })
-                  : navigator.clipboard?.writeText(window.location.href)
-              }
+                    });
+                  } else if (navigator.clipboard) {
+                    await navigator.clipboard.writeText(window.location.href);
+                    alert('Link copied to clipboard!');
+                  }
+                } catch (error) {
+                  console.error('Share failed:', error);
+                }
+              }}
             >
               <Share className="w-4 h-4 mr-2" />
               Share
@@ -171,9 +179,7 @@ export const PropertyDetail = ({ id }: PropertyDetailProps) => {
                 <div className="font-medium">{property.bedrooms} Bedrooms</div>
               </Card>
               <Card className="p-4 text-center">
-                <div className="w-6 h-6 mb-2 text-blue-600 dark:text-blue-400 mx-auto flex items-center justify-center">
-                  🚿
-                </div>
+                <Bath className="w-6 h-6 mb-2 text-blue-600 dark:text-blue-400 mx-auto" />
                 <div className="font-medium">{property.bathrooms} Bathrooms</div>
               </Card>
               <Card className="p-4 text-center">
