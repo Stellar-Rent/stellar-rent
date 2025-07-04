@@ -83,13 +83,13 @@ export default function SearchBar() {
 
     if (paramsCheckIn) {
       const checkInDate = new Date(paramsCheckIn);
-      if (!isNaN(checkInDate.getTime())) {
+      if (!Number.isNaN(checkInDate.getTime())) {
         setCheckIn(checkInDate);
       }
     }
     if (paramsCheckOut) {
       const checkOutDate = new Date(paramsCheckOut);
-      if (!isNaN(checkOutDate.getTime())) {
+      if (!Number.isNaN(checkOutDate.getTime())) {
         setCheckOut(checkOutDate);
       }
     }
@@ -118,7 +118,8 @@ export default function SearchBar() {
         {showSuggestions && (
           <div className="suggestions-container absolute left-0 top-full mt-1 z-30 w-full bg-white dark:bg-[#0B1D39] border rounded-md shadow-md max-h-40 overflow-y-auto text-sm">
             {suggestions.map((sug) => (
-              <div
+              <button
+                type="button"
                 key={sug}
                 className="px-2 py-1 hover:bg-muted cursor-pointer"
                 onClick={() => selectSuggestion(sug)}
@@ -129,10 +130,9 @@ export default function SearchBar() {
                   }
                 }}
                 tabIndex={0}
-                role="button"
               >
                 {sug}
-              </div>
+              </button>
             ))}
           </div>
         )}
