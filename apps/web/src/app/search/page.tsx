@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useCallback, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import PropertyGrid from "@/components/search/PropertyGrid";
 import FilterSidebar from "~/components/search/FilterSidebar";
@@ -14,17 +14,6 @@ const PropertyMap = dynamic(() => import("@/components/search/Map"), {
   ssr: false
 });
 
-type FullProperyProps = {
-  id: string;
-  title: string;
-  images: string[];
-  price: number;
-  rating: number;
-  distance: string;
-  location: string;
-  amenities: string[];
-};
-
 export default function SearchPage() {
   const [page, setPage] = useState(1);
   const pageSize = 3;
@@ -36,7 +25,6 @@ export default function SearchPage() {
     rating: 0
   });
   const searchParams = useSearchParams();
-  const router = useRouter();
 
   const center: LatLngTuple = [-34.61, -58.39];
   const markers: { position: LatLngTuple; title: string }[] = [
@@ -78,8 +66,8 @@ export default function SearchPage() {
     if (sort === "rating") result.sort((a, b) => b.rating - a.rating);
     if (sort === "distance") {
       result.sort((a, b) => {
-        const aDist = parseFloat(a.distance);
-        const bDist = parseFloat(b.distance);
+        const aDist = Number.parseFloat(a.distance);
+        const bDist = Number.parseFloat(b.distance);
         return aDist - bDist;
       });
     }
@@ -137,10 +125,6 @@ export default function SearchPage() {
                 <p className="text-center my-4">Loading more properties...</p>
               )}
             </div>
-
-            {/* <div className="w-full lg:w-[40%] h-[70vh] mt-6 lg:mt-12 rounded-2xl border m-0 lg:m-6 hidden lg:block">
-              <PropertyMap center={center} markers={markers} />
-            </div> */}
 
             <div className="w-full lg:w-[40%] h-[300px] lg:h-[70vh] mt-4 lg:mt-12 rounded-2xl border m-0 lg:m-6 block">
               <PropertyMap center={center} markers={markers} />

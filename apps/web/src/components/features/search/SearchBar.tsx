@@ -164,7 +164,6 @@ export const SearchBar = () => {
       }
 
       // Here you would handle the search logic
-      console.log("Search with:", validated);
 
       setInitialParams(validated);
 

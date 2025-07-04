@@ -10,7 +10,7 @@ import {
 } from "react-leaflet";
 import type { LatLngExpression } from "leaflet";
 import "leaflet/dist/leaflet.css";
-import L from "leaflet";
+import L, { marker } from "leaflet";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 
@@ -35,6 +35,13 @@ type MapProps = {
 };
 
 export default function PropertyMap({ center, markers }: MapProps) {
+  if (!center || !markers) {
+    return (
+      <div className="w-full h-full flex items-center justify-center">
+        Map data unavailable
+      </div>
+    );
+  }
   return (
     <MapContainer
       center={center}
@@ -51,7 +58,11 @@ export default function PropertyMap({ center, markers }: MapProps) {
       />
 
       {markers.map((marker, idx) => (
-        <Marker position={marker.position} icon={customIcon} key={idx}>
+        <Marker
+          position={marker.position}
+          icon={customIcon}
+          key={`${marker.position}-${marker.title}`}
+        >
           <Tooltip
             direction="top"
             offset={[0, -15]}
