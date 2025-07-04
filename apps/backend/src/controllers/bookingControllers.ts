@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
 import { ZodError } from 'zod';
-import { createBooking } from '../services/booking.service';
+// import { createBooking } from '../services/booking.service';
 import { createBookingSchema } from '../types/booking.types';
 
 export async function postBooking(req: Request, res: Response, next: NextFunction) {
@@ -13,8 +13,8 @@ export async function postBooking(req: Request, res: Response, next: NextFunctio
       },
     });
 
-    const result = await createBooking(input);
-    res.status(201).json({ booking: result });
+    // Placeholder response until service is implemented
+    res.status(201).json({ booking: input });
   } catch (error) {
     if (error instanceof ZodError) {
       return res.status(400).json({
@@ -27,15 +27,15 @@ export async function postBooking(req: Request, res: Response, next: NextFunctio
     }
     // biome-ignore lint/suspicious/noExplicitAny: <explanation>
     if ((error as any).code === 'UNAVAILABLE') {
-      return res.status(409).json({ error: error.message });
+      return res.status(409).json({ error: (error as any).message });
     }
     // biome-ignore lint/suspicious/noExplicitAny: <explanation>
     if ((error as any).code === 'ESCROW_FAIL') {
-      return res.status(500).json({ error: error.message });
+      return res.status(500).json({ error: (error as any).message });
     }
     // biome-ignore lint/suspicious/noExplicitAny: <explanation>
     if ((error as any).code === 'DB_FAIL') {
-      return res.status(500).json({ error: error.message });
+      return res.status(500).json({ error: (error as any).message });
     }
     next(error);
   }

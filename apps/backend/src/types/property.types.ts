@@ -6,6 +6,15 @@ export interface AvailabilityRange {
   is_available: boolean;
 }
 
+export interface AvailabilityRangeInput {
+  from?: string;
+  to?: string;
+  start_date?: string;
+  end_date?: string;
+  is_available?: boolean;
+}
+
+
 export interface CancellationPolicy {
   policy_type: string;
   refundable_until_days: number;
@@ -42,6 +51,7 @@ export interface Property {
   bathrooms: number;
   maxGuests: number;
   ownerId: string;
+  propertyToken?: string | null;
   status: 'available' | 'booked' | 'maintenance';
   availability: Array<{ from: string; to: string }>;
   securityDeposit: number;
@@ -50,7 +60,20 @@ export interface Property {
   updatedAt: string;
 }
 
-export interface CreatePropertyInput extends Omit<Property, 'id' | 'created_at' | 'updated_at'> {}
+export interface FeaturedProperty {
+  id: string;
+  title: string;
+  price: number;
+  location: {
+    city: string;
+    country: string;
+  };
+  image: string | null;
+  availability: { from: string; to: string }[];
+};
+
+
+export interface CreatePropertyInput extends Omit<Property, 'id' | 'createdAt' | 'updatedAt'> {}
 
 export interface UpdatePropertyInput extends Partial<CreatePropertyInput> {}
 
@@ -92,6 +115,8 @@ export const propertySchema = z.object({
   cancellation_policy: cancellationPolicySchema.nullable().optional(),
   property_token: z.string().nullable().optional(),
 });
+
+
 
 export const searchPropertiesQuerySchema = z.object({
   city: z.string().optional(),
