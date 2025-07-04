@@ -1,4 +1,4 @@
-export type FullProperyProps = {
+export type FullPropertyProps = {
   id: string;
   title: string;
   images: string[];
@@ -9,7 +9,7 @@ export type FullProperyProps = {
   amenities: string[];
 };
 
-export const MOCK_PROPERTIES: FullProperyProps[] = [
+export const MOCK_PROPERTIES: FullPropertyProps[] = [
   {
     id: "1",
     title: "Modern Apartment with Kitchen",
@@ -28,7 +28,7 @@ export const MOCK_PROPERTIES: FullProperyProps[] = [
   {
     id: "2",
     title: "Luxury Villa with Pool",
-    location: "Luján, Buenos Aires",
+    location: "Mendoza, Argentina",
     price: 6000,
     images: [
       "/images/house2.jpg",
@@ -43,7 +43,7 @@ export const MOCK_PROPERTIES: FullProperyProps[] = [
   {
     id: "3",
     title: "Cozy Bedroom Suite",
-    location: "Luján, Buenos Aires",
+    location: "Rosario, Santa Fe",
     price: 4500,
     images: [
       "/images/house3.jpg",
@@ -88,7 +88,7 @@ export const MOCK_PROPERTIES: FullProperyProps[] = [
   {
     id: "6",
     title: "Modern Architectural House",
-    location: "Luján, Buenos Aires",
+    location: "Córdoba, Argentina",
     price: 6500,
     images: [
       "/images/house.jpg",
@@ -103,10 +103,10 @@ export const MOCK_PROPERTIES: FullProperyProps[] = [
   {
     id: "7",
     title: "Cozy kitchen home with garden view",
-    location: "Luján, Buenos Aires",
+    location: "San Isidro, Buenos Aires",
     price: 2500,
     images: [
-      "/house4.jpg",
+      "/images/house.jpg",
       "/images/house2.jpg",
       "/images/house3.jpg",
       "/images/house4.jpg"
@@ -118,7 +118,7 @@ export const MOCK_PROPERTIES: FullProperyProps[] = [
   {
     id: "8",
     title: "Rustic Country Bungalow",
-    location: "Luján, Buenos Aires",
+    location: "Palermo, Buenos Aires",
     price: 3100,
     images: [
       "/images/house1.jpg",
@@ -138,7 +138,7 @@ export const MOCK_PROPERTIES: FullProperyProps[] = [
     images: [
       "/images/house2.jpg",
       "/images/house3.jpg",
-      "/property-1.jpg",
+      "/images/property-1.jpg",
       "/images/house1.jpg"
     ],
     rating: 4.0,
@@ -148,7 +148,7 @@ export const MOCK_PROPERTIES: FullProperyProps[] = [
   {
     id: "10",
     title: "Penthouse with Rooftop View",
-    location: "Luján, Buenos Aires",
+    location: "Rosario, Santa Fe",
     price: 7000,
     images: [
       "/images/house5.jpg",
@@ -163,7 +163,7 @@ export const MOCK_PROPERTIES: FullProperyProps[] = [
   {
     id: "11",
     title: "Downtown Artist’s Loft",
-    location: "Luján, Buenos Aires",
+    location: "Mendoza, Argentina",
     price: 3300,
     images: [
       "/images/house3.jpg",
@@ -178,11 +178,11 @@ export const MOCK_PROPERTIES: FullProperyProps[] = [
   {
     id: "12",
     title: "Family Home with Backyard",
-    location: "Luján, Buenos Aires",
+    location: "Rosario, Santa Fe",
     price: 4200,
     images: [
       "/images/house4.jpg",
-      "/property-1.jpg",
+      "/images/property-1.jpg",
       "/images/house1.jpg",
       "/images/house2.jpg"
     ],
@@ -193,7 +193,7 @@ export const MOCK_PROPERTIES: FullProperyProps[] = [
   {
     id: "13",
     title: "Smart Home with Modern Tech",
-    location: "Luján, Buenos Aires",
+    location: "Córdoba, Argentina",
     price: 4800,
     images: [
       "/images/house.jpg",
@@ -208,7 +208,7 @@ export const MOCK_PROPERTIES: FullProperyProps[] = [
   {
     id: "14",
     title: "Budget Studio Apartment",
-    location: "Luján, Buenos Aires",
+    location: "San Isidro, Buenos Aires",
     price: 1900,
     images: [
       "/images/house5.jpg",
@@ -228,7 +228,7 @@ export const MOCK_PROPERTIES: FullProperyProps[] = [
     images: [
       "/images/house2.jpg",
       "/images/house.jpg",
-      "/property-1.jpg",
+      "/images/property-1.jpg",
       "/images/house4.jpg"
     ],
     rating: 4.7,
@@ -238,7 +238,7 @@ export const MOCK_PROPERTIES: FullProperyProps[] = [
   {
     id: "16",
     title: "Nature Lover’s Cottage",
-    location: "Luján, Buenos Aires",
+    location: "Córdoba, Argentina",
     price: 2750,
     images: [
       "/images/house3.jpg",
@@ -268,7 +268,7 @@ export const MOCK_PROPERTIES: FullProperyProps[] = [
   {
     id: "18",
     title: "Stylish Loft with Workspace",
-    location: "Luján, Buenos Aires",
+    location: "San Isidro, Buenos Aires",
     price: 3700,
     images: [
       "/images/house2.jpg",
@@ -283,7 +283,7 @@ export const MOCK_PROPERTIES: FullProperyProps[] = [
   {
     id: "19",
     title: "Luxury Farm House",
-    location: "Luján, Buenos Aires",
+    location: "Mendoza, Argentina",
     price: 7200,
     images: [
       "/images/house.jpg",
@@ -298,11 +298,11 @@ export const MOCK_PROPERTIES: FullProperyProps[] = [
   {
     id: "20",
     title: "Tranquil Studio by the Lake",
-    location: "Luján, Buenos Aires",
+    location: "Palermo, Buenos Aires",
     price: 3200,
     images: [
       "/images/house4.jpg",
-      "/property-1.jpg",
+      "/images/property-1.jpg",
       "/images/house1.jpg",
       "/images/house5.jpg"
     ],
@@ -328,7 +328,7 @@ export const MOCK_PROPERTIES: FullProperyProps[] = [
   {
     id: "22",
     title: "Duplex with Shared Pool",
-    location: "Luján, Buenos Aires",
+    location: "Córdoba, Argentina",
     price: 4100,
     images: [
       "/images/house5.jpg",
@@ -343,7 +343,7 @@ export const MOCK_PROPERTIES: FullProperyProps[] = [
   {
     id: "23",
     title: "Studio Loft for Couples",
-    location: "Luján, Buenos Aires",
+    location: "Mendoza, Argentina",
     price: 2990,
     images: [
       "/images/house3.jpg",
@@ -358,13 +358,13 @@ export const MOCK_PROPERTIES: FullProperyProps[] = [
   {
     id: "24",
     title: "Countryside Retreat with Hot Tub",
-    location: "Luján, Buenos Aires",
+    location: "Rosario, Santa Fe",
     price: 5200,
     images: [
       "/images/house.jpg",
       "/images/house2.jpg",
       "/images/house4.jpg",
-      "/property-1.jpg"
+      "/images/property-1.jpg"
     ],
     rating: 4.6,
     distance: "7km",

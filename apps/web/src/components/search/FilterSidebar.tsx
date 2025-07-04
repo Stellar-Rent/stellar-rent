@@ -20,7 +20,23 @@ import {
 import dynamic from "next/dynamic";
 import type { LatLngExpression } from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { SearchBar } from "../features/search/SearchBar";
+
+interface Filters {
+  price: number;
+  amenities: Record<string, boolean>;
+  rating: number;
+}
+
+interface FilterSidebarProps {
+  filters: Filters;
+  minAndMaxPrice: [number, number];
+  onFiltersChange: (newFilters: Filters) => void;
+  center: LatLngExpression;
+  markers: {
+    position: LatLngExpression;
+    title: string;
+  }[];
+}
 
 const AMENITIES = [
   { name: "Wifi", icon: <WifiIcon size={18} /> },
@@ -40,16 +56,7 @@ export default function FilterSidebar({
   onFiltersChange,
   center,
   markers
-}: {
-  filters: any;
-  minAndMaxPrice: [number, number];
-  onFiltersChange: (newFilters: any) => void;
-  center: LatLngExpression;
-  markers: {
-    position: LatLngExpression;
-    title: string;
-  }[];
-}) {
+}: FilterSidebarProps) {
   const [price, setPrice] = useState(
     filters.price === 0 ? minAndMaxPrice[0] : filters.price
   );
@@ -62,7 +69,6 @@ export default function FilterSidebar({
     onFiltersChange({ price, amenities, rating });
   }, [price, amenities, rating]);
 
-  console.log({ PropertyMap });
   return (
     <aside
       className="
@@ -156,6 +162,7 @@ export default function FilterSidebar({
         <Dialog>
           <DialogTrigger asChild>
             <button
+              type="button"
               className="
                 w-full flex items-center justify-center gap-2 
                 text-sm font-medium 

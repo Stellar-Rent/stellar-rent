@@ -14,7 +14,10 @@ const searchSchema = z.object({
   checkIn: z
     .string()
     .optional()
-    .refine((date) => !date || new Date(date) >= new Date()),
+    .refine(
+      (date) =>
+        !date || new Date(date) > new Date(new Date().setHours(0, 0, 0, 0))
+    ),
   checkOut: z
     .string()
     .optional()
@@ -71,15 +74,25 @@ export default function SearchBar() {
 
   useEffect(() => {
     const paramsLocation = searchParams.get("location") || "";
-    const paramsGuests = parseInt(searchParams.get("guests") || "2");
+    const paramsGuests = Number.parseInt(searchParams.get("guests") || "2");
     const paramsCheckIn = searchParams.get("checkIn");
     const paramsCheckOut = searchParams.get("checkOut");
 
     setLocation(paramsLocation);
     setGuests(paramsGuests);
 
-    if (paramsCheckIn) setCheckIn(new Date(paramsCheckIn));
-    if (paramsCheckOut) setCheckOut(new Date(paramsCheckOut));
+    if (paramsCheckIn) {
+      const checkInDate = new Date(paramsCheckIn);
+      if (!isNaN(checkInDate.getTime())) {
+        setCheckIn(checkInDate);
+      }
+    }
+    if (paramsCheckOut) {
+      const checkOutDate = new Date(paramsCheckOut);
+      if (!isNaN(checkOutDate.getTime())) {
+        setCheckOut(checkOutDate);
+      }
+    }
   }, [searchParams]);
 
   return (
@@ -93,15 +106,30 @@ export default function SearchBar() {
           className="text-sm bg-transparent outline-none w-full sm:w-32"
           value={location}
           onChange={handleLocationChange}
-          onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+          onBlur={(e) => {
+            if (
+              !e.relatedTarget ||
+              !e.relatedTarget.closest(".suggestions-container")
+            ) {
+              setShowSuggestions(false);
+            }
+          }}
         />
         {showSuggestions && (
-          <div className="absolute left-0 top-full mt-1 z-30 w-full bg-white dark:bg-[#0B1D39] border rounded-md shadow-md max-h-40 overflow-y-auto text-sm">
+          <div className="suggestions-container absolute left-0 top-full mt-1 z-30 w-full bg-white dark:bg-[#0B1D39] border rounded-md shadow-md max-h-40 overflow-y-auto text-sm">
             {suggestions.map((sug) => (
               <div
                 key={sug}
                 className="px-2 py-1 hover:bg-muted cursor-pointer"
                 onClick={() => selectSuggestion(sug)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    selectSuggestion(sug);
+                  }
+                }}
+                tabIndex={0}
+                role="button"
               >
                 {sug}
               </div>

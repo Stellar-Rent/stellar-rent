@@ -38,7 +38,7 @@ export function SortOptions({
         sortOptions.find((opt) => opt.value === current) || sortOptions[0]
       );
     }
-  }, [searchParams]);
+  }, [searchParams, selected.value]);
 
   const updateUrl = (value: string) => {
     const params = new URLSearchParams(Array.from(searchParams.entries()));

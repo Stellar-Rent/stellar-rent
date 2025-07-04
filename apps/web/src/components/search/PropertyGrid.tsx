@@ -2,21 +2,11 @@
 import { useEffect } from "react";
 import { useInView } from "react-intersection-observer";
 import PropertyCard from "./PropertyCard";
-
-type FullProperyProps = {
-  id: string;
-  title: string;
-  images: string[];
-  price: number;
-  rating: number;
-  distance: string;
-  location: string;
-  amenities: string[];
-};
+import type { FullPropertyProps } from "public/mock-data";
 
 type Props = {
-  properties: FullProperyProps[];
-  onLoadMore: () => void; // Called when scroll reaches bottom
+  properties: FullPropertyProps[];
+  onLoadMore: () => void;
 };
 
 export default function PropertyGrid({ properties, onLoadMore }: Props) {
@@ -26,7 +16,7 @@ export default function PropertyGrid({ properties, onLoadMore }: Props) {
 
   useEffect(() => {
     if (inView) {
-      onLoadMore();
+      onLoadMore(); // Called when scroll reaches bottom
     }
   }, [inView, onLoadMore]);
 
@@ -47,7 +37,7 @@ export default function PropertyGrid({ properties, onLoadMore }: Props) {
       </div>
 
       {/* Observer div for triggering infinite scroll */}
-      <div ref={ref} className="h-10"></div>
+      <div ref={ref} className="h-10" />
     </>
   );
 }
