@@ -12,7 +12,12 @@ export const rateLimiter = rateLimit({
 });
 
 export const featuredLimit = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  max: 5, 
+  windowMs: 60 * 1000,
+  max: 10,
   message: 'Too many requests to featured properties. Try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req): string => {
+    return req.ip || 'localhost';
+  },
 });
