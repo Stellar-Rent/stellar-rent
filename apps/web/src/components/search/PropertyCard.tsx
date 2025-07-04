@@ -3,10 +3,11 @@
 import Image from "next/image";
 import { Heart, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 type Props = {
-  image: string;
+  id: string;
+  images: string[];
   title: string;
   location: string;
   price: number;
@@ -15,17 +16,25 @@ type Props = {
 };
 
 export default function PropertyCard({
-  image,
+  id,
+  images,
   title,
   location,
   price,
   rating,
   distance
 }: Props) {
+  const router = useRouter();
+
+  const handleViewDetails = () => {
+    const params = new URLSearchParams();
+    params.set("propertyId", id);
+    router.push(`/search/property?${params.toString()}`);
+  };
   return (
     <div className="relative rounded-2xl overflow-hidden shadow-md bg-white dark:bg-[#0B1D39] duration-500 transition-all min-h-[300px] ease-in-out hover:scale-[1.01]">
       <div className="relative w-full h-60">
-        <Image src={image} alt={title} fill className="object-cover" />
+        <Image src={images[0]} alt={title} fill className="object-cover" />
         <div className="absolute top-3 right-3 bg-white/70 dark:bg-white/10 backdrop-blur-sm p-1 rounded-full cursor-pointer">
           <Heart className="w-5 h-5 text-red-500" />
         </div>
@@ -49,9 +58,12 @@ export default function PropertyCard({
           </p>
         </div>
 
-        <Link href="" className="text-blue-600 text-sm font-medium">
+        <button
+          onClick={handleViewDetails}
+          className="text-blue-600 text-sm bg-transparent font-medium"
+        >
           View details
-        </Link>
+        </button>
       </div>
     </div>
   );

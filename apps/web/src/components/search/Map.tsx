@@ -1,79 +1,74 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import mapboxgl from "mapbox-gl";
-import "mapbox-gl/dist/mapbox-gl.css";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Popup,
+  Tooltip,
+  ZoomControl
+} from "react-leaflet";
+import type { LatLngExpression } from "leaflet";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
 
-type Property = {
-  id: string;
-  title: string;
-  price: number;
-  lat: number;
-  lng: number;
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+
+// Custom pointer icon
+const customIcon = new L.Icon({
+  iconUrl: "/map-pointer.png",
+  iconSize: [32, 32],
+  iconAnchor: [16, 32],
+  popupAnchor: [0, -32],
+  shadowUrl: require("leaflet/dist/images/marker-shadow.png"),
+  shadowSize: [40, 40],
+  shadowAnchor: [13, 40],
+  className: "custom-map-icon"
+});
+
+type MapProps = {
+  center: LatLngExpression;
+  markers: {
+    position: LatLngExpression;
+    title: string;
+  }[];
 };
 
-type Props = {
-  properties: Property[];
-  onRegionChange?: (bounds: mapboxgl.LngLatBoundsLike) => void;
-};
-
-mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN!;
-
-export default function MapBoxMap({ properties, onRegionChange }: Props) {
-  const mapRef = useRef<mapboxgl.Map | null>(null);
-  const mapContainerRef = useRef<HTMLDivElement>(null);
-
-  const [loaded, setLoaded] = useState(false);
-
-  useEffect(() => {
-    if (!mapContainerRef.current || mapRef.current) return;
-
-    mapRef.current = new mapboxgl.Map({
-      container: mapContainerRef.current,
-      style: "mapbox://styles/mapbox/streets-v12",
-      center: [properties[0]?.lng ?? 0, properties[0]?.lat ?? 0],
-      zoom: 10
-    });
-
-    mapRef.current.on("load", () => {
-      setLoaded(true);
-
-      // Add markers
-      properties.forEach((p) => {
-        const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(
-          `<h3>$${p.price}</h3><p>${p.title}</p>`
-        );
-
-        new mapboxgl.Marker({ color: "#2563eb" }) // Tailwind's blue-600
-          .setLngLat([p.lng, p.lat])
-          .setPopup(popup)
-          .addTo(mapRef.current!);
-      });
-    });
-
-    // Handle bounds change
-    mapRef.current.on("moveend", () => {
-      const bounds = mapRef.current?.getBounds();
-      if (!bounds || !onRegionChange) return;
-      onRegionChange(bounds);
-    });
-
-    return () => {
-      mapRef.current?.remove();
-      mapRef.current = null;
-    };
-  }, [properties]);
-
+export default function PropertyMap({ center, markers }: MapProps) {
   return (
-    <div
-      className="w-full h-[400px] rounded-2xl shadow-md overflow-hidden border dark:border-gray-700"
-      ref={mapContainerRef}
+    <MapContainer
+      center={center}
+      zoom={12}
+      scrollWheelZoom={true}
+      zoomControl={false}
+      className="w-full h-full rounded-2xl shadow-md z-10"
     >
-      {!loaded && (
-        <p className="text-center py-4 text-gray-500 dark:text-gray-300">
-          Loading map...
-        </p>
-      )}
-    </div>
+      <ZoomControl position="topright" />
+
+      <TileLayer
+        attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a>'
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      />
+
+      {markers.map((marker, idx) => (
+        <Marker position={marker.position} icon={customIcon} key={idx}>
+          <Tooltip
+            direction="top"
+            offset={[0, -15]}
+            opacity={0.9}
+            permanent
+            className="!bg-white !text-blue-600 rounded px-2 py-1 shadow"
+          >
+            {marker.title}
+          </Tooltip>
+          <Popup className="custom-popup">
+            <div className="p-2 space-y-1 text-sm">
+              <h3 className="font-semibold">{marker.title}</h3>
+              <p className="text-xs text-gray-500">Tap to view details</p>
+            </div>
+          </Popup>
+        </Marker>
+      ))}
+    </MapContainer>
   );
 }

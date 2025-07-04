@@ -1,33 +1,53 @@
+"use client";
+import { useEffect } from "react";
+import { useInView } from "react-intersection-observer";
 import PropertyCard from "./PropertyCard";
 
-type Property = {
+type FullProperyProps = {
   id: string;
   title: string;
-  location: string;
+  images: string[];
   price: number;
-  image: string;
   rating: number;
-  distance: string | number;
+  distance: string;
+  location: string;
+  amenities: string[];
 };
 
-export default function PropertyGrid({
-  properties
-}: {
-  properties: Property[];
-}) {
-  console.log({ properties });
+type Props = {
+  properties: FullProperyProps[];
+  onLoadMore: () => void; // Called when scroll reaches bottom
+};
+
+export default function PropertyGrid({ properties, onLoadMore }: Props) {
+  const { ref, inView } = useInView({
+    threshold: 1
+  });
+
+  useEffect(() => {
+    if (inView) {
+      onLoadMore();
+    }
+  }, [inView, onLoadMore]);
+
   if (properties.length < 1) {
     return (
-      <div className=" w-full h-full grid place-items-center text-2xl font-bold text-white">
+      <div className="w-full h-full grid place-items-center text-2xl font-bold text-white">
         No Properties found
       </div>
     );
   }
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-4 overflow-y-scroll md:mt-8 md:h-[90vh] md:pb-32">
-      {properties.map((property, i) => (
-        <PropertyCard key={i} {...property} />
-      ))}
-    </div>
+    <>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-4 md:mt-8 md:pb-32">
+        {properties.map((property, i) => (
+          <PropertyCard key={property.id || i} {...property} />
+        ))}
+      </div>
+
+      {/* Observer div for triggering infinite scroll */}
+      <div ref={ref} className="h-10"></div>
+    </>
   );
 }

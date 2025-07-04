@@ -1,9 +1,8 @@
 "use client";
 
-import { MapPin, Users, Search } from "lucide-react";
+import { MapPin, Users, Search, Calendar as CalendarIcon } from "lucide-react";
 import { Calendar } from "../ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
-import { Calendar1 } from "lucide-react";
 import { Button } from "../ui/button";
 import { useEffect, useState } from "react";
 import { format } from "date-fns/format";
@@ -11,33 +10,18 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { z } from "zod";
 
 const searchSchema = z.object({
-  location: z
-    .string()
-    .min(2, "Location must be at least 2 characters")
-    .max(100, "Location is too long"),
+  location: z.string().min(2).max(100),
   checkIn: z
     .string()
     .optional()
-    .refine((date) => !date || new Date(date) >= new Date(), {
-      message: "Check-in date must be today or later"
-    }),
+    .refine((date) => !date || new Date(date) >= new Date()),
   checkOut: z
     .string()
     .optional()
-    .refine((date) => !date || new Date(date) >= new Date(), {
-      message: "Check-out date must be today or later"
-    }),
-  guests: z
-    .number()
-    .int()
-    .min(1, "At least 1 guest required")
-    .max(16, "Maximum 16 guests allowed")
-    .optional()
+    .refine((date) => !date || new Date(date) >= new Date()),
+  guests: z.number().int().min(1).max(16).optional()
 });
 
-type SearchFormData = z.infer<typeof searchSchema>;
-
-// Mock locations for autocomplete
 const LOCATIONS = [
   "Luján, Buenos Aires",
   "San Isidro, Buenos Aires",
@@ -52,28 +36,12 @@ export default function SearchBar() {
   const searchParams = useSearchParams();
 
   const [location, setLocation] = useState("");
-  const [checkIn, setCheckIn] = useState<Date | undefined>(undefined);
-  const [checkOut, setCheckOut] = useState<Date | undefined>(undefined);
+  const [checkIn, setCheckIn] = useState<Date | undefined>();
+  const [checkOut, setCheckOut] = useState<Date | undefined>();
   const [guests, setGuests] = useState(2);
   const [error, setError] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-
-  const validateField = (
-    field: keyof SearchFormData,
-    value: string | number
-  ): string | null => {
-    try {
-      const fieldSchema = z.object({ [field]: searchSchema.shape[field] });
-      fieldSchema.parse({ [field]: value });
-      return null;
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return error.errors[0].message;
-      }
-      return "Invalid input";
-    }
-  };
 
   const updateParams = (key: string, value: string) => {
     const params = new URLSearchParams(Array.from(searchParams.entries()));
@@ -83,16 +51,7 @@ export default function SearchBar() {
 
   const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-
-    // Only show validation error if user has typed something
-    if (value) {
-      const fieldError = validateField("location", value);
-      setError(fieldError);
-    } else {
-      setError(null);
-    }
-
-    // Filter suggestions based on input
+    setLocation(value);
     if (value.length > 1) {
       const filtered = LOCATIONS.filter((loc) =>
         loc.toLowerCase().includes(value.toLowerCase())
@@ -105,79 +64,63 @@ export default function SearchBar() {
   };
 
   const selectSuggestion = (suggestion: string) => {
-    // setFormData({ ...formData, location: suggestion });
     setLocation(suggestion);
     setShowSuggestions(false);
-    setError(null);
+    updateParams("location", suggestion);
   };
 
   useEffect(() => {
     const paramsLocation = searchParams.get("location") || "";
-    const paramsGuests = parseInt(searchParams.get("guests") || "1");
+    const paramsGuests = parseInt(searchParams.get("guests") || "2");
     const paramsCheckIn = searchParams.get("checkIn");
     const paramsCheckOut = searchParams.get("checkOut");
 
     setLocation(paramsLocation);
     setGuests(paramsGuests);
 
-    if (paramsCheckIn) {
-      const parsed = new Date(paramsCheckIn);
-      if (!isNaN(parsed.getTime())) setCheckIn(parsed);
-    }
-
-    if (paramsCheckOut) {
-      const parsed = new Date(paramsCheckOut);
-      if (!isNaN(parsed.getTime())) setCheckOut(parsed);
-    }
+    if (paramsCheckIn) setCheckIn(new Date(paramsCheckIn));
+    if (paramsCheckOut) setCheckOut(new Date(paramsCheckOut));
   }, [searchParams]);
 
   return (
-    <form className="flex flex-wrap border items-center gap-4 p-3 rounded-2xl text-[#182A47] dark:text-[#C2F2FF]">
-      <div className="flex items-center border gap-2 w-full bg-background dark:bg-input/30 rounded-2xl px-3 py-2 md:w-auto">
-        <Search className="w-5 h-5 text-blue-600" />
+    <form className="flex flex-wrap sm:flex-nowrap justify-between items-center gap-2 p-2 sm:p-3 border rounded-xl bg-background dark:bg-input/30 text-[#182A47] dark:text-[#C2F2FF]">
+      {/* Location */}
+      <div className="relative flex items-center gap-1 px-2 py-1 rounded-lg border w-full sm:w-auto bg-white dark:bg-[#0B1D39]">
+        <Search className="w-4 h-4 text-blue-600" />
         <input
           type="text"
-          placeholder="Location"
-          className="bg-transparent outline-none w-full md:w-40 placeholder:text-gray-500 dark:placeholder:text-gray-300"
+          placeholder="Where to?"
+          className="text-sm bg-transparent outline-none w-full sm:w-32"
           value={location}
-          onChange={(e) => {
-            setLocation(e.target.value);
-            updateParams("location", e.target.value);
-            handleLocationChange(e);
-          }}
+          onChange={handleLocationChange}
+          onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
         />
-
-        {showSuggestions && suggestions.length > 0 && (
-          <select
-            id="location-listbox"
-            className="absolute max-w-[300px] mt-1 bg-background border rounded-md shadow-md z-20 max-h-48 overflow-y-auto"
-            size={Math.min(suggestions.length, 5)}
-            onChange={(e) => {
-              selectSuggestion(e.target.value);
-              updateParams("location", e.target.value);
-            }}
-            onBlur={() => setShowSuggestions(false)}
-          >
-            {suggestions.map((suggestion) => (
-              <option
-                key={suggestion}
-                value={suggestion}
-                className="p-2 hover:bg-muted cursor-pointer"
+        {showSuggestions && (
+          <div className="absolute left-0 top-full mt-1 z-30 w-full bg-white dark:bg-[#0B1D39] border rounded-md shadow-md max-h-40 overflow-y-auto text-sm">
+            {suggestions.map((sug) => (
+              <div
+                key={sug}
+                className="px-2 py-1 hover:bg-muted cursor-pointer"
+                onClick={() => selectSuggestion(sug)}
               >
-                {suggestion}
-              </option>
+                {sug}
+              </div>
             ))}
-          </select>
+          </div>
         )}
       </div>
 
-      {/* Check-in */}
-      <div className="flex items-center border gap-2 w-full md:w-auto bg-background dark:bg-input/30 px-3 py-2 rounded-2xl justify-start text-left font-normal">
-        <Calendar1 className="w-5 h-5 text-blue-600" />
+      {/* Dates */}
+      <div className="flex items-center gap-1 w-full sm:w-auto">
+        {/* Check-in */}
         <Popover>
           <PopoverTrigger asChild>
-            <Button variant="outline" className="border-none dark:text-white">
-              {checkIn ? format(checkIn, "PPP") : "Check in"}
+            <Button
+              variant="ghost"
+              className="text-xs px-2 py-1 border rounded-lg bg-white dark:bg-[#0B1D39] flex items-center gap-1"
+            >
+              <CalendarIcon className="w-4 h-4 text-blue-600" />
+              {checkIn ? format(checkIn, "MMM d") : "Check-in"}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="min-w-[300px] p-0">
@@ -185,23 +128,24 @@ export default function SearchBar() {
               mode="single"
               className="w-full"
               selected={checkIn}
-              onSelect={(selected) => {
-                setCheckIn(selected);
-                if (selected) updateParams("checkIn", selected.toISOString());
+              onSelect={(d) => {
+                setCheckIn(d);
+                if (d) updateParams("checkIn", d.toISOString());
               }}
               disabled={(d) => d < new Date()}
             />
           </PopoverContent>
         </Popover>
-      </div>
 
-      {/* Check-out */}
-      <div className="flex items-center border gap-2 w-full md:w-auto bg-background dark:bg-input/30 px-3 py-2 rounded-2xl justify-start text-left font-normal">
-        <Calendar1 className="w-5 h-5 text-blue-600" />
+        {/* Check-out */}
         <Popover>
           <PopoverTrigger asChild>
-            <Button variant="outline" className="border-none dark:text-white">
-              {checkOut ? format(checkOut, "PPP") : "Check out"}
+            <Button
+              variant="ghost"
+              className="text-xs px-2 py-1 border rounded-lg bg-white dark:bg-[#0B1D39] flex items-center gap-1"
+            >
+              <CalendarIcon className="w-4 h-4 text-blue-600" />
+              {checkOut ? format(checkOut, "MMM d") : "Check-out"}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="min-w-[300px] p-0">
@@ -209,9 +153,9 @@ export default function SearchBar() {
               mode="single"
               className="w-full"
               selected={checkOut}
-              onSelect={(selected) => {
-                setCheckOut(selected);
-                if (selected) updateParams("checkOut", selected.toISOString());
+              onSelect={(d) => {
+                setCheckOut(d);
+                if (d) updateParams("checkOut", d.toISOString());
               }}
               disabled={(d) => d < new Date()}
             />
@@ -220,19 +164,19 @@ export default function SearchBar() {
       </div>
 
       {/* Guests */}
-      <div className="flex items-center gap-2 w-full md:w-auto bg-background border dark:bg-input/30 px-3 py-2 rounded-2xl">
-        <Users className="w-5 h-5 text-blue-600" />
+      <div className="flex items-center gap-1 px-2 py-1 border rounded-lg w-full sm:w-auto bg-white dark:bg-[#0B1D39]">
+        <Users className="w-4 h-4 text-blue-600" />
         <input
           type="number"
           placeholder="Guests"
-          className="bg-transparent outline-none w-full md:w-20 placeholder:text-gray-500 dark:placeholder:text-gray-300"
+          className="text-sm bg-transparent outline-none w-full sm:w-16"
           value={guests}
+          min={1}
           onChange={(e) => {
             const val = Number(e.target.value);
             setGuests(val);
             updateParams("guests", val.toString());
           }}
-          min={1}
         />
       </div>
     </form>
