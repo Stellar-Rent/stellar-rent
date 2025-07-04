@@ -55,27 +55,27 @@ Each review stored on-chain contains:
 stellar contract invoke \
   --id <CONTRACT_ID> \
   --network testnet \
-  --source-account alice \
+  --source alice \
   -- submit_review \
-  --booking_id "booking123" \
-  --reviewer_did "did:stellar:alice" \
-  --target_did "did:stellar:bob" \
+  --booking_id booking123 \
+  --reviewer_did alice \
+  --target_did bob \
   --rating 5 \
-  --comment "Great experience, very clean property!"
+  --comment "Great experience"
 ```
 
 **Parameters:**
 - `booking_id`: Unique identifier for the booking being reviewed.
-- `reviewer_did`: DID of the person leaving the review.
-- `target_did`: DID of the person being reviewed.
+- `reviewer_did`: DID of the person leaving the review (use simple identifier without `did:stellar:` prefix).
+- `target_did`: DID of the person being reviewed (use simple identifier without `did:stellar:` prefix).
 - `rating`: Numeric rating from 1 to 5.
 - `comment`: Text comment describing the experience.
 
 **Result:**  
 Returns the booking ID on success. Fails if:
-- Rating is not between 1-5
+- Rating is not between 1-5 (Error #1)
 - Any required field is empty
-- Same reviewer has already reviewed this booking for this target
+- Same reviewer has already reviewed this booking for this target (Error #2)
 
 ---
 
@@ -88,13 +88,13 @@ Returns the booking ID on success. Fails if:
 stellar contract invoke \
   --id <CONTRACT_ID> \
   --network testnet \
-  --source-account alice \
+  --source alice \
   -- get_reviews_for_user \
-  --user_did "did:stellar:bob"
+  --user_did bob
 ```
 
 **Parameters:**
-- `user_did`: DID of the user whose reviews to retrieve.
+- `user_did`: DID of the user whose reviews to retrieve (use simple identifier without `did:stellar:` prefix).
 
 **Result:**  
 Returns a vector of all `Review` structs for the specified user. Returns empty vector if no reviews exist.
@@ -110,13 +110,13 @@ Returns a vector of all `Review` structs for the specified user. Returns empty v
 stellar contract invoke \
   --id <CONTRACT_ID> \
   --network testnet \
-  --source-account alice \
+  --source alice \
   -- get_reputation \
-  --user_did "did:stellar:bob"
+  --user_did bob
 ```
 
 **Parameters:**
-- `user_did`: DID of the user whose reputation to retrieve.
+- `user_did`: DID of the user whose reputation to retrieve (use simple identifier without `did:stellar:` prefix).
 
 **Result:**  
 Returns the reputation score (currently returns 0 as default).
