@@ -10,9 +10,7 @@ import {
   Address,
 } from '@stellar/stellar-sdk';
 import * as mockBookingContract from '../__mocks__/bookingContract';
-
-// Define the booking status type to match the Soroban contract enum
-type BookingStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled';
+import type { BookingStatus } from './types';
 
 const useMock = process.env.USE_MOCK === 'true';
 

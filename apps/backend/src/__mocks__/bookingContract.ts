@@ -1,6 +1,4 @@
-import type { MockBooking } from '../blockchain/types';
-
-type BookingStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled';
+import type { BookingStatus, MockBooking } from '../blockchain/types';
 
 // Mock storage for bookings
 const mockBookings: MockBooking[] = [];
