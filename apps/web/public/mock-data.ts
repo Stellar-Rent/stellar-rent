@@ -4,6 +4,8 @@ export type FullPropertyProps = {
   images: string[];
   price: number;
   rating: number;
+  maxGuests: number;
+  bedrooms: number;
   distance: string;
   location: string;
   amenities: string[];
@@ -22,6 +24,8 @@ export const MOCK_PROPERTIES: FullPropertyProps[] = [
       "/images/house4.jpg"
     ],
     rating: 4.1,
+    maxGuests: 4,
+    bedrooms: 2,
     distance: "30km",
     amenities: ["pool", "wifi"]
   },
@@ -37,6 +41,8 @@ export const MOCK_PROPERTIES: FullPropertyProps[] = [
       "/images/house5.jpg"
     ],
     rating: 4.8,
+    maxGuests: 8,
+    bedrooms: 4,
     distance: "6km",
     amenities: ["wifi", "pet friendly"]
   },
@@ -52,6 +58,8 @@ export const MOCK_PROPERTIES: FullPropertyProps[] = [
       "/images/house.jpg"
     ],
     rating: 3.9,
+    maxGuests: 7,
+    bedrooms: 4,
     distance: "14km",
     amenities: ["pool", "wifi"]
   },
@@ -67,6 +75,8 @@ export const MOCK_PROPERTIES: FullPropertyProps[] = [
       "/images/house3.jpg"
     ],
     rating: 4.5,
+    maxGuests: 10,
+    bedrooms: 6,
     distance: "8km",
     amenities: ["pool", "wifi", "garden"]
   },
@@ -82,6 +92,8 @@ export const MOCK_PROPERTIES: FullPropertyProps[] = [
       "/images/house3.jpg"
     ],
     rating: 4.2,
+    maxGuests: 14,
+    bedrooms: 6,
     distance: "12km",
     amenities: ["parking space", "wifi"]
   },
@@ -97,6 +109,8 @@ export const MOCK_PROPERTIES: FullPropertyProps[] = [
       "/images/house3.jpg"
     ],
     rating: 4.7,
+    maxGuests: 2,
+    bedrooms: 1,
     distance: "10km",
     amenities: ["wifi", "garden"]
   },
@@ -112,6 +126,8 @@ export const MOCK_PROPERTIES: FullPropertyProps[] = [
       "/images/house4.jpg"
     ],
     rating: 4.1,
+    maxGuests: 6,
+    bedrooms: 2,
     distance: "30km",
     amenities: ["pool", "parking space", "pet friendly"]
   },
@@ -127,6 +143,8 @@ export const MOCK_PROPERTIES: FullPropertyProps[] = [
       "/images/house.jpg"
     ],
     rating: 4.3,
+    maxGuests: 10,
+    bedrooms: 5,
     distance: "17km",
     amenities: ["wifi", "garden"]
   },
@@ -142,6 +160,8 @@ export const MOCK_PROPERTIES: FullPropertyProps[] = [
       "/images/house1.jpg"
     ],
     rating: 4.0,
+    maxGuests: 12,
+    bedrooms: 7,
     distance: "22km",
     amenities: ["pool", "wifi", "pet friendly"]
   },
@@ -157,6 +177,8 @@ export const MOCK_PROPERTIES: FullPropertyProps[] = [
       "/images/house2.jpg"
     ],
     rating: 4.9,
+    maxGuests: 6,
+    bedrooms: 4,
     distance: "5km",
     amenities: ["wifi", "parking space"]
   },
@@ -172,6 +194,8 @@ export const MOCK_PROPERTIES: FullPropertyProps[] = [
       "/images/house5.jpg"
     ],
     rating: 3.8,
+    maxGuests: 13,
+    bedrooms: 8,
     distance: "13km",
     amenities: ["wifi"]
   },
@@ -187,6 +211,8 @@ export const MOCK_PROPERTIES: FullPropertyProps[] = [
       "/images/house2.jpg"
     ],
     rating: 4.4,
+    maxGuests: 4,
+    bedrooms: 3,
     distance: "9km",
     amenities: ["garden", "pool", "wifi"]
   },
@@ -202,6 +228,8 @@ export const MOCK_PROPERTIES: FullPropertyProps[] = [
       "/images/house4.jpg"
     ],
     rating: 4.6,
+    maxGuests: 3,
+    bedrooms: 3,
     distance: "11km",
     amenities: ["wifi", "parking space"]
   },
@@ -217,6 +245,8 @@ export const MOCK_PROPERTIES: FullPropertyProps[] = [
       "/images/house3.jpg"
     ],
     rating: 3.5,
+    maxGuests: 2,
+    bedrooms: 2,
     distance: "18km",
     amenities: ["wifi"]
   },
@@ -232,6 +262,8 @@ export const MOCK_PROPERTIES: FullPropertyProps[] = [
       "/images/house4.jpg"
     ],
     rating: 4.7,
+    maxGuests: 3,
+    bedrooms: 1,
     distance: "15km",
     amenities: ["garden", "wifi"]
   },
@@ -247,6 +279,8 @@ export const MOCK_PROPERTIES: FullPropertyProps[] = [
       "/images/house1.jpg"
     ],
     rating: 4.1,
+    maxGuests: 9,
+    bedrooms: 3,
     distance: "28km",
     amenities: ["wifi", "pet friendly"]
   },
@@ -262,6 +296,8 @@ export const MOCK_PROPERTIES: FullPropertyProps[] = [
       "/images/house2.jpg"
     ],
     rating: 3.9,
+    maxGuests: 6,
+    bedrooms: 2,
     distance: "19km",
     amenities: ["wifi"]
   },
@@ -277,6 +313,8 @@ export const MOCK_PROPERTIES: FullPropertyProps[] = [
       "/images/house.jpg"
     ],
     rating: 4.2,
+    maxGuests: 7,
+    bedrooms: 4,
     distance: "16km",
     amenities: ["wifi", "parking space"]
   },
@@ -292,6 +330,8 @@ export const MOCK_PROPERTIES: FullPropertyProps[] = [
       "/images/house3.jpg"
     ],
     rating: 4.9,
+    maxGuests: 1,
+    bedrooms: 1,
     distance: "4km",
     amenities: ["pool", "wifi", "garden"]
   },
@@ -307,6 +347,8 @@ export const MOCK_PROPERTIES: FullPropertyProps[] = [
       "/images/house5.jpg"
     ],
     rating: 4.3,
+    maxGuests: 2,
+    bedrooms: 1,
     distance: "21km",
     amenities: ["wifi", "pet friendly"]
   },
@@ -322,6 +364,8 @@ export const MOCK_PROPERTIES: FullPropertyProps[] = [
       "/images/house4.jpg"
     ],
     rating: 4.0,
+    maxGuests: 2,
+    bedrooms: 2,
     distance: "25km",
     amenities: ["wifi", "garden"]
   },
@@ -337,6 +381,8 @@ export const MOCK_PROPERTIES: FullPropertyProps[] = [
       "/images/house3.jpg"
     ],
     rating: 4.2,
+    maxGuests: 5,
+    bedrooms: 5,
     distance: "14km",
     amenities: ["pool", "wifi"]
   },
@@ -352,6 +398,8 @@ export const MOCK_PROPERTIES: FullPropertyProps[] = [
       "/images/house5.jpg"
     ],
     rating: 3.7,
+    maxGuests: 3,
+    bedrooms: 2,
     distance: "19km",
     amenities: ["wifi"]
   },
@@ -367,6 +415,8 @@ export const MOCK_PROPERTIES: FullPropertyProps[] = [
       "/images/property-1.jpg"
     ],
     rating: 4.6,
+    maxGuests: 8,
+    bedrooms: 2,
     distance: "7km",
     amenities: ["pool", "wifi", "parking space"]
   },
@@ -382,6 +432,8 @@ export const MOCK_PROPERTIES: FullPropertyProps[] = [
       "/images/house3.jpg"
     ],
     rating: 4.5,
+    maxGuests: 3,
+    bedrooms: 2,
     distance: "11km",
     amenities: ["wifi", "garden", "parking space"]
   }

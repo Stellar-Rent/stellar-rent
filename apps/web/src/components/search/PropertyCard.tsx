@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { LoaderCircle } from "lucide-react";
+import { Button } from "../ui/button";
 
 type Props = {
   id: string;
@@ -38,9 +39,11 @@ export default function PropertyCard({
 
   if (isNavigating) {
     return (
-      <div className="grid place-items-center text-center">
+      <div className="flex flex-col justify-center items-center gap-2 fixed inset-0 z-[1000] bg-[#00000088]">
         <LoaderCircle className="w-20 h-20 animate-spin " />
-        <p className="text-base font-medium">Loading Property details...</p>
+        <p className="text-base font-medium text-center">
+          Loading Property details...
+        </p>
       </div>
     );
   }
@@ -72,20 +75,20 @@ export default function PropertyCard({
       </div>
 
       <div className="p-3 flex justify-between items-center text-[#182A47] dark:text-[#C2F2FF]">
-        <div>
+        <div className="max-w-[1/2] overflow-ellipsis">
           <p className="font-semibold text-sm">{location}</p>
-          <p className="text-xs text-gray-600 dark:text-gray-300 truncate">
+          <p className="text-xs text-gray-600 dark:text-gray-300 overflow-ellipsis truncate">
             {title}
           </p>
         </div>
 
-        <button
+        <Button
           type="button"
           onClick={handleViewDetails}
-          className="text-blue-600 text-sm bg-transparent font-medium"
+          className="text-blue-600 text-sm font-medium"
         >
           View details
-        </button>
+        </Button>
       </div>
     </div>
   );

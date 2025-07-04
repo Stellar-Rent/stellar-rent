@@ -55,6 +55,7 @@ export default function SearchBar() {
   const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setLocation(value);
+    updateParams("location", value);
     if (value.length > 1) {
       const filtered = LOCATIONS.filter((loc) =>
         loc.toLowerCase().includes(value.toLowerCase())
