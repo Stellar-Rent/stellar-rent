@@ -33,13 +33,17 @@ export interface PropertyAvailability {
   unavailableDates: Date[];
   minNights: number;
 }
-
+export interface PropertyFees {
+  cleaning?: number;
+  service?: number;
+}
 export interface Property {
   id: string;
   title: string;
   location: string;
   address: string;
   price: number;
+  fees?: PropertyFees;
   images: string[];
   rating: number;
   reviewCount: number;

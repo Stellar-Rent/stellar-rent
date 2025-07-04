@@ -67,7 +67,7 @@ export const PropertyDetail = ({ id }: PropertyDetailProps) => {
 
   const calculateNights = () => {
     if (!selectedDates?.from || !selectedDates?.to) return 0;
-    return Math.ceil(
+    return Math.floor(
       (selectedDates.to.getTime() - selectedDates.from.getTime()) / (1000 * 60 * 60 * 24)
     );
   };
@@ -75,8 +75,8 @@ export const PropertyDetail = ({ id }: PropertyDetailProps) => {
   const calculateTotal = () => {
     const nights = calculateNights();
     const subtotal = property.price * nights;
-    const cleaningFee = 150;
-    const serviceFee = 100;
+    const cleaningFee = property.fees?.cleaning || 150;
+    const serviceFee = property.fees?.service || 100;
     return {
       nights,
       subtotal,
