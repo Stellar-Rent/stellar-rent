@@ -1,4 +1,3 @@
-// ✅ SortOptions.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -50,11 +49,19 @@ export function SortOptions({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" className="min-w-[300px] justify-between">
-          {selected.label} <ChevronDown className="ml-2 h-4 w-4" />
+        <Button
+          variant="outline"
+          className="w-full sm:w-60 md:w-72 flex justify-between items-center px-3 py-2 text-sm bg-background dark:bg-input/30 border dark:border-muted shadow-sm"
+        >
+          <span className="truncate">{selected.label}</span>
+          <ChevronDown className="h-4 w-4 text-muted-foreground" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-full">
+
+      <DropdownMenuContent
+        className="w-full sm:w-60 md:w-72 z-50 shadow-xl bg-background dark:bg-input/80 border dark:border-muted"
+        align="start"
+      >
         {sortOptions.map((option) => (
           <DropdownMenuItem
             key={option.value}
@@ -63,6 +70,7 @@ export function SortOptions({
               updateUrl(option.value);
               onSortChange(option.value);
             }}
+            className="cursor-pointer text-sm"
           >
             {option.label}
           </DropdownMenuItem>
