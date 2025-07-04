@@ -1,4 +1,7 @@
-import type { AvailabilityRequest, AvailabilityResponse } from '../blockchain/soroban';
+import type {
+  AvailabilityRequest,
+  AvailabilityResponse,
+} from '../blockchain/soroban';
 import type { BookingEscrowParams } from '../blockchain/trustlessWork';
 import { supabase } from '../config/supabase';
 import { loggingService } from '../services/logging.service';
@@ -6,7 +9,9 @@ import type { CreateBookingInput } from '../types/booking.types';
 import { BookingError } from '../types/common.types';
 
 export interface BlockchainServices {
-  checkAvailability: (request: AvailabilityRequest) => Promise<AvailabilityResponse>;
+  checkAvailability: (
+    request: AvailabilityRequest
+  ) => Promise<AvailabilityResponse>;
   createEscrow: (params: BookingEscrowParams) => Promise<string>;
   cancelEscrow: (escrowAddress: string) => Promise<void>;
 }
@@ -20,10 +25,11 @@ export class BookingService {
 
     try {
       // Check property availability
-      const availabilityResult = await this.blockchainServices.checkAvailability({
-        propertyId: input.propertyId,
-        dates: input.dates,
-      });
+      const availabilityResult =
+        await this.blockchainServices.checkAvailability({
+          propertyId: input.propertyId,
+          dates: input.dates,
+        });
 
       if (!availabilityResult.isAvailable) {
         throw new BookingError(
@@ -52,7 +58,10 @@ export class BookingService {
         .insert({
           property_id: input.propertyId,
           user_id: input.userId,
-          dates: input.dates,
+          dates: {
+            from: input.dates.from.toISOString(),
+            to: input.dates.to.toISOString(),
+          },
           guests: input.guests,
           total: input.total,
           deposit: input.deposit,
@@ -74,7 +83,11 @@ export class BookingService {
           });
         }
 
-        throw new BookingError('Failed to create booking record', 'DB_FAIL', dbError);
+        throw new BookingError(
+          'Failed to create booking record',
+          'DB_FAIL',
+          dbError
+        );
       }
 
       // Log successful operation
@@ -92,14 +105,17 @@ export class BookingService {
 
       // Log and rethrow other errors
       loggingService.logBlockchainError(logId, error as Error);
-      throw new BookingError('Failed to create escrow', 'ESCROW_FAIL', (error as Error).message);
+      throw new BookingError(
+        'Failed to create escrow',
+        'ESCROW_FAIL',
+        (error as Error).message
+      );
     }
   }
 }
 
 export async function confirmBookingPayment(escrowAddress: string) {
   try {
-    // Example logic: update booking status from escrow confirmation
     const { data, error } = await supabase
       .from('bookings')
       .update({ status: 'confirmed' })
@@ -108,7 +124,11 @@ export async function confirmBookingPayment(escrowAddress: string) {
       .single();
 
     if (error || !data) {
-      throw new BookingError('Failed to confirm booking', 'CONFIRM_FAIL', error);
+      throw new BookingError(
+        'Failed to confirm booking',
+        'CONFIRM_FAIL',
+        error
+      );
     }
 
     return data;

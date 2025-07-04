@@ -30,23 +30,28 @@ export const createBookingSchema = z.object({
   deposit: z.number().nonnegative('Deposit must be non-negative'),
 });
 
-export const ParamsSchema = z.object({
+export const BookingParamsSchema = z.object({
   bookingId: z.string().uuid(),
 });
 
-export const ResponseSchema = z.object({
+export const BookingResponseSchema = z.object({
   id: z.string().uuid(),
-  user_id: z.string().uuid(),
-  property_id: z.string().uuid(),
-  dates: z.array(z.string()),
+  userId: z.string().uuid(),
+  propertyId: z.string().uuid(),
+  dates: z.object({
+    from: z.string().refine(val => !isNaN(Date.parse(val)), { message: 'Invalid from date' }),
+    to: z.string().refine(val => !isNaN(Date.parse(val)), { message: 'Invalid to date' }),
+  }),
   guests: z.number(),
   total: z.number(),
   deposit: z.number(),
-  status: z.string(),
-  escrow_address: z.string().nullable().optional(),
-  created_at: z.string(),
-  // Add other fields returned by getBookingById if necessary
+  status: z.enum(['pending', 'confirmed', 'cancelled', 'completed']),
+  escrowAddress: z.string().nullable().optional(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
 });
 
 
 export type CreateBookingInput = z.infer<typeof createBookingSchema>;
+export type BookingResponse = z.infer<typeof BookingResponseSchema>;
+export type BookingParams = z.infer<typeof BookingParamsSchema>;

@@ -1,10 +1,11 @@
 import type { Response } from 'express';
 import { confirmBookingPayment, getBookingById } from '../services/booking.service';
 import type { AuthRequest } from '../types/auth.types';
-import { ParamsSchema, ResponseSchema } from '../types/booking.types';
+import { BookingParamsSchema, BookingResponseSchema } from '../types/booking.types';
+import type { ConfirmPaymentInput } from '../../../web/src/types';
 
 export const getBooking = async (req: AuthRequest, res: Response) => {
-  const parseResult = ParamsSchema.safeParse(req.params);
+  const parseResult = BookingParamsSchema.safeParse(req.params);
   if (!parseResult.success) {
     return res.status(400).json({
       success: false,
@@ -30,9 +31,9 @@ export const getBooking = async (req: AuthRequest, res: Response) => {
   }
 
   try {
-    const bookingDetails = await getBookingById(bookingId, requesterUserId);
+    const bookingDetails = await getBookingById(bookingId);
 
-    const validResponse = ResponseSchema.safeParse(bookingDetails);
+    const validResponse = BookingResponseSchema.safeParse(bookingDetails);
     if (!validResponse.success) {
       return res.status(500).json({
         success: false,
@@ -126,7 +127,7 @@ export const confirmPayment = async (req: BookingRequest, res: Response) => {
       console.log(`Payment confirmation attempt for booking ${bookingId}`);
     }
 
-    const result = await confirmBookingPayment(bookingId, userId, input);
+    const result = await confirmBookingPayment(bookingId);
 
     res.status(200).json(result);
   } catch (error) {

@@ -17,14 +17,15 @@ import {
   validateOwnerId,
   validatePropertyId,
 } from '../validators/property.validator';
+import { featuredLimit } from '../middleware/rateLimiter';
 
 const router = Router();
 
 // Public routes (NO auth required)
 router.get('/amenities', getAllowedAmenitiesController);
+router.get('/featured', featuredLimit, getFeaturedPropertiesController);
 router.get('/', searchPropertiesController);
 router.get('/:id', validatePropertyId, getPropertyByIdController);
-router.get('/featured', getFeaturedPropertiesController);
 
 // Protected routes (require token)
 router.post(

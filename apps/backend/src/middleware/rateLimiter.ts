@@ -10,3 +10,9 @@ export const rateLimiter = rateLimit({
     return req.ip || 'localhost';
   },
 });
+
+export const featuredLimit = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 5, 
+  message: 'Too many requests to featured properties. Try again later.',
+});

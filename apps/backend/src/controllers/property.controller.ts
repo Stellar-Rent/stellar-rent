@@ -16,7 +16,6 @@ import {
   searchProperties,
   updateProperty,
   updatePropertyAvailability,
-  updatePropertyStatus,
 } from '../services/property.service';
 import {
   availabilityRangeSchema,
@@ -25,6 +24,7 @@ import {
   updatePropertySchema,
   type AvailabilityRangeInput,
   type CreatePropertyInput,
+  type FeaturedProperty,
 } from '../types/property.types';
 
 const createPropertyRequestSchema = propertySchema;
@@ -773,7 +773,7 @@ export async function updatePropertyStatusController(
     const { status } = bodyValidation.data;
 
     // Update status using service
-    const result = await updatePropertyStatus(id, status);
+    const result = await updateProperty(id, { status });
 
     if (!result.success) {
       const statusCode = result.error === 'Property not found' ? 404 : 500;
@@ -818,15 +818,15 @@ export async function getFeaturedPropertiesController(
       return;
     }
 
-    const response = result.data!.map((property: any) => ({
+    const response = (result.data || []).map((property: FeaturedProperty) => ({
       id: property.id,
       title: property.title,
       price: property.price,
       location: {
-        city: property.location?.city ?? '',
-        country: property.location?.country ?? '',
+        city: property.location.city,
+        country: property.location.country,
       },
-      image: property.image ?? '',
+      image: property.image,
       availability: property.availability ?? [],
     }));
 
