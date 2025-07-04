@@ -1,5 +1,7 @@
 #![no_std]
-use soroban_sdk::{contract, contractimpl, contracttype, Env, Map, String, Symbol, Vec};
+use soroban_sdk::{
+    contract, contracterror, contractimpl, contracttype, Env, Map, String, Symbol, Vec,
+};
 
 #[contracttype]
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -32,6 +34,16 @@ pub enum StorageKey {
     ReviewMap(Symbol),
 }
 
+#[contracterror]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+#[repr(u32)]
+pub enum ReviewError {
+    InvalidRating = 1,
+    DuplicateReview = 2,
+    UnauthorizedReviewer = 3,
+    InvalidInput = 4,
+}
+
 #[contract]
 pub struct ReviewContract;
 
@@ -44,48 +56,56 @@ impl ReviewContract {
         target_did: Symbol,
         rating: u32,
         comment: String,
-    ) -> Symbol {
-        let timestamp = env.ledger().timestamp();
-        let sequence = env.ledger().sequence();
-
-        let review_id = Symbol::new(env, "review");
-
+    ) -> Result<Symbol, ReviewError> {
+        // Validate input
+        (if rating < 1 || rating > 5 {
+            return Err(ReviewError::InvalidRating);
+        });
+        // Validate comment length (e.g., max 500 characters)
+        if comment.len() > 500 {
+            return Err(ReviewError::InvalidInput);
+        }
+        let empty = Symbol::new(env, "");
+        if booking_id == empty || reviewer_did == empty || target_did == empty {
+            return Err(ReviewError::InvalidInput);
+        }
+        // Prevent duplicate review (same reviewer, booking, and target)
+        let map_key = StorageKey::ReviewMap(target_did.clone());
+        let mut reviews: Vec<Review> = env
+            .storage()
+            .persistent()
+            .get(&map_key)
+            .unwrap_or_else(|| Vec::new(env));
+        for review in reviews.iter() {
+            if review.booking_id == booking_id && review.reviewer_did == reviewer_did {
+                return Err(ReviewError::DuplicateReview);
+            }
+        }
         let review = Review {
-            id: review_id.clone(),
-            booking_id,
-            reviewer_did,
-            target_did,
+            id: Symbol::short("review"), // id is not used for lookup, keep placeholder
+            booking_id: booking_id.clone(),
+            reviewer_did: reviewer_did.clone(),
+            target_did: target_did.clone(),
             rating,
             comment,
-            timestamp,
+            timestamp: env.ledger().timestamp(),
         };
-
-        let key = StorageKey::Review(review_id.clone());
-        env.storage().persistent().set(&key, &review);
-
-        review_id
+        reviews.push_back(review);
+        env.storage().persistent().set(&map_key, &reviews);
+        Ok(booking_id)
     }
+
     pub fn get_reviews_for_user(env: &Env, user_did: Symbol) -> Vec<Review> {
-        let key = StorageKey::ReviewMap(user_did.clone());
-        let mut user_reviews: Vec<Review> = Vec::new(env);
-        let reviews: Map<Symbol, Vec<Symbol>> = env.storage().persistent().get(&key).unwrap();
-
-        reviews.iter().for_each(|(_, review_ids)| {
-            review_ids.iter().for_each(|review_id| {
-                let key = StorageKey::Review(review_id.clone());
-                if let Some(review) = env.storage().persistent().get::<_, Review>(&key) {
-                    if review.target_did == user_did {
-                        user_reviews.push_back(review);
-                    }
-                }
-            });
-        });
-
-        user_reviews
+        let key = StorageKey::ReviewMap(user_did);
+        env.storage()
+            .persistent()
+            .get(&key)
+            .unwrap_or_else(|| Vec::new(env))
     }
+
     pub fn get_reputation(env: &Env, user_did: Symbol) -> u32 {
         let key = StorageKey::ReputationScoresMap(user_did);
-        env.storage().persistent().get(&key).unwrap()
+        env.storage().persistent().get(&key).unwrap_or(0)
     }
 }
 
