@@ -132,7 +132,82 @@ export class BookingService {
     };
   }
 
-  async confirmBookingPayment(bookingId: string, userId: string, input: { transactionHash: string, amount: number }) {
+  async cancelBooking(bookingId: string, userId: string) {
+    // Fetch booking from database
+    const { data: booking, error } = await supabase
+      .from('bookings')
+      .select('*')
+      .eq('id', bookingId)
+      .single();
+
+    if (error || !booking) {
+      throw new Error('Booking not found');
+    }
+
+    // Check if user is authorized to cancel this booking
+    if (booking.user_id !== userId) {
+      throw new Error('You do not have permission to cancel this booking');
+    }
+
+    // Check booking status allows cancellation
+    if (booking.status !== 'pending' && booking.status !== 'confirmed') {
+      throw new Error(`Cannot cancel booking with status: ${booking.status}`);
+    }
+
+    // Log blockchain operation
+    const logId = loggingService.logBlockchainOperation('cancelBooking', { bookingId, userId });
+
+    try {
+      // Cancel escrow on blockchain if available
+      if (booking.escrow_address) {
+        try {
+          await this.blockchainServices.cancelEscrow(booking.escrow_address);
+        } catch (blockchainError) {
+          // Log blockchain error but continue with database update
+          loggingService.logBlockchainError(logId, {
+            error: blockchainError as Error,
+            context: 'Failed to cancel escrow on blockchain, proceeding with database update',
+          });
+        }
+      }
+
+      // Update booking status in database
+      const { data: updatedBooking, error: updateError } = await supabase
+        .from('bookings')
+        .update({
+          status: 'cancelled',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', bookingId)
+        .select()
+        .single();
+
+      if (updateError || !updatedBooking) {
+        throw new Error('Failed to update booking status');
+      }
+
+      // Log successful operation
+      loggingService.logBlockchainSuccess(logId, { updatedBooking });
+
+      return {
+        success: true,
+        booking: {
+          id: updatedBooking.id,
+          status: updatedBooking.status,
+        },
+      };
+    } catch (error) {
+      // Log and rethrow error
+      loggingService.logBlockchainError(logId, error as Error);
+      throw error;
+    }
+  }
+
+  async confirmBookingPayment(
+    bookingId: string,
+    userId: string,
+    input: { transactionHash: string; amount: number }
+  ) {
     // Fetch booking from database
     const { data: booking, error } = await supabase
       .from('bookings')
@@ -156,7 +231,9 @@ export class BookingService {
 
     // Validate payment amount matches booking total
     if (input.amount !== booking.total) {
-      throw new Error(`Payment amount ${input.amount} does not match booking total ${booking.total}`);
+      throw new Error(
+        `Payment amount ${input.amount} does not match booking total ${booking.total}`
+      );
     }
 
     // Log blockchain operation
@@ -166,7 +243,7 @@ export class BookingService {
       // Update booking status in blockchain
       // Use the previously added updateBookingStatus function from blockchain/bookingContract
       // Assuming we have a way to call it with relevant info
-      
+
       // For now, just log and update in database
       const { data: updatedBooking, error: updateError } = await supabase
         .from('bookings')

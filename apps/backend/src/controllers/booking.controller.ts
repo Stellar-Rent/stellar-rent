@@ -202,7 +202,7 @@ export const cancelBooking = async (req: BookingRequest, res: Response, next: Ne
       throw new BookingNotFoundError(`Booking with ID ${bookingId} not found`);
     }
 
-    const result = await bookingService.cancelBooking(bookingId);
+    const result = await bookingService.cancelBooking(bookingId, userId);
 
     return res.status(200).json({
       success: true,
