@@ -1,4 +1,6 @@
 import { z } from 'zod';
+import type { Request } from 'express';
+import type { User as SupabaseUser } from '@supabase/supabase-js';
 export interface Booking {
   id: string;
   propertyId: string;
@@ -31,3 +33,44 @@ export const createBookingSchema = z.object({
 });
 
 export type CreateBookingInput = z.infer<typeof createBookingSchema>;
+
+export const confirmPaymentSchema = z.object({
+  transactionHash: z.string().min(1, 'Transaction hash is required'),
+  amount: z.number().positive('Amount must be positive'),
+});
+
+export type ConfirmPaymentInput = z.infer<typeof confirmPaymentSchema>;
+
+// Schema for request parameters
+export const ParamsSchema = z.object({
+  bookingId: z.string().uuid('Invalid booking ID format')
+});
+
+// Schema for booking response
+export const ResponseSchema = z.object({
+  id: z.string(),
+  propertyId: z.string(),
+  userId: z.string(),
+  dates: z.object({
+    from: z.date(),
+    to: z.date()
+  }),
+  guests: z.number().int(),
+  total: z.number(),
+  deposit: z.number(),
+  escrowAddress: z.string(),
+  status: z.enum(['pending', 'confirmed', 'cancelled', 'completed']),
+  createdAt: z.date(),
+  updatedAt: z.date()
+});
+
+// Extend Request to include user from auth middleware and validated data
+export interface BookingRequest extends Request {
+  user?: SupabaseUser;
+  validatedBooking?: CreateBookingInput;
+  // These properties are already part of Express.Request
+  body: Record<string, unknown>;
+  params: {
+    [key: string]: string;
+  };
+}
