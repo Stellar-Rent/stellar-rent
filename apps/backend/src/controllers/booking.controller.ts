@@ -1,14 +1,14 @@
 import type { NextFunction, Request, Response } from 'express';
 import { ZodError } from 'zod';
-import type { ConfirmPaymentInput } from '../../../web/src/types';
 import { confirmBookingPayment, getBookingById } from '../services/booking.service';
+import { bookingService } from '../services/booking.service';
 import type { AuthRequest } from '../types/auth.types';
 import {
   BookingParamsSchema,
-  type BookingRequest,
   BookingResponseSchema,
   createBookingSchema,
 } from '../types/booking.types';
+import { BookingError } from '../types/common.types';
 
 export async function postBooking(req: Request, res: Response, next: NextFunction) {
   try {
@@ -19,6 +19,8 @@ export async function postBooking(req: Request, res: Response, next: NextFunctio
         to: new Date(req.body.dates.to),
       },
     });
+
+    const booking = await bookingService.createBooking(input);
 
     // Placeholder response until service is implemented
     res.status(201).json({ booking: input });
@@ -31,6 +33,11 @@ export async function postBooking(req: Request, res: Response, next: NextFunctio
           message: e.message,
         })),
       });
+    }
+
+    if (error instanceof BookingError) {
+      const status = error.code === 'UNAVAILABLE' ? 409 : 500;
+      return res.status(status).json({ error: error.message });
     }
 
     interface CustomError extends Error {
@@ -152,11 +159,11 @@ export const getBooking = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const confirmPayment = async (req: BookingRequest, res: Response) => {
+export const confirmPayment = async (req: AuthRequest, res: Response) => {
   try {
-    const bookingId = req.params.bookingId;
+    const escrowAddress = req.body.escrowAddress;
     const userId = req.user?.id;
-    const input: ConfirmPaymentInput = req.body;
+    const transactionHash = req.body.transactionHash;
 
     if (!userId) {
       return res.status(401).json({
@@ -166,17 +173,23 @@ export const confirmPayment = async (req: BookingRequest, res: Response) => {
 
     if (process.env.NODE_ENV !== 'production') {
       console.log('Payment confirmation attempt:', {
-        bookingId,
         userId,
-        transactionHash: `${input.transactionHash.substring(0, 8)}...`,
+        transactionHash: `${transactionHash.substring(0, 8)}...`,
       });
     } else {
-      console.log(`Payment confirmation attempt for booking ${bookingId}`);
+      console.log(`Payment confirmation attempt for booking ${transactionHash}`);
     }
 
-    const result = await confirmBookingPayment(bookingId);
+    if (!escrowAddress) {
+      return res.status(400).json({ error: 'escrowAddress is required' });
+    }
 
-    res.status(200).json(result);
+    const result = await confirmBookingPayment(escrowAddress);
+
+    res.status(200).json({
+      message: 'Booking confirmed successfully',
+      booking: result,
+    });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error('Error confirming payment:', errorMessage);
