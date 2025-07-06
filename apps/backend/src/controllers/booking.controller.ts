@@ -23,7 +23,10 @@ export async function postBooking(req: Request, res: Response, next: NextFunctio
     const booking = await bookingService.createBooking(input);
 
     // Placeholder response until service is implemented
-    res.status(201).json({ booking: input });
+    res.status(201).json({
+      success: true,
+      data: booking,
+    });
   } catch (error) {
     if (error instanceof ZodError) {
       return res.status(400).json({
@@ -40,23 +43,6 @@ export async function postBooking(req: Request, res: Response, next: NextFunctio
       return res.status(status).json({ error: error.message });
     }
 
-    interface CustomError extends Error {
-      code?: string;
-    }
-
-    const customError = error as CustomError;
-
-    if (customError.code === 'UNAVAILABLE') {
-      return res.status(409).json({ error: customError.message });
-    }
-
-    if (customError.code === 'ESCROW_FAIL') {
-      return res.status(500).json({ error: customError.message });
-    }
-
-    if (customError.code === 'DB_FAIL') {
-      return res.status(500).json({ error: customError.message });
-    }
     next(error);
   }
 }
@@ -171,6 +157,10 @@ export const confirmPayment = async (req: AuthRequest, res: Response) => {
       });
     }
 
+    if (!transactionHash) {
+      return res.status(400).json({ error: 'transactionHash is required' });
+    }
+
     if (process.env.NODE_ENV !== 'production') {
       console.log('Payment confirmation attempt:', {
         userId,
@@ -187,8 +177,9 @@ export const confirmPayment = async (req: AuthRequest, res: Response) => {
     const result = await confirmBookingPayment(escrowAddress);
 
     res.status(200).json({
+      success: true,
+      data: result,
       message: 'Booking confirmed successfully',
-      booking: result,
     });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
