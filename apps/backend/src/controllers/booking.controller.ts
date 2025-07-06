@@ -1,8 +1,58 @@
-import type { Response } from 'express';
+import type { NextFunction, Request, Response } from 'express';
+import { ZodError } from 'zod';
+import type { ConfirmPaymentInput } from '../../../web/src/types';
 import { confirmBookingPayment, getBookingById } from '../services/booking.service';
 import type { AuthRequest } from '../types/auth.types';
-import { BookingParamsSchema, BookingResponseSchema } from '../types/booking.types';
-import type { ConfirmPaymentInput } from '../../../web/src/types';
+import {
+  BookingParamsSchema,
+  type BookingRequest,
+  BookingResponseSchema,
+  createBookingSchema,
+} from '../types/booking.types';
+
+export async function postBooking(req: Request, res: Response, next: NextFunction) {
+  try {
+    const input = createBookingSchema.parse({
+      ...req.body,
+      dates: {
+        from: new Date(req.body.dates.from),
+        to: new Date(req.body.dates.to),
+      },
+    });
+
+    // Placeholder response until service is implemented
+    res.status(201).json({ booking: input });
+  } catch (error) {
+    if (error instanceof ZodError) {
+      return res.status(400).json({
+        error: 'Validation error',
+        details: error.errors.map((e) => ({
+          field: e.path.join('.'),
+          message: e.message,
+        })),
+      });
+    }
+
+    interface CustomError extends Error {
+      code?: string;
+    }
+
+    const customError = error as CustomError;
+
+    if (customError.code === 'UNAVAILABLE') {
+      return res.status(409).json({ error: customError.message });
+    }
+
+    if (customError.code === 'ESCROW_FAIL') {
+      return res.status(500).json({ error: customError.message });
+    }
+
+    if (customError.code === 'DB_FAIL') {
+      return res.status(500).json({ error: customError.message });
+    }
+    next(error);
+  }
+}
 
 export const getBooking = async (req: AuthRequest, res: Response) => {
   const parseResult = BookingParamsSchema.safeParse(req.params);
@@ -45,13 +95,11 @@ export const getBooking = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    // 5) Return wrapped success object
     return res.status(200).json({
       success: true,
       data: validResponse.data,
     });
   } catch (err: unknown) {
-    // 6) Narrow error to string
     let message: string;
     if (err instanceof Error) {
       message = err.message;
@@ -116,7 +164,6 @@ export const confirmPayment = async (req: BookingRequest, res: Response) => {
       });
     }
 
-    // Log the payment confirmation attempt (without sensitive data in production)
     if (process.env.NODE_ENV !== 'production') {
       console.log('Payment confirmation attempt:', {
         bookingId,
@@ -134,7 +181,6 @@ export const confirmPayment = async (req: BookingRequest, res: Response) => {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error('Error confirming payment:', errorMessage);
 
-    // Handle specific error types
     if (errorMessage.includes('not found') || errorMessage.includes('permission')) {
       return res.status(404).json({
         error: 'Booking not found or access denied',
@@ -154,7 +200,6 @@ export const confirmPayment = async (req: BookingRequest, res: Response) => {
       });
     }
 
-    // Generic server error
     res.status(500).json({
       error: 'Failed to confirm payment',
       details: [{ message: 'Internal server error' }],

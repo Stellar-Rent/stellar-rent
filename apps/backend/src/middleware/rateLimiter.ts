@@ -11,10 +11,10 @@ export const rateLimiter = rateLimit({
   },
 });
 
-export const featuredLimit = rateLimit({
+export const authLimit = rateLimit({
   windowMs: 60 * 1000,
   max: 10,
-  message: 'Too many requests to featured properties. Try again later.',
+  message: 'Too many auth attempts. Try again later.',
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: (req): string => {
