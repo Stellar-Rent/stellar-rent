@@ -2,6 +2,11 @@ import { Networks, StrKey, Transaction } from '@stellar/stellar-sdk';
 import jwt from 'jsonwebtoken';
 import { supabase } from '../config/supabase';
 import type { WalletAuthResponse, WalletLoginRequest } from '../types/wallet-auth.types';
+import {
+  InvalidChallengeError,
+  InvalidPublicKeyError,
+  SignatureVerificationError,
+} from '../types/wallet-error-types';
 import { getValidChallenge, removeChallenge } from './wallet-challenge.service';
 
 //===================
@@ -13,9 +18,17 @@ async function verifySignedTransaction(
   signedTransactionXDR: string
 ): Promise<boolean> {
   try {
-    const transaction = new Transaction(signedTransactionXDR, Networks.TESTNET);
+    const transaction = new Transaction(
+      signedTransactionXDR,
+      process.env.NODE_ENV === 'production' ? Networks.PUBLIC : Networks.TESTNET
+    );
     if (transaction.signatures.length === 0) {
       console.error('No signatures found in transaction');
+      return false;
+    }
+    const sourceAccount = transaction.source;
+    if (sourceAccount !== publicKey) {
+      console.error('Transaction source account mismatch');
       return false;
     }
     // Verify the transaction memo contains our challenge
@@ -150,45 +163,43 @@ function generateJWT(userId: string, publicKey: string): string {
 //===================
 export async function authenticateWallet(input: WalletLoginRequest): Promise<WalletAuthResponse> {
   const { publicKey, signedTransaction, challenge } = input;
+  const userKey = `${publicKey.substring(0, 10)}...`;
 
-  // Validate public key format
+  console.log(`Starting wallet authentication for ${userKey}`);
+  console.log(`Challenge: ${challenge}`);
+
   if (!StrKey.isValidEd25519PublicKey(publicKey)) {
-    console.error(' Invalid public key format');
-    throw new Error('Invalid public key format');
+    console.error(`Invalid public key format for ${userKey}`);
+    throw new InvalidPublicKeyError('Invalid public key format');
   }
+  console.log(`Public key format is valid for ${userKey}`);
 
-  console.log('Public key format is valid');
-
-  // Retrieve and validate challenge
-  console.log('Validating challenge...');
+  console.log(`Validating challenge for ${userKey}...`);
   const storedChallenge = await getValidChallenge(publicKey, challenge);
   if (!storedChallenge) {
-    console.error('Invalid or expired challenge');
-    throw new Error('Invalid or expired challenge');
+    console.error(`Invalid or expired challenge for ${userKey}`);
+    throw new InvalidChallengeError('Invalid or expired challenge');
   }
-
-  console.log('Challenge is valid');
-
-  // Verify signed transaction
+  console.log(`Challenge is valid for ${userKey}`);
+  console.log(`Verifying signed transaction for ${userKey}...`);
   const isValidTransaction = await verifySignedTransaction(publicKey, challenge, signedTransaction);
   if (!isValidTransaction) {
-    throw new Error('Invalid signed transaction');
+    console.error(`Transaction verification failed for ${userKey}`);
+    throw new SignatureVerificationError('Invalid signed transaction');
   }
+  console.log(`Transaction verification successful for ${userKey}`);
 
-  console.log('Transaction verification successful');
-
+  console.log(`Removing used challenge for ${userKey}...`);
   await removeChallenge(storedChallenge.id);
 
+  console.log(`Getting or creating wallet user for ${userKey}...`);
   const walletUser = await getOrCreateWalletUser(publicKey);
 
-  // Generate JWT token
-  console.log('Generating JWT token...');
+  console.log(`Generating JWT token for ${userKey}...`);
   const token = generateJWT(walletUser.id, publicKey);
 
   const profile = await getUserProfile(walletUser.id);
-
-  console.log('Wallet authentication completed successfully!');
-
+  console.log(`Wallet authentication completed successfully for ${userKey}!`);
   return {
     token,
     user: {

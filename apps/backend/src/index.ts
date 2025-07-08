@@ -6,9 +6,14 @@ import { rateLimiter } from './middleware/rateLimiter';
 import authRoutes from './routes/auth';
 import bookingRoutes from './routes/booking.routes';
 import walletAuthRoutes from './routes/wallet-auth.routes';
+import { runInitialCleanup, startCleanupScheduler } from './services/cleanup-schedular';
 // Environment variables configuration
 dotenv.config();
 
+async function initializeCronJob() {
+  await runInitialCleanup();
+  startCleanupScheduler();
+}
 // Debug: verificar variables de entorno
 console.log('Variables de entorno cargadas:', {
   supabaseUrl: process.env.SUPABASE_URL ? '✅' : '❌',
@@ -16,7 +21,7 @@ console.log('Variables de entorno cargadas:', {
   jwtSecret: process.env.JWT_SECRET ? '✅' : '❌',
 });
 
-const app = express();
+export const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
@@ -45,4 +50,6 @@ app.use(errorMiddleware);
 // Start server
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en el puerto ${PORT}`);
+  initializeCronJob();
+  console.log('Cron job initialized for expired challenges cleanup');
 });

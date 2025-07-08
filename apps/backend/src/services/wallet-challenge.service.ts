@@ -7,8 +7,26 @@ import type { Challenge, ChallengeResponse } from '../types/wallet-auth.types';
 //===================
 export async function generateChallenge(publicKey: string): Promise<ChallengeResponse> {
   const CHALLENGE_EXPIRY_MINUTES = 5;
+
+  // Check if there's already a valid challenge for this public key
+  const { data: existingChallenge, error: fetchError } = await supabase
+    .from('wallet_challenges')
+    .select('*')
+    .eq('public_key', publicKey)
+    .gt('expires_at', new Date().toISOString())
+    .single();
+
+  if (existingChallenge && !fetchError) {
+    console.log(`Reusing existing challenge for ${publicKey.substring(0, 10)}...`);
+    return {
+      challenge: existingChallenge.challenge,
+      expiresAt: existingChallenge.expires_at,
+    };
+  }
+
   const challenge = randomBytes(12).toString('hex');
   const expiresAt = new Date(Date.now() + CHALLENGE_EXPIRY_MINUTES * 60 * 1000);
+
   await cleanupExpiredChallenges(publicKey);
 
   const { error } = await supabase.from('wallet_challenges').insert({
@@ -22,6 +40,7 @@ export async function generateChallenge(publicKey: string): Promise<ChallengeRes
     throw new Error('Failed to generate challenge');
   }
 
+  console.log(`Generated new challenge for ${publicKey.substring(0, 10)}...`);
   return {
     challenge,
     expiresAt: expiresAt.toISOString(),
@@ -84,6 +103,37 @@ async function cleanupExpiredChallenges(publicKey?: string): Promise<void> {
 //===================
 // Periodic cleanup of all expired challenges
 //===================
+// export async function cleanupAllExpiredChallenges(): Promise<void> {
+//   await cleanupExpiredChallenges();
+// }
 export async function cleanupAllExpiredChallenges(): Promise<void> {
-  await cleanupExpiredChallenges();
+  try {
+    const { data: expiredChallenges, error: fetchError } = await supabase
+      .from('wallet_challenges')
+      .select('id')
+      .lt('expires_at', new Date().toISOString());
+
+    if (fetchError) {
+      console.error('Error fetching expired challenges:', fetchError);
+      return;
+    }
+
+    if (!expiredChallenges || expiredChallenges.length === 0) {
+      console.log('No expired challenges to cleanup');
+      return;
+    }
+
+    const { error: deleteError } = await supabase
+      .from('wallet_challenges')
+      .delete()
+      .lt('expires_at', new Date().toISOString());
+
+    if (deleteError) {
+      console.error('Error cleaning up expired challenges:', deleteError);
+    } else {
+      console.log(`🗑️ Cleaned up ${expiredChallenges.length} expired challenges`);
+    }
+  } catch (error) {
+    console.error('Error during cleanup:', error);
+  }
 }
