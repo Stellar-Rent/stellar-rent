@@ -1,29 +1,26 @@
 "use client";
 
-import { MapPin, Users, Search, Calendar as CalendarIcon } from "lucide-react";
+import { format } from "date-fns/format";
+import { Calendar as CalendarIcon, MapPin, Search, Users } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { z } from "zod";
+import { Button } from "../ui/button";
 import { Calendar } from "../ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
-import { Button } from "../ui/button";
-import { useEffect, useState } from "react";
-import { format } from "date-fns/format";
-import { useRouter, useSearchParams } from "next/navigation";
-import { z } from "zod";
 
-const searchSchema = z.object({
-  location: z.string().min(2).max(100),
-  checkIn: z
-    .string()
-    .optional()
-    .refine(
-      (date) =>
-        !date || new Date(date) > new Date(new Date().setHours(0, 0, 0, 0))
-    ),
-  checkOut: z
-    .string()
-    .optional()
-    .refine((date) => !date || new Date(date) >= new Date()),
-  guests: z.number().int().min(1).max(16).optional()
-});
+// const searchSchema = z.object({
+//   location: z.string().min(2).max(100),
+//   checkIn: z
+//     .string()
+//     .optional()
+//     .refine((date) => !date || new Date(date) > new Date(new Date().setHours(0, 0, 0, 0))),
+//   checkOut: z
+//     .string()
+//     .optional()
+//     .refine((date) => !date || new Date(date) >= new Date()),
+//   guests: z.number().int().min(1).max(16).optional(),
+// });
 
 const LOCATIONS = [
   "Luján, Buenos Aires",
@@ -157,11 +154,11 @@ export default function SearchBar() {
               mode="single"
               className="w-full"
               selected={checkIn}
-              onSelect={(d) => {
+              onSelect={(d: Date) => {
                 setCheckIn(d);
                 if (d) updateParams("checkIn", d.toISOString());
               }}
-              disabled={(d) => d < new Date()}
+              disabled={(d: Date) => d < new Date()}
             />
           </PopoverContent>
         </Popover>
@@ -182,11 +179,11 @@ export default function SearchBar() {
               mode="single"
               className="w-full"
               selected={checkOut}
-              onSelect={(d) => {
+              onSelect={(d: Date) => {
                 setCheckOut(d);
                 if (d) updateParams("checkOut", d.toISOString());
               }}
-              disabled={(d) => d < new Date()}
+              disabled={(d: Date) => d < (checkIn || new Date())}
             />
           </PopoverContent>
         </Popover>
