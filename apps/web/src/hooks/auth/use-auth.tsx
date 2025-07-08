@@ -2,6 +2,7 @@
 
 import { type ReactNode, createContext, useContext, useEffect, useState } from 'react';
 import { signTransactionWithFreighter } from '~/lib/freighter-utils';
+import { getNetworkName, getNetworkPassphrase, logNetworkInfo } from '~/lib/network-utils';
 import { apiUtils, authAPI } from '../../services/api';
 import { useWallet } from '../useWallet';
 
@@ -37,24 +38,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [authType, setAuthType] = useState<'email' | 'wallet' | null>(null);
-  const { connect, publicKey, isConnected, network, networkPassphrase } = useWallet();
+  const { network, networkPassphrase, getPublicKey } = useWallet();
 
   useEffect(() => {
     const checkAuth = () => {
-      const token = apiUtils.getToken();
       const storedUser = localStorage.getItem('user');
       const storedAuthType = localStorage.getItem('authType') as 'email' | 'wallet' | null;
 
-      if (token && storedUser) {
+      if (storedUser) {
         try {
           const parsedUser = JSON.parse(storedUser);
           setUser(parsedUser);
           setAuthType(storedAuthType);
         } catch (error) {
           console.error('Error parsing stored user:', error);
-          apiUtils.clearToken();
-          localStorage.removeItem('user');
-          localStorage.removeItem('authType');
+          apiUtils.clearAuth();
         }
       }
     };
@@ -66,7 +64,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
     try {
       const response = await authAPI.login(email, password);
-
       const userData: User = {
         id: response.user.id,
         email: response.user.email,
@@ -76,8 +73,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       setUser(userData);
       setAuthType('email');
-
-      apiUtils.setToken(response.token);
       localStorage.setItem('user', JSON.stringify(userData));
       localStorage.setItem('authType', 'email');
     } catch (error) {
@@ -91,55 +86,56 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loginWithWallet = async () => {
     setIsLoading(true);
     try {
-      if (!isConnected || !publicKey) {
-        await connect();
-      }
-
-      const walletPublicKey = publicKey;
+      // Get public key (this handles connection if needed)
+      const walletPublicKey = await getPublicKey();
       if (!walletPublicKey) {
         throw new Error('Failed to get public key from wallet');
       }
 
       console.log('🔑 Using public key:', walletPublicKey);
 
+      // Debug network information
+      logNetworkInfo(network, 'TESTNET');
+
+      // Request challenge from backend
       const challengeResponse = await authAPI.requestChallenge(walletPublicKey);
 
       try {
-        const { TransactionBuilder, Networks, Account, Memo, Operation } = await import(
+        const { TransactionBuilder, Account, Memo, BASE_FEE } = await import(
           '@stellar/stellar-sdk'
         );
-
-        let targetNetworkPassphrase =
-          process.env.NODE_ENV === 'production' ? Networks.TESTNET : Networks.PUBLIC;
-        if (network === 'PUBLIC') {
-          targetNetworkPassphrase = Networks.PUBLIC;
-        } else if (network === 'FUTURENET') {
-          targetNetworkPassphrase = Networks.FUTURENET;
-        }
 
         const challengeText = challengeResponse.challenge;
         if (challengeText.length > 28) {
           throw new Error('Challenge too long for transaction memo');
         }
-        const account = new Account(walletPublicKey, '0');
 
+        // Use the wallet's current network, but ensure it matches what we expect
+        const walletNetworkPassphrase = networkPassphrase || getNetworkPassphrase(network);
+        const targetNetworkName = getNetworkName(network);
+
+        console.log('🌐 Transaction Network Info:');
+        console.log('  Wallet Network:', network);
+        console.log('  Wallet Passphrase:', networkPassphrase);
+        console.log('  Using Passphrase:', walletNetworkPassphrase);
+        console.log('  Target Network Name:', targetNetworkName);
+
+        // Create memo-only transaction (no operations as backend expects)
+        const account = new Account(walletPublicKey, '0');
         const transaction = new TransactionBuilder(account, {
-          fee: '100',
-          networkPassphrase: targetNetworkPassphrase,
+          fee: BASE_FEE,
+          networkPassphrase: walletNetworkPassphrase, // Use wallet's actual network
         })
-          .addOperation(
-            Operation.manageData({
-              name: 'auth',
-              value: 'stellar-rent-auth',
-            })
-          )
-          .addMemo(Memo.text(challengeText))
+          .addMemo(Memo.text(challengeText)) // Only memo, no operations
           .setTimeout(30)
           .build();
 
+        console.log('📝 Transaction created for network:', walletNetworkPassphrase);
+
+        // Sign transaction - use the wallet's current network
         const signResult = await signTransactionWithFreighter(transaction.toXDR(), {
-          network: network || 'TESTNET',
-          networkPassphrase: networkPassphrase || undefined,
+          network: targetNetworkName,
+          networkPassphrase: walletNetworkPassphrase,
           address: walletPublicKey,
         });
 
@@ -151,6 +147,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           throw new Error('No signed transaction returned');
         }
 
+        console.log('✅ Transaction signed successfully');
+
+        // Authenticate with backend
         const authResponse = await authAPI.authenticateWallet(
           walletPublicKey,
           signResult.signedTxXdr,
@@ -166,10 +165,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         setUser(userData);
         setAuthType('wallet');
-
-        apiUtils.setToken(authResponse.token);
         localStorage.setItem('user', JSON.stringify(userData));
         localStorage.setItem('authType', 'wallet');
+
+        console.log('🎉 Wallet authentication successful!');
       } catch (signError) {
         console.error('Error creating or signing transaction:', signError);
         throw new Error('Failed to sign authentication transaction');
@@ -191,9 +190,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setUser(null);
       setAuthType(null);
-      apiUtils.clearToken();
-      localStorage.removeItem('user');
-      localStorage.removeItem('authType');
+      apiUtils.clearAuth();
       setIsLoading(false);
     }
   };

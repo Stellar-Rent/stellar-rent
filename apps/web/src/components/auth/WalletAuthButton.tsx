@@ -1,11 +1,11 @@
 'use client';
 
 import { CheckCircle, Loader2, ShieldCheck, Wallet } from 'lucide-react';
-import { useEffect, useState } from 'react';
-
+import { useState } from 'react';
 import { useAuth } from '~/hooks/auth/use-auth';
-import { useWallet } from '../../hooks/useWallet';
+import { useWallet } from '~/hooks/useWallet';
 import { getFreighterInstallUrl } from '../../lib/freighter-utils';
+import NetworkStatus from '../NetworkStatus';
 
 interface WalletAuthButtonProps {
   onSuccess?: () => void;
@@ -13,93 +13,37 @@ interface WalletAuthButtonProps {
   className?: string;
 }
 
-type AuthState = 'disconnected' | 'connecting' | 'connected' | 'authenticating' | 'auto-checking';
-
-const hasUsedWalletAuth = (publicKey: string | null) => {
-  if (typeof window === 'undefined') return false;
-  const authType = localStorage.getItem('authType');
-  const lastWalletKey = localStorage.getItem('lastWalletPublicKey');
-  return authType === 'wallet' && lastWalletKey === publicKey;
-};
+type AuthState = 'idle' | 'authenticating' | 'success' | 'error';
 
 export default function WalletAuthButton({
   onSuccess,
   onError,
   className = '',
 }: WalletAuthButtonProps) {
-  const [authState, setAuthState] = useState<AuthState>('disconnected');
+  const [authState, setAuthState] = useState<AuthState>('idle');
   const { loginWithWallet, isLoading } = useAuth();
   const {
-    isConnected,
-    publicKey,
     isInstalled,
+    isConnected,
+    network,
     isLoading: walletLoading,
     error: walletError,
-    connect,
   } = useWallet();
-
-  useEffect(() => {
-    const handleAutoAuth = async () => {
-      if (isConnected && publicKey && !isLoading && authState === 'connected') {
-        if (hasUsedWalletAuth(publicKey)) {
-          setAuthState('authenticating');
-          try {
-            await loginWithWallet();
-            localStorage.setItem('lastWalletPublicKey', publicKey);
-            onSuccess?.();
-          } catch (error) {
-            console.error('Auto-auth failed:', error);
-            const errorMessage = getErrorMessage(error);
-            onError?.(errorMessage);
-            setAuthState('connected');
-          }
-        }
-      }
-    };
-
-    handleAutoAuth();
-  }, [isConnected, publicKey, isLoading, authState, loginWithWallet, onSuccess, onError]);
-
-  useEffect(() => {
-    if (walletLoading) {
-      setAuthState('auto-checking');
-    } else if (!isInstalled) {
-      setAuthState('disconnected');
-    } else if (!isConnected || !publicKey) {
-      setAuthState('disconnected');
-    } else if (isConnected && publicKey && !isLoading) {
-      if (hasUsedWalletAuth(publicKey)) {
-        setAuthState('connected');
-      } else {
-        setAuthState('connected');
-      }
-    }
-  }, [walletLoading, isInstalled, isConnected, publicKey, isLoading]);
-
-  const handleConnect = async () => {
-    setAuthState('connecting');
-    try {
-      await connect();
-    } catch (error) {
-      console.error('Connection failed:', error);
-      const errorMessage = getErrorMessage(error);
-      onError?.(errorMessage);
-      setAuthState('disconnected');
-    }
-  };
 
   const handleAuthenticate = async () => {
     setAuthState('authenticating');
     try {
       await loginWithWallet();
-      if (publicKey) {
-        localStorage.setItem('lastWalletPublicKey', publicKey);
-      }
+      setAuthState('success');
       onSuccess?.();
     } catch (error) {
+      console.error('Authentication failed:', error);
       const errorMessage = getErrorMessage(error);
       onError?.(errorMessage);
-      setAuthState('connected');
+      setAuthState('error');
+
+      // Reset to idle after showing error briefly
+      setTimeout(() => setAuthState('idle'), 3000);
     }
   };
 
@@ -121,11 +65,15 @@ export default function WalletAuthButton({
       if (error.message.includes('Invalid signature')) {
         return 'Signature verification failed. Please try again.';
       }
+      if (error.message.includes('network') || error.message.includes('Network')) {
+        return 'Network mismatch detected. Please ensure your wallet is on the correct network.';
+      }
       return error.message;
     }
     return 'An unexpected error occurred during wallet authentication.';
   };
 
+  // Show install button if Freighter is not installed
   if (!walletLoading && !isInstalled) {
     return (
       <div className="space-y-3">
@@ -151,6 +99,7 @@ export default function WalletAuthButton({
     );
   }
 
+  // Show error state if wallet has errors
   if (walletError && !walletLoading) {
     return (
       <div className="space-y-3">
@@ -170,87 +119,96 @@ export default function WalletAuthButton({
 
   const getButtonContent = () => {
     switch (authState) {
-      case 'auto-checking':
-        return (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Detecting Wallet...
-          </>
-        );
-      case 'connecting':
-        return (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Connecting Wallet...
-          </>
-        );
-      case 'connected':
-        return (
-          <>
-            <CheckCircle className="mr-2 h-5 w-5 text-green-500" />
-            {publicKey ? `${publicKey.slice(0, 8)}... • Click to Sign In` : 'Click to Sign In'}
-          </>
-        );
       case 'authenticating':
         return (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            {hasUsedWalletAuth(publicKey) ? 'Signing you in...' : 'Please approve in wallet...'}
+            Please approve in wallet...
+          </>
+        );
+      case 'success':
+        return (
+          <>
+            <CheckCircle className="mr-2 h-5 w-5 text-green-500" />
+            Signed In Successfully!
+          </>
+        );
+      case 'error':
+        return (
+          <>
+            <Wallet className="mr-2 h-5 w-5" />
+            Try Again
           </>
         );
       default:
         return (
           <>
             <Wallet className="mr-2 h-5 w-5" />
-            Connect Stellar Wallet
+            Connect & Sign In
           </>
         );
     }
   };
 
-  const handleClick = () => {
+  const isDisabled =
+    authState === 'authenticating' || isLoading || walletLoading || authState === 'success';
+
+  const getButtonStyles = () => {
+    const baseStyles = `
+      flex w-full items-center justify-center rounded-md border px-4 py-2 
+      text-sm font-medium shadow-sm transition-all duration-300 
+      focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+      disabled:cursor-not-allowed disabled:opacity-50
+    `;
+
     switch (authState) {
-      case 'disconnected':
-        handleConnect();
-        break;
-      case 'connected':
-        handleAuthenticate();
-        break;
+      case 'success':
+        return `${baseStyles} border-green-300 bg-green-50 text-green-700 hover:bg-green-100 
+                dark:border-green-600 dark:bg-green-900/20 dark:text-green-400`;
+      case 'error':
+        return `${baseStyles} border-red-300 bg-red-50 text-red-700 hover:bg-red-100
+                dark:border-red-600 dark:bg-red-900/20 dark:text-red-400`;
       default:
-        break;
+        return `${baseStyles} border-gray-300 bg-white text-gray-700 hover:bg-gray-50
+                dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700`;
     }
   };
 
-  const isDisabled =
-    authState === 'auto-checking' || authState === 'connecting' || authState === 'authenticating';
-
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
+      {/* Network Status */}
+      {isConnected && (
+        <div className="flex justify-center">
+          <NetworkStatus />
+        </div>
+      )}
+
+      {/* Auth Button */}
       <button
         type="button"
-        onClick={handleClick}
+        onClick={handleAuthenticate}
         disabled={isDisabled}
-        className={`
-          flex w-full items-center justify-center rounded-md border border-gray-300 
-          bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm 
-          transition-all duration-300 hover:bg-gray-50 focus:outline-none 
-          focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 
-          disabled:cursor-not-allowed disabled:opacity-50
-          dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700
-          ${authState === 'connected' ? 'border-green-300 bg-green-50 hover:bg-green-100 dark:border-green-600 dark:bg-green-900/20' : ''}
-          ${className}
-        `}
+        className={`${getButtonStyles()} ${className}`}
       >
         {getButtonContent()}
       </button>
-      {authState === 'connected' && !hasUsedWalletAuth(publicKey) && (
+
+      {/* Helper Text */}
+      {authState === 'authenticating' && (
         <p className="text-xs text-gray-500 text-center dark:text-gray-400">
-          Click the button above to sign the authentication message
+          You may see 1-2 wallet popups for connection and signing
         </p>
       )}
-      {authState === 'connected' && hasUsedWalletAuth(publicKey) && (
-        <p className="text-xs text-green-600 text-center dark:text-green-400">
-          Welcome back! You'll be signed in automatically
+
+      {authState === 'idle' && isConnected && (
+        <p className="text-xs text-gray-500 text-center dark:text-gray-400">
+          Ready to authenticate with {network?.toLowerCase() || 'testnet'} network
+        </p>
+      )}
+
+      {authState === 'idle' && !isConnected && (
+        <p className="text-xs text-gray-500 text-center dark:text-gray-400">
+          One-click authentication with your Stellar wallet
         </p>
       )}
     </div>

@@ -3,7 +3,6 @@ import type { ConfirmPaymentResponse, DashboardBooking, Transaction, UserProfile
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
 
 // Define the expected shape of the backend response
-
 interface BackendBooking {
   id: string;
   user_id?: string;
@@ -166,10 +165,9 @@ function downloadFile(blob: Blob, filename: string): void {
 }
 
 async function apiCall<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+  // Remove token from localStorage - backend uses HTTP-only cookies
   const defaultHeaders = {
     'Content-Type': 'application/json',
-    ...(token && { Authorization: `Bearer ${token}` }),
   };
 
   console.log(`🌐 API Call: ${options.method || 'GET'} ${API_BASE_URL}${endpoint}`);
@@ -179,7 +177,7 @@ async function apiCall<T>(endpoint: string, options: RequestInit = {}): Promise<
 
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     ...options,
-    credentials: 'include',
+    credentials: 'include', // This ensures cookies are sent
     headers: {
       ...defaultHeaders,
       ...options.headers,
@@ -197,12 +195,13 @@ async function apiCall<T>(endpoint: string, options: RequestInit = {}): Promise<
     }
 
     if (response.status === 401) {
+      // Clear local storage and redirect on auth failure
       if (typeof window !== 'undefined') {
-        localStorage.removeItem('authToken');
+        localStorage.removeItem('user');
+        localStorage.removeItem('authType');
         window.location.href = '/login';
       }
     }
-
     throw new Error(errorMessage);
   }
 
@@ -294,7 +293,6 @@ export const profileAPI = {
         method: 'PUT',
         body: JSON.stringify(backendData),
       });
-
       return transformProfile(rawProfile);
     } catch (error) {
       console.error('Failed to update profile:', error);
@@ -307,20 +305,15 @@ export const profileAPI = {
       const formData = new FormData();
       formData.append('avatar', file);
 
-      const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
-
       const response = await fetch(`${API_BASE_URL}/profiles/avatar`, {
         method: 'POST',
-        headers: {
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
+        credentials: 'include', // Use cookies instead of Authorization header
         body: formData,
       });
 
       if (!response.ok) {
         throw new Error(`Upload failed: ${response.status}`);
       }
-
       return await response.json();
     } catch (error) {
       console.error('Failed to upload avatar:', error);
@@ -346,7 +339,7 @@ export const walletAPI = {
       return await apiCall<{ balance: number; pendingTransactions: number }>('/wallet/info');
     } catch (error) {
       console.error('Failed to fetch wallet info:', error);
-      throw error; // Let the calling code handle the error
+      throw error;
     }
   },
 
@@ -355,7 +348,7 @@ export const walletAPI = {
       return await apiCall<Transaction[]>('/wallet/transactions');
     } catch (error) {
       console.error('Failed to fetch transactions:', error);
-      throw error; // Let the calling code handle the error
+      throw error;
     }
   },
 
@@ -373,17 +366,13 @@ export const walletAPI = {
 
   exportTransactions: async (): Promise<void> => {
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
-
       const response = await fetch(`${API_BASE_URL}/wallet/export`, {
-        headers: {
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
+        credentials: 'include',
       });
 
       if (response.ok) {
         const blob = await response.blob();
-        downloadFile(blob, 'transactions.csv'); // Use the utility function
+        downloadFile(blob, 'transactions.csv');
       }
     } catch (error) {
       console.error('Failed to export transactions:', error);
@@ -446,6 +435,7 @@ export const authAPI = {
       throw error;
     }
   },
+
   // ===========================
   // Authenticate wallet
   // ===========================
@@ -475,17 +465,9 @@ export const authAPI = {
       const result = await apiCall<{ success: boolean }>('/auth/logout', {
         method: 'POST',
       });
-
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('authToken');
-      }
-
       return result;
     } catch (error) {
       console.error('Failed to logout:', error);
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('authToken');
-      }
       return { success: true };
     }
   },
@@ -507,7 +489,8 @@ export const apiUtils = {
     if (error && typeof error === 'object' && 'message' in error) {
       if (error.message?.includes('401')) {
         if (typeof window !== 'undefined') {
-          localStorage.removeItem('authToken');
+          localStorage.removeItem('user');
+          localStorage.removeItem('authType');
           window.location.href = '/login';
         }
       }
@@ -522,23 +505,15 @@ export const apiUtils = {
 
   isAuthenticated: (): boolean => {
     if (typeof window === 'undefined') return false;
-    return !!localStorage.getItem('authToken');
+    // Check if user data exists (since we're using HTTP-only cookies for tokens)
+    return !!localStorage.getItem('user');
   },
 
-  setToken: (token: string): void => {
+  // Remove token management functions since we use HTTP-only cookies
+  clearAuth: (): void => {
     if (typeof window !== 'undefined') {
-      localStorage.setItem('authToken', token);
-    }
-  },
-
-  getToken: (): string | null => {
-    if (typeof window === 'undefined') return null;
-    return localStorage.getItem('authToken');
-  },
-
-  clearToken: (): void => {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('authToken');
+      localStorage.removeItem('user');
+      localStorage.removeItem('authType');
     }
   },
 };

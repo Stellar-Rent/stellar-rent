@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-
 import {
   checkFreighterConnection,
   checkFreighterPermission,
@@ -39,7 +38,6 @@ export function useWallet() {
     const initializeWallet = async () => {
       try {
         const connectionStatus = await checkFreighterConnection();
-
         if (!mounted) return;
 
         if (!connectionStatus.isInstalled) {
@@ -53,7 +51,6 @@ export function useWallet() {
         }
 
         const permissionStatus = await checkFreighterPermission();
-
         if (!mounted) return;
 
         const isAllowed = permissionStatus.isAllowed;
@@ -107,12 +104,16 @@ export function useWallet() {
     };
   }, []);
 
-  const connect = async () => {
+  // Smart public key getter that handles connection
+  const getPublicKey = async (): Promise<string> => {
     try {
-      setWalletState((prev) => ({ ...prev, isLoading: true, error: null }));
+      // If already connected, return existing key
+      if (walletState.isConnected && walletState.publicKey) {
+        return walletState.publicKey;
+      }
 
+      // Otherwise, connect and get key
       const connectResult = await connectFreighter();
-
       if (connectResult.error) {
         throw new Error(connectResult.error);
       }
@@ -121,8 +122,8 @@ export function useWallet() {
         throw new Error('No address returned from Freighter');
       }
 
+      // Update state
       const networkResult = await getFreighterNetwork();
-
       setWalletState((prev) => ({
         ...prev,
         isConnected: true,
@@ -131,9 +132,24 @@ export function useWallet() {
         networkPassphrase: networkResult.networkPassphrase || null,
         isInstalled: true,
         isAllowed: true,
-        isLoading: false,
         error: null,
       }));
+
+      return connectResult.address;
+    } catch (error) {
+      console.error('Error getting public key:', error);
+      setWalletState((prev) => ({
+        ...prev,
+        error: error instanceof Error ? error.message : 'Failed to get public key',
+      }));
+      throw error;
+    }
+  };
+
+  const connect = async () => {
+    try {
+      setWalletState((prev) => ({ ...prev, isLoading: true, error: null }));
+      await getPublicKey(); // This handles connection
     } catch (error) {
       console.error('Error connecting to Freighter:', error);
       setWalletState((prev) => ({
@@ -142,6 +158,8 @@ export function useWallet() {
         error: error instanceof Error ? error.message : 'Failed to connect',
       }));
       throw error;
+    } finally {
+      setWalletState((prev) => ({ ...prev, isLoading: false }));
     }
   };
 
@@ -188,5 +206,6 @@ export function useWallet() {
     connect,
     disconnect,
     refreshConnection,
+    getPublicKey,
   };
 }
