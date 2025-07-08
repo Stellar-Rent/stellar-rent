@@ -19,6 +19,7 @@
     "@simplewebauthn/browser": "^13.1.0",
     "@stellar/freighter-api": "^4.1.0",
     "@stellar/stellar-sdk": "^13.3.0",
+    "@trustless-work/escrow": "^1.0.6",
     "base64url": "^3.0.1",
     "bigint-conversion": "^2.4.3",
     "cbor-x": "^1.6.0",
