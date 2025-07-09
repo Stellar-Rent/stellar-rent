@@ -52,7 +52,10 @@ export class BookingService {
         .insert({
           property_id: input.propertyId,
           user_id: input.userId,
-          dates: input.dates,
+          dates: {
+            from: input.dates.from.toISOString(),
+            to: input.dates.to.toISOString(),
+          },
           guests: input.guests,
           total: input.total,
           deposit: input.deposit,
@@ -96,3 +99,44 @@ export class BookingService {
     }
   }
 }
+
+export async function confirmBookingPayment(escrowAddress: string) {
+  try {
+    const { data, error } = await supabase
+      .from('bookings')
+      .update({ status: 'confirmed' })
+      .eq('escrow_address', escrowAddress)
+      .select()
+      .single();
+
+    if (error || !data) {
+      throw new BookingError('Failed to confirm booking', 'CONFIRM_FAIL', error);
+    }
+
+    return data;
+  } catch (error) {
+    throw new BookingError('Confirmation error', 'CONFIRM_FAIL', error);
+  }
+}
+
+export async function getBookingById(id: string) {
+  const { data, error } = await supabase.from('bookings').select('*').eq('id', id).single();
+
+  if (error || !data) {
+    throw new BookingError('Booking not found', 'NOT_FOUND', error);
+  }
+
+  return data;
+}
+
+export const bookingService = new BookingService({
+  checkAvailability: async () => {
+    throw new Error('checkAvailability not implemented');
+  },
+  createEscrow: async () => {
+    throw new Error('createEscrow not implemented');
+  },
+  cancelEscrow: async () => {
+    throw new Error('cancelEscrow not implemented');
+  },
+});

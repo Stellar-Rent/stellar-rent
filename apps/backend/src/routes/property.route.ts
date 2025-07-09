@@ -3,6 +3,7 @@ import {
   createPropertyController,
   deletePropertyController,
   getAllowedAmenitiesController,
+  getFeaturedPropertiesController,
   getPropertiesByOwnerController,
   getPropertyByIdController,
   searchPropertiesController,
@@ -21,6 +22,7 @@ const router = Router();
 
 // Public routes (NO auth required)
 router.get('/amenities', getAllowedAmenitiesController);
+router.get('/featured', getFeaturedPropertiesController);
 router.get('/', searchPropertiesController);
 router.get('/:id', validatePropertyId, getPropertyByIdController);
 

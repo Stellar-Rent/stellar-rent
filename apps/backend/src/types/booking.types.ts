@@ -1,4 +1,8 @@
 import { z } from 'zod';
+import type { AuthRequest } from './auth.types';
+
+export type BookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'ongoing';
+
 export interface Booking {
   id: string;
   propertyId: string;
@@ -8,10 +12,24 @@ export interface Booking {
   total: number;
   deposit: number;
   escrowAddress: string;
-  status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
+  status: BookingStatus;
   createdAt: Date;
   updatedAt: Date;
 }
+
+export interface BookingRequest extends AuthRequest {
+  params: {
+    bookingId: string;
+  };
+}
+
+export interface BookingConfirmationResponse {
+  id: string;
+  status: BookingStatus;
+  escrowAddress: string;
+  updatedAt: string;
+}
+
 export const createBookingSchema = z.object({
   propertyId: z.string().uuid('Invalid property ID'),
   userId: z.string().uuid('Invalid user ID'),
@@ -30,4 +48,32 @@ export const createBookingSchema = z.object({
   deposit: z.number().nonnegative('Deposit must be non-negative'),
 });
 
+export const BookingParamsSchema = z.object({
+  bookingId: z.string().uuid(),
+});
+
+export const BookingResponseSchema = z.object({
+  id: z.string().uuid(),
+  userId: z.string().uuid(),
+  propertyId: z.string().uuid(),
+  dates: z.object({
+    from: z.string().refine((val) => !Number(Date.parse(val)), { message: 'Invalid from date' }),
+    to: z.string().refine((val) => !Number(Date.parse(val)), { message: 'Invalid to date' }),
+  }),
+  guests: z.number(),
+  total: z.number(),
+  deposit: z.number(),
+  status: z.enum(['pending', 'confirmed', 'cancelled', 'completed']),
+  escrowAddress: z.string().nullable().optional(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+export const confirmPaymentSchema = z.object({
+  transactionHash: z.string().min(10, 'Transaction hash is required and must be valid'),
+});
+
 export type CreateBookingInput = z.infer<typeof createBookingSchema>;
+export type BookingResponse = z.infer<typeof BookingResponseSchema>;
+export type BookingParams = z.infer<typeof BookingParamsSchema>;
+export type ConfirmPaymentInput = z.infer<typeof confirmPaymentSchema>;

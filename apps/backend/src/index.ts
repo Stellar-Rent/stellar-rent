@@ -1,12 +1,17 @@
 import cors from 'cors';
 import dotenv from 'dotenv';
 import express from 'express';
+
 import { errorMiddleware } from './middleware/error.middleware';
 import { rateLimiter } from './middleware/rateLimiter';
+
 import authRoutes from './routes/auth';
-import bookingRoutes from './routes/booking.routes';
 import walletAuthRoutes from './routes/wallet-auth.routes';
+import bookingRoutes from './routes/booking.routes';
+import { locationRoutes, profileRoutes, propertyRoutes } from './routes';
+
 import { runInitialCleanup, startCleanupScheduler } from './services/cleanup-schedular';
+
 // Environment variables configuration
 dotenv.config();
 
@@ -14,8 +19,8 @@ async function initializeCronJob() {
   await runInitialCleanup();
   startCleanupScheduler();
 }
-// Debug: verificar variables de entorno
-console.log('Variables de entorno cargadas:', {
+
+console.log('Loaded environment variables:', {
   supabaseUrl: process.env.SUPABASE_URL ? '✅' : '❌',
   supabaseKey: process.env.SUPABASE_ANON_KEY ? '✅' : '❌',
   jwtSecret: process.env.JWT_SECRET ? '✅' : '❌',
@@ -37,7 +42,10 @@ app.use(rateLimiter);
 // Routes
 app.use('/auth', authRoutes);
 app.use('/api/auth', walletAuthRoutes);
-// app.use('/api/bookings', bookingRoutes);
+app.use('/api/bookings', bookingRoutes);
+app.use('/api/locations', locationRoutes);
+app.use('/api/profile', profileRoutes);
+app.use('/api/properties', propertyRoutes);
 
 // Test route
 app.get('/', (_req, res) => {
@@ -53,3 +61,4 @@ app.listen(PORT, () => {
   initializeCronJob();
   console.log('Cron job initialized for expired challenges cleanup');
 });
+

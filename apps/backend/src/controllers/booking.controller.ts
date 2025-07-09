@@ -1,11 +1,54 @@
-import type { Response } from 'express';
+import type { NextFunction, Request, Response } from 'express';
+import { ZodError } from 'zod';
 import { confirmBookingPayment, getBookingById } from '../services/booking.service';
+import { bookingService } from '../services/booking.service';
 import type { AuthRequest } from '../types/auth.types';
-import type { BookingRequest, ConfirmPaymentInput } from '../types/booking.types';
-import { ParamsSchema, ResponseSchema } from '../types/booking.types';
+import {
+  BookingParamsSchema,
+  BookingResponseSchema,
+  createBookingSchema,
+} from '../types/booking.types';
+import { BookingError } from '../types/common.types';
+
+export async function postBooking(req: Request, res: Response, next: NextFunction) {
+  try {
+    const input = createBookingSchema.parse({
+      ...req.body,
+      dates: {
+        from: new Date(req.body.dates.from),
+        to: new Date(req.body.dates.to),
+      },
+    });
+
+    const booking = await bookingService.createBooking(input);
+
+    // Placeholder response until service is implemented
+    res.status(201).json({
+      success: true,
+      data: booking,
+    });
+  } catch (error) {
+    if (error instanceof ZodError) {
+      return res.status(400).json({
+        error: 'Validation error',
+        details: error.errors.map((e) => ({
+          field: e.path.join('.'),
+          message: e.message,
+        })),
+      });
+    }
+
+    if (error instanceof BookingError) {
+      const status = error.code === 'UNAVAILABLE' ? 409 : 500;
+      return res.status(status).json({ error: error.message });
+    }
+
+    next(error);
+  }
+}
 
 export const getBooking = async (req: AuthRequest, res: Response) => {
-  const parseResult = ParamsSchema.safeParse(req.params);
+  const parseResult = BookingParamsSchema.safeParse(req.params);
   if (!parseResult.success) {
     return res.status(400).json({
       success: false,
@@ -31,9 +74,9 @@ export const getBooking = async (req: AuthRequest, res: Response) => {
   }
 
   try {
-    const bookingDetails = await getBookingById(bookingId, requesterUserId);
+    const bookingDetails = await getBookingById(bookingId);
 
-    const validResponse = ResponseSchema.safeParse(bookingDetails);
+    const validResponse = BookingResponseSchema.safeParse(bookingDetails);
     if (!validResponse.success) {
       return res.status(500).json({
         success: false,
@@ -45,13 +88,11 @@ export const getBooking = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    // 5) Return wrapped success object
     return res.status(200).json({
       success: true,
       data: validResponse.data,
     });
   } catch (err: unknown) {
-    // 6) Narrow error to string
     let message: string;
     if (err instanceof Error) {
       message = err.message;
@@ -104,11 +145,11 @@ export const getBooking = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const confirmPayment = async (req: BookingRequest, res: Response) => {
+export const confirmPayment = async (req: AuthRequest, res: Response) => {
   try {
-    const bookingId = req.params.bookingId;
+    const escrowAddress = req.body.escrowAddress;
     const userId = req.user?.id;
-    const input: ConfirmPaymentInput = req.body;
+    const transactionHash = req.body.transactionHash;
 
     if (!userId) {
       return res.status(401).json({
@@ -116,25 +157,34 @@ export const confirmPayment = async (req: BookingRequest, res: Response) => {
       });
     }
 
-    // Log the payment confirmation attempt (without sensitive data in production)
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('Payment confirmation attempt:', {
-        bookingId,
-        userId,
-        transactionHash: `${input.transactionHash.substring(0, 8)}...`,
-      });
-    } else {
-      console.log(`Payment confirmation attempt for booking ${bookingId}`);
+    if (!transactionHash) {
+      return res.status(400).json({ error: 'transactionHash is required' });
     }
 
-    const result = await confirmBookingPayment(bookingId, userId, input);
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('Payment confirmation attempt:', {
+        userId,
+        transactionHash: `${transactionHash.substring(0, 8)}...`,
+      });
+    } else {
+      console.log(`Payment confirmation attempt for booking ${transactionHash}`);
+    }
 
-    res.status(200).json(result);
+    if (!escrowAddress) {
+      return res.status(400).json({ error: 'escrowAddress is required' });
+    }
+
+    const result = await confirmBookingPayment(escrowAddress);
+
+    res.status(200).json({
+      success: true,
+      data: result,
+      message: 'Booking confirmed successfully',
+    });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error('Error confirming payment:', errorMessage);
 
-    // Handle specific error types
     if (errorMessage.includes('not found') || errorMessage.includes('permission')) {
       return res.status(404).json({
         error: 'Booking not found or access denied',
@@ -154,7 +204,6 @@ export const confirmPayment = async (req: BookingRequest, res: Response) => {
       });
     }
 
-    // Generic server error
     res.status(500).json({
       error: 'Failed to confirm payment',
       details: [{ message: 'Internal server error' }],
