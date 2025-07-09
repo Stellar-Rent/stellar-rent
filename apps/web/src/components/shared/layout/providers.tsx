@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import React from 'react';
 import { AuthProvider } from '~/hooks/auth/use-auth';
 import { StellarProvider } from '~/hooks/stellar/stellar-context';
+import { TrustlessWorkProvider } from '~/providers/TrustlessWorkProvider';
 
 const ThemeProvider = dynamic(
   () => import('next-themes').then((mod) => ({ default: mod.ThemeProvider })),
@@ -32,9 +33,7 @@ export function Providers({ children }: ProvidersProps) {
 
   React.useEffect(() => {
     const portal =
-      typeof window !== 'undefined'
-        ? document.getElementById('theme-portal-root')
-        : null;
+      typeof window !== 'undefined' ? document.getElementById('theme-portal-root') : null;
     if (portal && resolvedTheme) {
       portal.className = resolvedTheme;
     }
@@ -62,7 +61,10 @@ export function Providers({ children }: ProvidersProps) {
       }}
     >
       <StellarProvider>
-        <AuthProvider>{children}</AuthProvider>
+        {/* You can envolve a tanstak provider one layer up of TW in order to use mutations or whatever you need */}
+        <TrustlessWorkProvider>
+          <AuthProvider>{children}</AuthProvider>
+        </TrustlessWorkProvider>
       </StellarProvider>
     </ThemeProvider>
   );

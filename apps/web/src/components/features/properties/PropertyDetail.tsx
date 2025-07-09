@@ -1,7 +1,6 @@
-'use client';
+"use client";
 
 import type React from 'react';
-
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -25,7 +24,9 @@ import {
   Waves,
   Wifi,
   Wind,
+  Calendar,
 } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 import type { DateRange } from 'react-day-picker';
@@ -40,6 +41,7 @@ export const PropertyDetail = ({ id }: PropertyDetailProps) => {
   const [guests, setGuests] = useState(1);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   const property = getPropertyById(id);
 
@@ -56,7 +58,10 @@ export const PropertyDetail = ({ id }: PropertyDetailProps) => {
           <h2 className="text-2xl font-bold text-red-700 dark:text-red-400 mb-4">
             Property Not Found
           </h2>
-          <p className="mb-4">The property you're looking for could not be found.</p>
+          <p className="mb-4">
+            The property you&apos;re looking for could not be found. It may have
+            been removed or the ID is incorrect.
+          </p>
           <Button asChild className="mt-4">
             <Link href="/">Browse Available Properties</Link>
           </Button>
@@ -97,6 +102,7 @@ export const PropertyDetail = ({ id }: PropertyDetailProps) => {
     };
     return iconMap[amenity] || <Shield className="w-5 h-5" />;
   };
+
   const handleShare = async () => {
     try {
       if (navigator.share) {
@@ -113,6 +119,7 @@ export const PropertyDetail = ({ id }: PropertyDetailProps) => {
       toast.error('Failed to share link');
     }
   };
+
   const costs = calculateTotal();
 
   return (
@@ -195,7 +202,9 @@ export const PropertyDetail = ({ id }: PropertyDetailProps) => {
                     !isDescriptionExpanded ? 'line-clamp-3' : ''
                   }`}
                 >
-                  {property.description}
+                  {property.description || 
+                    `This beautiful property offers a perfect blend of comfort and luxury. Located in the heart of ${property.location}, it provides easy access to local attractions, restaurants, and transportation. The property features modern amenities, including high-speed WiFi, a fully equipped kitchen, and comfortable sleeping arrangements. Perfect for both short and long-term stays, this rental property accepts cryptocurrency payments for a seamless booking experience.`
+                  }
                 </p>
                 <Button
                   variant="ghost"
@@ -237,18 +246,20 @@ export const PropertyDetail = ({ id }: PropertyDetailProps) => {
                 <div>
                   <h3 className="font-medium mb-2">Check-in / Check-out</h3>
                   <div className="text-muted-foreground space-y-1">
-                    <p>Check-in: {property.policies.checkIn}</p>
-                    <p>Check-out: {property.policies.checkOut}</p>
+                    <p>Check-in: {property.policies?.checkIn || '3:00 PM'}</p>
+                    <p>Check-out: {property.policies?.checkOut || '11:00 AM'}</p>
                   </div>
                 </div>
                 <div>
                   <h3 className="font-medium mb-2">Cancellation Policy</h3>
-                  <p className="text-muted-foreground">{property.policies.cancellation}</p>
+                  <p className="text-muted-foreground">
+                    {property.policies?.cancellation || 'Free cancellation up to 48 hours before check-in'}
+                  </p>
                 </div>
                 <div>
                   <h3 className="font-medium mb-2">Security Deposit</h3>
                   <p className="text-muted-foreground">
-                    ${property.policies.deposit} USDC (refundable)
+                    ${property.policies?.deposit || 200} USDC (refundable)
                   </p>
                 </div>
               </div>
@@ -257,10 +268,10 @@ export const PropertyDetail = ({ id }: PropertyDetailProps) => {
             {/* Mobile Calendar - Show on mobile before reviews */}
             <div className="lg:hidden">
               <PropertyCalendar
-                unavailableDates={property.availability.unavailableDates}
+                unavailableDates={property.availability?.unavailableDates || []}
                 onDateSelect={setSelectedDates}
                 selectedDates={selectedDates}
-                minNights={property.availability.minNights}
+                minNights={property.availability?.minNights || 1}
               />
             </div>
 
@@ -298,10 +309,10 @@ export const PropertyDetail = ({ id }: PropertyDetailProps) => {
               {/* Calendar - Hidden on mobile */}
               <div className="mb-6 hidden lg:block">
                 <PropertyCalendar
-                  unavailableDates={property.availability.unavailableDates}
+                  unavailableDates={property.availability?.unavailableDates || []}
                   onDateSelect={setSelectedDates}
                   selectedDates={selectedDates}
-                  minNights={property.availability.minNights}
+                  minNights={property.availability?.minNights || 1}
                 />
               </div>
 
@@ -378,7 +389,7 @@ export const PropertyDetail = ({ id }: PropertyDetailProps) => {
               </Button>
 
               <p className="text-xs text-center text-muted-foreground mt-4">
-                You won't be charged yet. Payment will be processed securely through our crypto
+                You won&apos;t be charged yet. Payment will be processed securely through our crypto
                 payment gateway.
               </p>
             </Card>
