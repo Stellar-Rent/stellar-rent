@@ -2,11 +2,14 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import toast from 'react-hot-toast';
 import { useRegister } from '~/hooks/useRegister';
 import type { RegisterFormData } from '~/validations/auth.schema';
 import { registerSchema } from '~/validations/auth.schema';
+import WalletAuthButton from './WalletAuthButton';
 
 function PasswordStrength({ password }: { password: string }) {
   const getStrength = () => {
@@ -53,6 +56,7 @@ export default function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { register: registerUser, isLoading, error } = useRegister();
+  const router = useRouter();
 
   const {
     register,
@@ -68,13 +72,21 @@ export default function RegisterForm() {
   const onSubmit = async (data: RegisterFormData) => {
     await registerUser(data);
   };
+  const handleWalletSuccess = () => {
+    toast.success('Successfully authenticated with wallet!');
+    router.push('/dashboard');
+  };
 
+  const handleWalletError = (error: string) => {
+    toast.error(error);
+  };
   return (
     <div className="w-full max-w-md space-y-8 p-8">
       <div>
-        <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
-          Crear cuenta
-        </h2>
+        <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Create Account</h2>
+        <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+          Choose your preferred authentication method
+        </p>
       </div>
 
       {error && (
@@ -83,6 +95,34 @@ export default function RegisterForm() {
         </div>
       )}
 
+      {/* Wallet Authentication Section */}
+      <div className="space-y-4">
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-300 dark:border-gray-600" />
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="bg-white px-2 text-gray-500 dark:bg-gray-900 dark:text-gray-400">
+              Quick Setup with Wallet
+            </span>
+          </div>
+        </div>
+
+        <WalletAuthButton onSuccess={handleWalletSuccess} onError={handleWalletError} />
+
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-300 dark:border-gray-600" />
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="bg-white px-2 text-gray-500 dark:bg-gray-900 dark:text-gray-400">
+              Or continue with email
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Traditional Email Registration Form */}
       <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-6">
         <div className="space-y-4">
           <div>
@@ -90,14 +130,14 @@ export default function RegisterForm() {
               htmlFor="fullName"
               className="block text-sm font-medium text-gray-700 dark:text-gray-300"
             >
-              Nombre completo
+              Full Name
             </label>
             <input
               {...register('fullName')}
               type="text"
               id="fullName"
               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-              placeholder="Juan Pérez"
+              placeholder="John Doe"
             />
             {errors.fullName && (
               <p className="mt-1 text-sm text-red-600 dark:text-red-400">
@@ -118,12 +158,10 @@ export default function RegisterForm() {
               type="email"
               id="email"
               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-              placeholder="juan@ejemplo.com"
+              placeholder="john@example.com"
             />
             {errors.email && (
-              <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                {errors.email.message}
-              </p>
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.email.message}</p>
             )}
           </div>
 
@@ -132,7 +170,7 @@ export default function RegisterForm() {
               htmlFor="password"
               className="block text-sm font-medium text-gray-700 dark:text-gray-300"
             >
-              Contraseña
+              Password
             </label>
             <div className="relative">
               <input
@@ -192,7 +230,7 @@ export default function RegisterForm() {
               htmlFor="confirmPassword"
               className="block text-sm font-medium text-gray-700 dark:text-gray-300"
             >
-              Confirmar contraseña
+              Confirm Password
             </label>
             <div className="relative">
               <input
@@ -275,22 +313,17 @@ export default function RegisterForm() {
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
                 />
               </svg>
-              Creando cuenta...
+              Creating account...
             </>
           ) : (
-            'Crear cuenta'
+            'Create Account'
           )}
         </button>
 
         <div className="text-center text-sm">
-          <span className="text-gray-600 dark:text-gray-400">
-            ¿Ya tienes una cuenta?{' '}
-          </span>
-          <Link
-            href="/login"
-            className="font-medium text-primary hover:text-primary/90"
-          >
-            Iniciar sesión
+          <span className="text-gray-600 dark:text-gray-400">Already have an account? </span>
+          <Link href="/login" className="font-medium text-primary hover:text-primary/90">
+            Sign in
           </Link>
         </div>
       </form>

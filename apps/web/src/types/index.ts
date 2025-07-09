@@ -42,6 +42,7 @@ export interface UserProfile {
   email: string;
   phone: string;
   avatar: string;
+  publicKey?: string;
   memberSince: string;
   verified: boolean;
   location?: string;
@@ -144,4 +145,17 @@ export function transformFromLegacyUser(user: LegacyUserProfile): UserProfile {
     ...user,
     id: user.id.toString(),
   };
+}
+
+declare global {
+  interface Window {
+    freighterApi?: {
+      isConnected: () => Promise<boolean>;
+      connect: () => Promise<void>;
+      disconnect: () => Promise<void>;
+      getPublicKey: () => Promise<string>;
+      getNetwork: () => Promise<string>;
+      signTransaction: (transaction: string) => Promise<string>;
+    };
+  }
 }
