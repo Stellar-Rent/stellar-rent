@@ -1,163 +1,215 @@
-import type { Response } from 'express';
-import { confirmBookingPayment, getBookingById } from '../services/booking.service';
+import type { NextFunction, Response } from 'express';
+import {
+  cancelBooking as cancelBlockchainBooking,
+  createBooking as createBlockchainBooking,
+} from '../blockchain/bookingContract';
+import { supabase } from '../config/supabase';
+import {
+  BookingNotFoundError,
+  BookingPermissionError,
+  BookingStatusError,
+  TransactionValidationError,
+} from '../errors/booking.errors';
+import type { BookingService } from '../services/booking.service';
 import type { AuthRequest } from '../types/auth.types';
 import type { BookingRequest, ConfirmPaymentInput } from '../types/booking.types';
 import { ParamsSchema, ResponseSchema } from '../types/booking.types';
 
-export const getBooking = async (req: AuthRequest, res: Response) => {
-  const parseResult = ParamsSchema.safeParse(req.params);
-  if (!parseResult.success) {
-    return res.status(400).json({
-      success: false,
-      error: {
-        message: 'Bad Request',
-        details: parseResult.error.format(),
-      },
-      data: null,
-    });
-  }
-  const { bookingId } = parseResult.data;
-
-  const requesterUserId = req.user?.id as string;
-  if (!requesterUserId) {
-    return res.status(401).json({
-      success: false,
-      error: {
-        message: 'Unauthorized',
-        details: 'Missing or invalid auth token',
-      },
-      data: null,
-    });
-  }
-
+/**
+ * Get a booking by ID
+ */
+export const getBooking = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const bookingDetails = await getBookingById(bookingId, requesterUserId);
+    const { bookingId } = ParamsSchema.parse(req.params);
 
-    const validResponse = ResponseSchema.safeParse(bookingDetails);
-    if (!validResponse.success) {
-      return res.status(500).json({
-        success: false,
-        error: {
-          message: 'Internal Server Error',
-          details: 'Response data did not match expected schema',
-        },
-        data: null,
-      });
+    if (!req.user?.id) {
+      throw new BookingPermissionError('Unauthorized: Missing or invalid auth token');
     }
 
-    // 5) Return wrapped success object
+    const userId = req.user.id;
+    const bookingService = req.app.locals.bookingService as BookingService;
+
+    if (!bookingService) {
+      throw new Error('Booking service not initialized');
+    }
+
+    const booking = await bookingService.getBookingById(bookingId, userId);
+
+    if (!booking) {
+      throw new BookingNotFoundError(`Booking with ID ${bookingId} not found`);
+    }
+
     return res.status(200).json({
       success: true,
-      data: validResponse.data,
+      data: ResponseSchema.parse(booking),
     });
-  } catch (err: unknown) {
-    // 6) Narrow error to string
-    let message: string;
-    if (err instanceof Error) {
-      message = err.message;
-    } else {
-      message = String(err);
-    }
-
-    if (message === 'Booking not found') {
-      return res.status(404).json({
-        success: false,
-        error: {
-          message: 'Booking not found',
-          details: 'The booking with the provided ID does not exist.',
-        },
-        data: null,
-      });
-    }
-
-    if (message === 'Property not found' || message === 'Host user not found') {
-      return res.status(404).json({
-        success: false,
-        error: {
-          message: 'Resource not found',
-          details: message,
-        },
-        data: null,
-      });
-    }
-
-    if (message === 'Access denied') {
-      return res.status(403).json({
-        success: false,
-        error: {
-          message: 'Access denied',
-          details: 'You do not have permission to access this booking.',
-        },
-        data: null,
-      });
-    }
-
-    console.error('getBooking error:', err);
-    return res.status(500).json({
-      success: false,
-      error: {
-        message: 'Internal Server Error',
-        details: 'Something went wrong retrieving booking details.',
-      },
-      data: null,
-    });
+  } catch (error) {
+    console.error('Error fetching booking:', error);
+    next(error);
   }
 };
 
-export const confirmPayment = async (req: BookingRequest, res: Response) => {
+/**
+ * Get all bookings for the authenticated user
+ */
+export const getBookings = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const bookingId = req.params.bookingId;
-    const userId = req.user?.id;
-    const input: ConfirmPaymentInput = req.body;
+    if (!req.user?.id) {
+      throw new BookingPermissionError('Unauthorized: Missing or invalid auth token');
+    }
 
-    if (!userId) {
-      return res.status(401).json({
-        error: 'User authentication required',
+    const userId = req.user.id;
+    const bookingService = req.app.locals.bookingService as BookingService;
+
+    if (!bookingService) {
+      throw new Error('Booking service not initialized');
+    }
+
+    // Fetch all bookings for this user
+    const { data: bookings, error } = await supabase
+      .from('bookings')
+      .select('*, property:properties(*)')
+      .eq('user_id', userId);
+
+    if (error) {
+      throw new Error(`Failed to fetch user bookings: ${error.message}`);
+    }
+
+    if (!bookings || bookings.length === 0) {
+      return res.status(200).json({
+        success: true,
+        data: [],
       });
     }
 
-    // Log the payment confirmation attempt (without sensitive data in production)
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('Payment confirmation attempt:', {
-        bookingId,
-        userId,
-        transactionHash: `${input.transactionHash.substring(0, 8)}...`,
-      });
-    } else {
-      console.log(`Payment confirmation attempt for booking ${bookingId}`);
-    }
+    // Transform to expected format
+    const formattedBookings = bookings.map((booking) => ({
+      id: booking.id,
+      propertyId: booking.property_id,
+      userId: booking.user_id,
+      dates: {
+        from: new Date(booking.dates.from),
+        to: new Date(booking.dates.to),
+      },
+      guests: booking.guests,
+      total: booking.total,
+      deposit: booking.deposit,
+      escrowAddress: booking.escrow_address,
+      status: booking.status,
+      createdAt: new Date(booking.created_at),
+      updatedAt: new Date(booking.updated_at),
+    }));
 
-    const result = await confirmBookingPayment(bookingId, userId, input);
-
-    res.status(200).json(result);
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('Error confirming payment:', errorMessage);
-
-    // Handle specific error types
-    if (errorMessage.includes('not found') || errorMessage.includes('permission')) {
-      return res.status(404).json({
-        error: 'Booking not found or access denied',
-      });
-    }
-
-    if (errorMessage.includes('status:') || errorMessage.includes('Cannot confirm')) {
-      return res.status(400).json({
-        error: errorMessage,
-      });
-    }
-
-    if (errorMessage.includes('Invalid') || errorMessage.includes('failed')) {
-      return res.status(400).json({
-        error: 'Transaction verification failed',
-        details: [{ message: errorMessage }],
-      });
-    }
-
-    // Generic server error
-    res.status(500).json({
-      error: 'Failed to confirm payment',
-      details: [{ message: 'Internal server error' }],
+    return res.status(200).json({
+      success: true,
+      data: formattedBookings,
     });
+  } catch (error) {
+    console.error('Error fetching bookings:', error);
+    next(error);
+  }
+};
+
+/**
+ * Create a new booking
+ */
+export const createBooking = async (req: BookingRequest, res: Response, next: NextFunction) => {
+  try {
+    const bookingData = req.validatedBooking;
+    if (!bookingData) {
+      throw new Error('Invalid booking data');
+    }
+
+    if (!req.user?.id) {
+      throw new BookingPermissionError('Unauthorized: Missing or invalid auth token');
+    }
+
+    bookingData.userId = req.user?.id;
+
+    const bookingService = req.app.locals.bookingService as BookingService;
+    if (!bookingService) {
+      throw new Error('Booking service not initialized');
+    }
+
+    const result = await bookingService.createBooking(bookingData);
+
+    return res.status(201).json({
+      success: true,
+      data: ResponseSchema.parse(result),
+    });
+  } catch (error) {
+    console.error('Error creating booking:', error);
+    next(error);
+  }
+};
+
+/**
+ * Confirm payment for a booking
+ */
+export const confirmPayment = async (req: BookingRequest, res: Response, next: NextFunction) => {
+  try {
+    const { bookingId } = ParamsSchema.parse(req.params);
+    const { transactionHash, amount } = req.body as ConfirmPaymentInput;
+
+    if (!req.user?.id) {
+      throw new BookingPermissionError('Unauthorized: Missing or invalid auth token');
+    }
+
+    const userId = req.user.id;
+    const bookingService = req.app.locals.bookingService as BookingService;
+
+    if (!bookingService) {
+      throw new Error('Booking service not initialized');
+    }
+
+    const result = await bookingService.confirmBookingPayment(bookingId, userId, {
+      transactionHash,
+      amount,
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: ResponseSchema.parse(result),
+    });
+  } catch (error) {
+    console.error('Error confirming payment:', error);
+    next(error);
+  }
+};
+
+/**
+ * Cancel a booking
+ */
+export const cancelBooking = async (req: BookingRequest, res: Response, next: NextFunction) => {
+  try {
+    const { bookingId } = ParamsSchema.parse(req.params);
+
+    if (!req.user?.id) {
+      throw new BookingPermissionError('Unauthorized: Missing or invalid auth token');
+    }
+
+    const userId = req.user.id;
+    const bookingService = req.app.locals.bookingService as BookingService;
+
+    if (!bookingService) {
+      throw new Error('Booking service not initialized');
+    }
+
+    // Check if booking exists and belongs to the user
+    const booking = await bookingService.getBookingById(bookingId, userId);
+
+    if (!booking) {
+      throw new BookingNotFoundError(`Booking with ID ${bookingId} not found`);
+    }
+
+    const result = await bookingService.cancelBooking(bookingId, userId);
+
+    return res.status(200).json({
+      success: true,
+      data: ResponseSchema.parse(result),
+    });
+  } catch (error) {
+    console.error('Error cancelling booking:', error);
+    next(error);
   }
 };
