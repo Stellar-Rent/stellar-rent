@@ -11,6 +11,9 @@ export const rateLimiter = rateLimit({
   },
 });
 
+//===================
+// Rate limiter for traditional auth routes
+//===================
 export const authLimit = rateLimit({
   windowMs: 60 * 1000,
   max: 10,
@@ -21,3 +24,30 @@ export const authLimit = rateLimit({
     return req.ip || 'localhost';
   },
 });
+
+//===================
+// Rate limiter specifically for wallet authentication endpoints
+//===================
+export const walletAuthRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10,
+  message: {
+    error: 'Too many wallet authentication attempts, please try again later.',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+//===================
+// More restrictive rate limiter for challenge generation
+//===================
+export const challengeRateLimit = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  max: 20,
+  message: {
+    error: 'Too many challenge requests, please try again later.',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
