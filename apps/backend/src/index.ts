@@ -5,10 +5,10 @@ import express from 'express';
 import { errorMiddleware } from './middleware/error.middleware';
 import { rateLimiter } from './middleware/rateLimiter';
 
-import authRoutes from './routes/auth';
-import walletAuthRoutes from './routes/wallet-auth.routes';
-import bookingRoutes from './routes/booking.routes';
 import { locationRoutes, profileRoutes, propertyRoutes } from './routes';
+import authRoutes from './routes/auth';
+import bookingRoutes from './routes/booking.routes';
+import walletAuthRoutes from './routes/wallet-auth.routes';
 
 import { runInitialCleanup, startCleanupScheduler } from './services/cleanup-schedular';
 
@@ -27,14 +27,17 @@ console.log('Loaded environment variables:', {
 });
 
 export const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(express.json());
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+    origin: ['http://localhost:3000', 'http://localhost:3002'],
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    optionsSuccessStatus: 200, // Para IE11
   })
 );
 app.use(rateLimiter);
@@ -61,4 +64,3 @@ app.listen(PORT, () => {
   initializeCronJob();
   console.log('Cron job initialized for expired challenges cleanup');
 });
-

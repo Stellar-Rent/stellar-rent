@@ -1,21 +1,13 @@
-import {
-  Contract,
-  Keypair,
-  Networks,
-  SorobanRpc,
-  TransactionBuilder,
-  nativeToScVal,
-  scValToNative,
-  xdr,
-} from '@stellar/stellar-sdk';
+import * as StellarSdk from '@stellar/stellar-sdk';
+import type { Server as SorobanRpcServer } from '@stellar/stellar-sdk/rpc';
 import * as mockBookingContract from '../__mocks__/bookingContract';
 
 const useMock = process.env.USE_MOCK === 'true';
 
 // Initialize blockchain-related variables
-let sourceKeypair: Keypair;
+let sourceKeypair: StellarSdk.Keypair;
 let contractId: string;
-let server: SorobanRpc.Server;
+let server: SorobanRpcServer;
 let networkPassphrase: string;
 
 if (!useMock) {
@@ -23,7 +15,7 @@ if (!useMock) {
   if (!secretKey) {
     throw new Error('STELLAR_SECRET_KEY environment variable is required');
   }
-  sourceKeypair = Keypair.fromSecret(secretKey);
+  sourceKeypair = StellarSdk.Keypair.fromSecret(secretKey);
 
   const envContractId = process.env.SOROBAN_CONTRACT_ID;
   if (!envContractId) {
@@ -35,8 +27,17 @@ if (!useMock) {
   if (!rpcUrl) {
     throw new Error('SOROBAN_RPC_URL environment variable is required');
   }
-  server = new SorobanRpc.Server(rpcUrl);
-  networkPassphrase = process.env.SOROBAN_NETWORK_PASSPHRASE || Networks.TESTNET;
+
+  // Initialize server with proper error handling
+  try {
+    const { Server } = require('@stellar/stellar-sdk/rpc');
+    server = new Server(rpcUrl);
+  } catch (e) {
+    console.error('Could not initialize Soroban RPC server:', e);
+    throw new Error('Failed to initialize Soroban RPC server');
+  }
+
+  networkPassphrase = process.env.SOROBAN_NETWORK_PASSPHRASE || StellarSdk.Networks.TESTNET;
 }
 
 export async function checkBookingAvailability(
@@ -64,14 +65,14 @@ export async function checkBookingAvailability(
   const endDate = Math.floor(toDate.getTime() / 1000);
 
   try {
-    const contract = new Contract(contractId);
+    const contract = new StellarSdk.Contract(contractId);
 
-    const propertyIdScVal = nativeToScVal(propertyId, { type: 'string' });
-    const startDateScVal = nativeToScVal(startDate, { type: 'i64' });
-    const endDateScVal = nativeToScVal(endDate, { type: 'i64' });
+    const propertyIdScVal = StellarSdk.nativeToScVal(propertyId, { type: 'string' });
+    const startDateScVal = StellarSdk.nativeToScVal(startDate, { type: 'i64' });
+    const endDateScVal = StellarSdk.nativeToScVal(endDate, { type: 'i64' });
 
     const account = await server.getAccount(sourceKeypair.publicKey());
-    const tx = new TransactionBuilder(account, {
+    const tx = new StellarSdk.TransactionBuilder(account, {
       fee: '100',
       networkPassphrase,
     })
@@ -86,8 +87,8 @@ export async function checkBookingAvailability(
     // Type guard for successful simulation
     if ('results' in sim && Array.isArray(sim.results) && sim.results.length > 0) {
       const xdrResult = sim.results[0].xdr;
-      const scVal = xdr.ScVal.fromXDR(xdrResult, 'base64');
-      const available = scValToNative(scVal);
+      const scVal = StellarSdk.xdr.ScVal.fromXDR(xdrResult, 'base64');
+      const available = StellarSdk.scValToNative(scVal);
 
       // Fail open: if result is undefined/null, assume available
       if (available === undefined || available === null) {
