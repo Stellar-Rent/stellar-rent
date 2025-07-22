@@ -4,6 +4,10 @@ import { loginUser, registerUser } from '../services/auth.service';
 
 export const register = async (req: Request, res: Response) => {
   try {
+    console.log('📝 Register request received:');
+    console.log('Headers:', req.headers);
+    console.log('Body:', req.body);
+
     const { user, token } = await registerUser(req.body);
 
     res.status(201).json({

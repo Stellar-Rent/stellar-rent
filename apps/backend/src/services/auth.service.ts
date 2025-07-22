@@ -16,7 +16,24 @@ export const registerUser = async (input: RegisterInput): Promise<AuthResponse> 
   const userId = supabaseAuthData.user.id;
   const session = supabaseAuthData.session;
 
-  // Step 2: Insert user profile into 'profiles' table
+  // Step 2: Insert user into 'users' table first
+  const { error: userError } = await supabase.from('users').insert([
+    {
+      id: userId, // Use the same UUID from Supabase Auth
+      email,
+      name,
+      password_hash: 'managed_by_supabase_auth', // Placeholder since Supabase Auth handles this
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+  ]);
+
+  if (userError) {
+    console.error('Error creating user record:', userError);
+    throw new Error('Error creating user record');
+  }
+
+  // Step 3: Insert user profile into 'profiles' table
   const { error: profileError } = await supabase.from('profiles').upsert(
     [
       {
@@ -39,7 +56,7 @@ export const registerUser = async (input: RegisterInput): Promise<AuthResponse> 
     throw new Error('Error creating user profile');
   }
 
-  // Step 3: Return your own AuthResponse
+  // Step 4: Return your own AuthResponse
   return {
     token: session?.access_token ?? '',
     user: {
