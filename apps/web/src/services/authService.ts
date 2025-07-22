@@ -11,10 +11,7 @@ interface AuthResponse {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
-export const login = async (
-  email: string,
-  password: string
-): Promise<AuthResponse> => {
+export const login = async (email: string, password: string): Promise<AuthResponse> => {
   const response = await fetch(`${API_URL}/auth/login`, {
     method: 'POST',
     headers: {
@@ -55,13 +52,13 @@ export const authService = {
       body: JSON.stringify({
         email: data.email,
         password: data.password,
-        fullName: data.fullName,
+        name: data.fullName, // Cambiado de fullName a name para coincidir con el backend
       }),
     });
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.message || 'Error al registrar usuario');
+      throw new Error(error.error || 'Error al registrar usuario');
     }
 
     return response.json();
