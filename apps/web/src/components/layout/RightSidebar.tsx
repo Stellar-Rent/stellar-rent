@@ -42,7 +42,6 @@ export const RightSidebar = () => {
         </button>
       </div>
 
-      {/* User Profile - Bottom */}
       <div className="mt-auto">
         <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center">
           <User className="w-6 h-6 text-primary" />
