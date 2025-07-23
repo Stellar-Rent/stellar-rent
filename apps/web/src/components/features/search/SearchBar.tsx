@@ -1,7 +1,7 @@
 'use client';
 
 import { IconContainer } from '@/components/ui/icon-container';
-import { Calendar1, MapPin, Users } from 'lucide-react';
+import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
 import { useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
@@ -88,7 +88,17 @@ export const SearchBar = () => {
           {/* Location Field */}
           <div className="flex relative group">
             <div className="flex items-center rounded-2xl p-5 gap-4">
-              <IconContainer icon={<MapPin className="h-10 w-10 text-primary p-2" />} />
+              <IconContainer
+                icon={
+                  <Image
+                    src="/icons/location.png"
+                    alt="Location"
+                    width={40}
+                    height={40}
+                    className="p-2"
+                  />
+                }
+              />
               <div className="flex flex-col">
                 <p className="text-white font-semibold text-lg block">Location</p>
                 <p className="text-sm text-gray-400 mt-1">Search by country or city</p>
@@ -101,7 +111,17 @@ export const SearchBar = () => {
           {/* Date Field */}
           <div className="flex relative group">
             <div className="flex items-center rounded-2xl p-5 gap-4">
-              <IconContainer icon={<Calendar1 className="h-10 w-10 text-primary p-2" />} />
+              <IconContainer
+                icon={
+                  <Image
+                    src="/icons/calendar.png"
+                    alt="Calendar"
+                    width={40}
+                    height={40}
+                    className="p-2"
+                  />
+                }
+              />
               <div className="flex flex-col">
                 <p className="text-white font-semibold text-lg block">Date</p>
                 <p className="text-sm text-gray-400 mt-1">Select a date</p>
@@ -114,7 +134,17 @@ export const SearchBar = () => {
           {/* Guests Field */}
           <div className="flex relative group">
             <div className="flex items-center rounded-2xl p-5 gap-4">
-              <IconContainer icon={<Users className="h-10 w-10 text-primary p-2" />} />
+              <IconContainer
+                icon={
+                  <Image
+                    src="/icons/agenda.png"
+                    alt="Agenda"
+                    width={40}
+                    height={40}
+                    className="p-2"
+                  />
+                }
+              />
               <div className="flex flex-col">
                 <p className="text-white font-semibold text-lg block">Guests</p>
                 <p className="text-sm text-gray-400 mt-1">2 Guests (1 Adult - 1 Kid)</p>

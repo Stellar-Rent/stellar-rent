@@ -1,16 +1,7 @@
 'use client';
 
-import {
-  AlignJustify,
-  Filter,
-  Heart,
-  Lock,
-  Mail,
-  Search,
-  Send,
-  SlidersVertical,
-  User,
-} from 'lucide-react';
+import { User } from 'lucide-react';
+import Image from 'next/image';
 import { IconContainer } from '../ui/icon-container';
 
 export const RightSidebar = () => {
@@ -19,35 +10,35 @@ export const RightSidebar = () => {
       {/* Navigation Icons */}
       <div className="flex flex-col items-center space-y-6">
         <button type="button" className="text-primary transition-colors duration-200 p-2">
-          <AlignJustify className="w-6 h-6" />
+          <Image src="/icons/menu.png" alt="Menu" width={40} height={40} className="p-2" />
         </button>
 
         <button type="button" className="text-primary transition-colors duration-200 p-2">
-          <IconContainer icon={<Search className="h-10 w-10 text-primary p-2" />} />
+          <IconContainer
+            icon={
+              <Image src="/icons/search.png" alt="Search" width={40} height={40} className="p-2" />
+            }
+          />
         </button>
 
         <button type="button" className="text-primary transition-colors duration-200 p-2">
-          <Heart className="w-6 h-6" />
+          <Image src="/icons/heart.png" alt="Heart" width={40} height={40} className="p-2" />
         </button>
 
         <button type="button" className="text-primary transition-colors duration-200 p-2">
-          <Send className="w-6 h-6" />
+          <Image src="/icons/send.png" alt="Send" width={40} height={40} className="p-2" />
         </button>
 
         <button type="button" className="text-primary transition-colors duration-200 p-2">
-          <SlidersVertical className="w-6 h-6" />
+          <Image src="/icons/settings.png" alt="Settings" width={40} height={40} className="p-2" />
         </button>
 
         <button type="button" className="text-primary transition-colors duration-200 p-2">
-          <Filter className="w-6 h-6" />
+          <Image src="/icons/lock.png" alt="Lock" width={40} height={40} className="p-2" />
         </button>
 
         <button type="button" className="text-primary transition-colors duration-200 p-2">
-          <Lock className="w-6 h-6" />
-        </button>
-
-        <button type="button" className="text-primary transition-colors duration-200 p-2">
-          <Mail className="w-6 h-6" />
+          <Image src="/icons/message.png" alt="Message" width={40} height={40} className="p-2" />
         </button>
       </div>
 
