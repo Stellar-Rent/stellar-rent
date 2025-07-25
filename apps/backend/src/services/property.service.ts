@@ -1,5 +1,33 @@
-import pLimit from 'p-limit';
+/**
+ * MODIFICATION SUMMARY - PropertyListingContract Integration
+ *
+ * Changed: Added blockchain synchronization logic for property CRUD operations
+ * Reason: OnlyDust task requirement for PropertyListingContract integration with data integrity verification
+ * Impact: Properties now automatically sync with Stellar blockchain when created/updated, enabling tamper-proof verification
+ * Dependencies: Added propertyListingContract.ts module for blockchain interactions
+ * Breaking Changes: Added 'warning' property to ServiceResponse interface for blockchain operation failures
+ *
+ * Related Files:
+ * - apps/backend/src/blockchain/propertyListingContract.ts (new blockchain client)
+ * - apps/backend/src/controllers/property.controller.ts (new verification endpoint)
+ * - apps/backend/src/routes/property.route.ts (new verification route)
+ * - apps/web/src/components/features/properties/PropertyDetail.tsx (blockchain verification UI)
+ * - apps/web/src/app/dashboard/host-dashboard/page.tsx (status badge integration)
+ *
+ * GitHub Issue: https://github.com/Stellar-Rent/stellar-rent/issues/99
+ */
+
+const pLimit = require('p-limit');
 import { checkBookingAvailability } from '../blockchain/bookingContract';
+import {
+  createPropertyListing,
+  updatePropertyListing,
+  updatePropertyStatus,
+  getPropertyListing,
+  verifyPropertyIntegrity,
+  propertyToHashData,
+  type PropertyListing,
+} from '../blockchain/propertyListingContract';
 import { supabase } from '../config/supabase';
 import type {
   AvailabilityRange,
@@ -11,6 +39,11 @@ import type {
 } from '../types/property.types';
 // import{ checkB }
 import { propertySchema, updatePropertySchema } from '../types/property.types';
+
+// Polyfill for Number.isNaN for older TypeScript targets
+const isNaN = Number.isNaN || function(value: any) {
+  return typeof value === 'number' && value !== value;
+};
 
 // Allowed amenities list
 const ALLOWED_AMENITIES = [
@@ -51,6 +84,7 @@ export interface ServiceResponse<T> {
   data?: T;
   error?: string;
   details?: unknown;
+  warning?: string;
 }
 
 export interface PropertyListResponse {
@@ -92,7 +126,7 @@ function validateAmenities(amenities: string[]): {
   invalidAmenities: string[];
 } {
   const invalidAmenities = amenities.filter(
-    (amenity) => !ALLOWED_AMENITIES.includes(amenity as AllowedAmenity)
+    (amenity) => !(ALLOWED_AMENITIES as any).includes(amenity)
   );
 
   return {
@@ -106,7 +140,7 @@ function validateAvailabilityRanges(availability: AvailabilityRange[]): boolean 
     const startDate = new Date(range.start_date);
     const endDate = new Date(range.end_date);
     return (
-      startDate < endDate && !Number.isNaN(startDate.getTime()) && !Number.isNaN(endDate.getTime())
+      startDate < endDate && !isNaN(startDate.getTime()) && !isNaN(endDate.getTime())
     );
   });
 }
@@ -183,7 +217,7 @@ export async function createProperty(
       };
     }
 
-    // Insert property into database
+    // Insert property into database first
     const { data: property, error: insertError } = await supabase
       .from('properties')
       .insert({
@@ -203,10 +237,49 @@ export async function createProperty(
       };
     }
 
-    return {
-      success: true,
-      data: property as Property,
-    };
+    // Create blockchain listing
+    try {
+      const propertyHashData = propertyToHashData(property as Property);
+      const blockchainListing = await createPropertyListing(
+        property.id,
+        propertyHashData,
+        input.ownerId // Use owner ID as blockchain address for now
+      );
+
+      // Update property with blockchain hash
+      const { data: updatedProperty, error: updateError } = await supabase
+        .from('properties')
+        .update({
+          property_token: blockchainListing.data_hash,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', property.id)
+        .select()
+        .single();
+
+      if (updateError) {
+        console.error('Failed to update property with blockchain hash:', updateError);
+        // Property was created but blockchain integration failed
+        return {
+          success: true,
+          data: property as Property,
+          warning: 'Property created but blockchain integration failed',
+        };
+      }
+
+      return {
+        success: true,
+        data: updatedProperty as Property,
+      };
+    } catch (blockchainError) {
+      console.error('Blockchain listing creation failed:', blockchainError);
+      // Property was created but blockchain integration failed
+      return {
+        success: true,
+        data: property as Property,
+        warning: 'Property created but blockchain integration failed',
+      };
+    }
   } catch (error) {
     console.error('Property creation error:', error);
     return {
@@ -393,6 +466,45 @@ export async function updateProperty(
       };
     }
 
+    // Update blockchain listing if property data changed
+    try {
+      const updatedProperty = property as Property;
+      const propertyHashData = propertyToHashData(updatedProperty);
+
+      // Check if this is a status-only update
+      if (input.status && Object.keys(input).length === 1) {
+        // Status-only update
+        await updatePropertyStatus(
+          id,
+          input.status as 'Available' | 'Booked' | 'Maintenance' | 'Inactive',
+          updatedProperty.ownerId
+        );
+      } else {
+        // Full property update
+        const blockchainListing = await updatePropertyListing(
+          id,
+          propertyHashData,
+          updatedProperty.ownerId
+        );
+
+        // Update property with new blockchain hash
+        const { error: hashUpdateError } = await supabase
+          .from('properties')
+          .update({
+            property_token: blockchainListing.data_hash,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', id);
+
+        if (hashUpdateError) {
+          console.error('Failed to update property hash:', hashUpdateError);
+        }
+      }
+    } catch (blockchainError) {
+      console.error('Blockchain update failed:', blockchainError);
+      // Continue with database update even if blockchain fails
+    }
+
     return {
       success: true,
       data: property as Property,
@@ -426,7 +538,7 @@ export async function getFeaturedProperties(): Promise<ServiceResponse<FeaturedP
       };
     }
 
-    const formatted = (data || []).map((property) => ({
+    const formatted = (data || []).map((property: any) => ({
       ...property,
       image: property.images?.[0] ?? null,
       location: {
@@ -481,6 +593,55 @@ export async function deleteProperty(id: string): Promise<ServiceResponse<boolea
     };
   } catch (error) {
     console.error('Property deletion error:', error);
+    return {
+      success: false,
+      error: 'Internal server error',
+      details: error,
+    };
+  }
+}
+
+/**
+ * Verify property data integrity with blockchain
+ */
+export async function verifyPropertyWithBlockchain(
+  id: string
+): Promise<ServiceResponse<{ isValid: boolean; blockchainData?: PropertyListing }>> {
+  try {
+    // Get property from database
+    const propertyResult = await getPropertyById(id);
+    if (!propertyResult.success) {
+      return {
+        success: false,
+        error: 'Property not found',
+      };
+    }
+
+    // Get property from blockchain
+    const blockchainListing = await getPropertyListing(id);
+    if (!blockchainListing) {
+      return {
+        success: true,
+        data: {
+          isValid: false,
+          blockchainData: undefined,
+        },
+      };
+    }
+
+    // Verify integrity
+    const propertyHashData = propertyToHashData(propertyResult.data!);
+    const isValid = verifyPropertyIntegrity(propertyHashData, blockchainListing.data_hash);
+
+    return {
+      success: true,
+      data: {
+        isValid,
+        blockchainData: blockchainListing,
+      },
+    };
+  } catch (error) {
+    console.error('Property verification error:', error);
     return {
       success: false,
       error: 'Internal server error',
@@ -583,7 +744,7 @@ export async function searchProperties(
       query = query.contains('amenities', filters.amenities);
     }
 
-    const { data: properties, error, count } = await query;
+    const { data: properties, error } = await query;
 
     if (error) {
       console.error('Database search error:', error);
@@ -600,7 +761,7 @@ export async function searchProperties(
       const fromDate = new Date(filters.from);
       const toDate = new Date(filters.to);
 
-      if (Number.isNaN(fromDate.getTime()) || Number.isNaN(toDate.getTime())) {
+      if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) {
         return {
           success: false,
           error: 'Invalid date format for from or to',
