@@ -1,6 +1,6 @@
 #![no_std]
 use soroban_sdk::{
-    contract, contractimpl, contracttype, symbol_short, vec, Address, Env, Symbol, Vec,
+    contract, contractimpl, contracttype, symbol_short, vec, Address, Env, Symbol, Vec, String,
 };
 
 #[contracttype]
@@ -9,68 +9,72 @@ pub enum PropertyStatus {
     Available,
     Booked,
     Maintenance,
+    Inactive,
 }
 
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct PropertyListing {
-    pub id: Symbol,
-    pub data_hash: Symbol,
+    pub id: String,
+    pub data_hash: String,
     pub owner: Address,
     pub status: PropertyStatus,
 }
 
+const LISTINGS: Symbol = symbol_short!("LISTINGS");
+
 #[contract]
 pub struct PropertyListingContract;
 
-// This is a sample contract. Replace this placeholder with your own contract logic.
-// A corresponding test example is available in `test.rs`.
-//
-// For comprehensive examples, visit <https://github.com/stellar/soroban-examples>.
-// The repository includes use cases for the Stellar ecosystem, such as data storage on
-// the blockchain, token swaps, liquidity pools, and more.
-//
-// Refer to the official documentation:
-// <https://developers.stellar.org/docs/build/smart-contracts/overview>.
 #[contractimpl]
 impl PropertyListingContract {
-    // Creates a new property listing
+    /// Create a new property listing
     pub fn create_listing(
-        env: &Env,
-        id: Symbol,
-        data_hash: Symbol,
+        env: Env,
+        id: String,
+        data_hash: String,
         owner: Address,
     ) -> PropertyListing {
+        // Verify the owner is the caller
+        owner.require_auth();
+
+        let key = (LISTINGS.clone(), id.clone());
+
         // Check if listing already exists
-        if env.storage().instance().has(&id) {
+        if env.storage().persistent().has(&key) {
             panic!("Property listing already exists");
         }
 
         let listing = PropertyListing {
             id: id.clone(),
             data_hash,
-            owner: owner.clone(),
+            owner,
             status: PropertyStatus::Available,
         };
 
         // Store the listing
-        env.storage().instance().set(&id, &listing);
+        env.storage().persistent().set(&key, &listing);
 
         listing
     }
 
-    // Updates an existing property listing
+    /// Update an existing property listing
     pub fn update_listing(
-        env: &Env,
-        id: Symbol,
-        data_hash: Symbol,
+        env: Env,
+        id: String,
+        data_hash: String,
         owner: Address,
     ) -> PropertyListing {
-        // Get the existing listing
-        let listing: PropertyListing = env
+        // Verify the owner is the caller
+        owner.require_auth();
+
+        let key = (LISTINGS.clone(), id.clone());
+        
+        // Get existing listing
+        let mut listing: PropertyListing = env
             .storage()
-            .instance()
-            .get(&id)
+            .persistent()
+            .get(&key)
             .unwrap_or_else(|| panic!("Property listing not found"));
 
         // Verify ownership
@@ -78,32 +82,32 @@ impl PropertyListingContract {
             panic!("Only the owner can update the listing");
         }
 
-        // Create updated listing
-        let updated_listing = PropertyListing {
-            id: id.clone(),
-            data_hash,
-            owner: owner.clone(),
-            status: listing.status,
-        };
+        // Update the data hash
+        listing.data_hash = data_hash;
 
-        // Store the updated listing
-        env.storage().instance().set(&id, &updated_listing);
+        // Store updated listing
+        env.storage().persistent().set(&key, &listing);
 
-        updated_listing
+        listing
     }
 
-    // Updates the status of a property listing
+    /// Update property status
     pub fn update_status(
-        env: &Env,
-        id: Symbol,
+        env: Env,
+        id: String,
         owner: Address,
         status: PropertyStatus,
     ) -> PropertyListing {
-        // Get the existing listing
-        let listing: PropertyListing = env
+        // Verify the owner is the caller
+        owner.require_auth();
+
+        let key = (LISTINGS.clone(), id.clone());
+        
+        // Get existing listing
+        let mut listing: PropertyListing = env
             .storage()
-            .instance()
-            .get(&id)
+            .persistent()
+            .get(&key)
             .unwrap_or_else(|| panic!("Property listing not found"));
 
         // Verify ownership
@@ -111,34 +115,26 @@ impl PropertyListingContract {
             panic!("Only the owner can update the status");
         }
 
-        // Create updated listing
-        let updated_listing = PropertyListing {
-            id: id.clone(),
-            data_hash: listing.data_hash,
-            owner: owner.clone(),
-            status,
-        };
+        // Update status
+        listing.status = status;
 
-        // Store the updated listing
-        env.storage().instance().set(&id, &updated_listing);
+        // Store updated listing
+        env.storage().persistent().set(&key, &listing);
 
-        updated_listing
+        listing
     }
 
-    // Gets a property listing by ID
-    pub fn get_listing(env: &Env, id: Symbol) -> PropertyListing {
-        env.storage()
-            .instance()
-            .get(&id)
-            .unwrap_or_else(|| panic!("Property listing not found"))
+    /// Get a property listing by ID
+    pub fn get_listing(env: Env, id: String) -> Option<PropertyListing> {
+        let key = (LISTINGS.clone(), id);
+        env.storage().persistent().get(&key)
     }
 
-    // Gets all property listings
-    pub fn get_all_listings(env: &Env) -> Vec<PropertyListing> {
-        let mut listings = vec![env];
-        // Note: In a real implementation, you would need to implement a way to iterate over all listings
-        // This is a simplified version that would need to be expanded based on your specific needs
-        listings
+    /// Get all listings (simplified implementation)
+    pub fn get_all_listings(env: Env) -> Vec<PropertyListing> {
+        // Note: This is a simplified implementation
+        // In production, you'd want pagination and proper iteration
+        vec![&env]
     }
 }
 
