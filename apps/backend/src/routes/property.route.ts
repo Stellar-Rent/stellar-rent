@@ -10,6 +10,7 @@ import {
   updatePropertyAvailabilityController,
   updatePropertyController,
   updatePropertyStatusController,
+  verifyPropertyController,
 } from '../controllers/property.controller';
 import { processImageUploads, upload } from '../middleware/upload.middleware';
 import {
@@ -56,5 +57,8 @@ router.patch(
 );
 
 router.patch('/:id/status', authenticateToken, validatePropertyId, updatePropertyStatusController);
+
+// Blockchain verification route
+router.get('/:id/verify', validatePropertyId, verifyPropertyController);
 
 export default router;
