@@ -9,9 +9,10 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { CheckCircle, Loader2, Wallet, XCircle } from 'lucide-react';
+import { CheckCircle, Loader2, ShieldCheck, Wallet, XCircle } from 'lucide-react';
 import { useState } from 'react';
 import { useWallet } from '~/hooks/useWallet';
+import { getFreighterInstallUrl } from '~/lib/freighter-utils';
 import { processPayment } from '~/lib/stellar';
 import { formatAmount } from '~/lib/utils';
 import { bookingAPI } from '~/services/api';
@@ -32,7 +33,8 @@ type PaymentState =
   | 'submitting_tx'
   | 'verifying_backend'
   | 'success'
-  | 'error';
+  | 'error'
+  | 'connecting_wallet';
 
 export default function PaymentButton({
   bookingId,
@@ -48,6 +50,8 @@ export default function PaymentButton({
     isLoading: walletLoading,
     error: walletError,
     refreshConnection,
+    isInstalled,
+    connect,
   } = useWallet();
   const [paymentState, setPaymentState] = useState<PaymentState>('idle');
   const [paymentError, setPaymentError] = useState<string | null>(null);
@@ -57,15 +61,23 @@ export default function PaymentButton({
     setPaymentError(null);
 
     if (!isConnected || !publicKey) {
-      setPaymentError('Wallet not connected. Please connect your wallet first.');
-      setPaymentState('error');
-      onPaymentError?.('Wallet not connected.');
-      return;
+      setPaymentState('connecting_wallet');
+      try {
+        await connect();
+        setPaymentState('idle');
+        return handlePayment();
+      } catch (error) {
+        console.error('Wallet connection failed:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Failed to connect wallet.';
+        setPaymentError(errorMessage);
+        setPaymentState('error');
+        onPaymentError?.(errorMessage);
+        return;
+      }
     }
 
     try {
       setPaymentState('checking_balance');
-      // Refresh balance to get the latest
       await refreshConnection();
 
       const currentUSDCBalance = Number.parseFloat(usdcBalance || '0');
@@ -85,8 +97,7 @@ export default function PaymentButton({
       const transactionHash = await processPayment(publicKey, escrowAddress, amount);
 
       setPaymentState('verifying_backend');
-      // Send transaction hash to backend for verification and booking update
-      const data = await bookingAPI.confirmBlockchainPayment(
+      await bookingAPI.confirmBlockchainPayment(
         bookingId,
         transactionHash,
         publicKey,
@@ -104,55 +115,74 @@ export default function PaymentButton({
     }
   };
 
+  const handleInstallFreighter = () => {
+    window.open(getFreighterInstallUrl(), '_blank');
+  };
+
   const getButtonContent = () => {
+    if (!isInstalled) {
+      return (
+        <>
+          <ShieldCheck className="mr-2 h-5 w-5" /> Install Freighter Wallet
+        </>
+      );
+    }
+
+    if (!isConnected) {
+      return (
+        <>
+          <Wallet className="mr-2 h-5 w-5" /> Connect Wallet
+        </>
+      );
+    }
+
     switch (paymentState) {
+      case 'connecting_wallet':
+        return (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Connecting wallet...
+          </>
+        );
       case 'checking_balance':
         return (
           <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Checking balance...
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Checking balance...
           </>
         );
       case 'creating_tx':
         return (
           <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Creating transaction...
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Creating transaction...
           </>
         );
       case 'signing_tx':
         return (
           <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Awaiting wallet signature...
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Awaiting wallet signature...
           </>
         );
       case 'submitting_tx':
         return (
           <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Submitting transaction...
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting transaction...
           </>
         );
       case 'verifying_backend':
         return (
           <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Verifying payment...
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Verifying payment...
           </>
         );
       case 'success':
         return (
           <>
-            <CheckCircle className="mr-2 h-5 w-5" />
-            Payment Successful!
+            <CheckCircle className="mr-2 h-5 w-5" /> Payment Successful!
           </>
         );
       case 'error':
         return (
           <>
-            <XCircle className="mr-2 h-5 w-5" />
-            Payment Failed. Try Again.
+            <XCircle className="mr-2 h-5 w-5" /> Payment Failed. Try Again.
           </>
         );
       default:
@@ -163,8 +193,8 @@ export default function PaymentButton({
         );
     }
   };
-
-  const isDisabled = walletLoading || !isConnected || paymentState !== 'idle';
+  const isDisabled =
+    walletLoading || (paymentState !== 'idle' && paymentState !== 'connecting_wallet');
 
   return (
     <Card className="w-full max-w-md">
@@ -201,7 +231,11 @@ export default function PaymentButton({
         )}
       </CardContent>
       <CardFooter>
-        <Button onClick={handlePayment} disabled={isDisabled} className="w-full">
+        <Button
+          onClick={!isInstalled ? handleInstallFreighter : handlePayment}
+          disabled={isDisabled && isInstalled && isConnected}
+          className={`w-full ${!isInstalled ? 'bg-gray-50 border-2 border-dashed border-gray-300 text-gray-600 hover:border-gray-400 hover:bg-gray-100' : ''}`}
+        >
           {getButtonContent()}
         </Button>
       </CardFooter>
