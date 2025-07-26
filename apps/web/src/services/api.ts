@@ -1,6 +1,6 @@
 import type { ConfirmPaymentResponse, DashboardBooking, Transaction, UserProfile } from '../types';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
 
 // Define the expected shape of the backend response
 interface BackendBooking {
