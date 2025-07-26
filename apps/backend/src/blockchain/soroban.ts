@@ -203,5 +203,5 @@ async function verifyStellarTransaction(
   }
 }
 
-export { checkAvailability };
+export { checkAvailability, getAccountUSDCBalance, verifyStellarTransaction };
 export type { AvailabilityRequest, AvailabilityResponse };
