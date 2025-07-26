@@ -210,6 +210,25 @@ async function apiCall<T>(endpoint: string, options: RequestInit = {}): Promise<
 }
 
 export const bookingAPI = {
+  // ===========================
+  // confirmBlockchainPayment
+  // ===========================
+  confirmBlockchainPayment: async (
+    bookingId: string,
+    transactionHash: string,
+    sourcePublicKey: string,
+    escrowAddress: string
+  ): Promise<ConfirmPaymentResponse> => {
+    try {
+      return await apiCall<ConfirmPaymentResponse>(`/api/bookings/${bookingId}/confirm-payment`, {
+        method: 'POST',
+        body: JSON.stringify({ transactionHash, sourcePublicKey, escrowAddress }),
+      });
+    } catch (error) {
+      console.error('Failed to confirm blockchain payment:', error);
+      throw error;
+    }
+  },
   getBookings: async (): Promise<DashboardBooking[]> => {
     try {
       const rawBookings = await apiCall<BackendBooking[]>('/api/bookings');
