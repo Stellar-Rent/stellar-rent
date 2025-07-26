@@ -1,6 +1,6 @@
 import type { ConfirmPaymentResponse, DashboardBooking, Transaction, UserProfile } from '../types';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 // Define the expected shape of the backend response
 interface BackendBooking {
@@ -210,6 +210,49 @@ async function apiCall<T>(endpoint: string, options: RequestInit = {}): Promise<
 }
 
 export const bookingAPI = {
+  // ===========================
+  // creating booking
+  // ===========================
+  createBooking: async (input: {
+    propertyId: string;
+    userId: string;
+    dates: { from: Date; to: Date };
+    guests: number;
+    total: number;
+    deposit: number;
+  }): Promise<{ bookingId: string; escrowAddress: string; status: string }> => {
+    try {
+      const response = await apiCall<{
+        success: boolean;
+        data: {
+          message: string;
+          bookingId: string;
+          escrowAddress: string;
+          status: string;
+        };
+      }>('/api/bookings', {
+        method: 'POST',
+        body: JSON.stringify({
+          propertyId: input.propertyId,
+          userId: input.userId,
+          dates: {
+            from: input.dates.from.toISOString(),
+            to: input.dates.to.toISOString(),
+          },
+          guests: input.guests,
+          total: input.total,
+          deposit: input.deposit,
+        }),
+      });
+      if (!response.success) {
+        throw new Error(response.data?.message || 'Failed to create booking on backend');
+      }
+      return response.data;
+    } catch (error) {
+      console.error('Failed to create booking:', error);
+      throw error;
+    }
+  },
   // ===========================
   // confirmBlockchainPayment
   // ===========================
@@ -445,7 +488,7 @@ export const authAPI = {
   // ===========================
   requestChallenge: async (publicKey: string): Promise<ChallengeResponse> => {
     try {
-      return await apiCall<ChallengeResponse>('/auth/challenge', {
+      return await apiCall<ChallengeResponse>('/api/auth/challenge', {
         method: 'POST',
         body: JSON.stringify({ publicKey }),
       });
@@ -464,7 +507,7 @@ export const authAPI = {
     challenge: string
   ): Promise<{ token: string; user: UserProfile }> => {
     try {
-      const response = await apiCall<WalletAuthResponse>('/auth/wallet', {
+      const response = await apiCall<WalletAuthResponse>('/api/auth/wallet', {
         method: 'POST',
         body: JSON.stringify({ publicKey, signedTransaction, challenge }),
       });

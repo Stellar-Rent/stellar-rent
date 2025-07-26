@@ -1,4 +1,5 @@
-import { Asset, Horizon, Networks, Operation, TransactionBuilder } from 'stellar-sdk';
+import { Asset, Horizon, Networks, Operation, TransactionBuilder } from 'stellar-sdk'; // Changed from Server to Horizon
+// Removed: type BalanceLineAsset
 
 const USDC_ISSUER = 'GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN';
 const USDC_ASSET = new Asset('USDC', USDC_ISSUER);
@@ -36,8 +37,8 @@ export async function createPaymentTransaction(
 export async function submitTransaction(signedTransaction: string) {
   try {
     const server = new Horizon.Server('https://horizon-testnet.stellar.org');
-    const transaction = TransactionBuilder.fromXDR(signedTransaction, Networks.TESTNET);
-    const result = await server.submitTransaction(transaction);
+    const tx = TransactionBuilder.fromXDR(signedTransaction, Networks.TESTNET);
+    const result = await server.submitTransaction(tx);
     return result.hash;
   } catch (error) {
     console.error('Error submitting transaction:', error);
@@ -73,17 +74,20 @@ export async function processPayment(
   }
 }
 
-//////////////////////////////////////////////
-//Fetches the USDC balance for a given Stellar public key on the client-side.
-/////////////////////////////////////////////
-
+/**
+ * Fetches the USDC balance for a given Stellar public key on the client-side.
+ * @param publicKey The Stellar public key of the account.
+ * @returns The USDC balance as a string, or '0' if not found.
+ */
 export async function getUSDCBalance(publicKey: string): Promise<string> {
   try {
-    const server = new Horizon.Server('https://horizon-testnet.stellar.org');
+    const server = new Horizon.Server('https://horizon-testnet.stellar.org'); // Use testnet Horizon for client-side
     const account = await server.loadAccount(publicKey);
 
+    // Filter for asset balances and then find USDC
     const usdcBalance = account.balances.find((balance) => {
       if (balance.asset_type === 'credit_alphanum4' || balance.asset_type === 'credit_alphanum12') {
+        // TypeScript should correctly narrow the type here, no explicit assertion needed
         return balance.asset_code === USDC_ASSET.code && balance.asset_issuer === USDC_ASSET.issuer;
       }
       return false;
@@ -92,6 +96,6 @@ export async function getUSDCBalance(publicKey: string): Promise<string> {
     return usdcBalance ? usdcBalance.balance : '0';
   } catch (error) {
     console.error(`Error fetching USDC balance for ${publicKey}:`, error);
-    return '0';
+    return '0'; // Return '0' on error or if account not found
   }
 }
