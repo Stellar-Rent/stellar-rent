@@ -1,4 +1,3 @@
-import { supabase } from '../../src/config/supabase';
 import type { TestBooking, TestProperty, TestUser } from '../fixtures/booking.fixtures';
 import {
   generateExpiredJWT,
@@ -6,6 +5,28 @@ import {
   generateTestJWT,
 } from '../fixtures/booking.fixtures';
 import { createMockBlockchainServices } from '../mocks/blockchain-integration.mock';
+
+// Mock Supabase client
+jest.mock('../../src/config/supabase', () => ({
+  supabase: {
+    from: jest.fn().mockReturnThis(),
+    select: jest.fn().mockReturnThis(),
+    insert: jest.fn().mockReturnThis(),
+    update: jest.fn().mockReturnThis(),
+    delete: jest.fn().mockReturnThis(),
+    eq: jest.fn().mockReturnThis(),
+    single: jest.fn().mockReturnThis(),
+    upsert: jest.fn().mockReturnThis(),
+    auth: {
+      getUser: jest.fn().mockResolvedValue({
+        data: { user: { id: 'test-user-id', email: 'test@example.com' } },
+        error: null,
+      }),
+    },
+  },
+}));
+
+import { supabase } from '../../src/config/supabase';
 
 export interface TestSetupOptions {
   mockBlockchain?: boolean;
@@ -24,6 +45,8 @@ export class BookingTestUtils {
     users: [],
     bookings: [],
   };
+
+  private constructor() {}
 
   static getInstance(): BookingTestUtils {
     if (!BookingTestUtils.instance) {
@@ -75,7 +98,7 @@ export class BookingTestUtils {
       const { error } = await supabase.from('properties').upsert(property, { onConflict: 'id' });
 
       if (error) {
-        console.error('Failed to insert test property:', error);
+        throw new Error(`Failed to insert test property: ${error.message}`);
       }
     }
 
@@ -84,7 +107,7 @@ export class BookingTestUtils {
       const { error } = await supabase.from('users').upsert(user, { onConflict: 'id' });
 
       if (error) {
-        console.error('Failed to insert test user:', error);
+        throw new Error(`Failed to insert test user: ${error.message}`);
       }
     }
 
@@ -93,7 +116,7 @@ export class BookingTestUtils {
       const { error } = await supabase.from('bookings').upsert(booking, { onConflict: 'id' });
 
       if (error) {
-        console.error('Failed to insert test booking:', error);
+        throw new Error(`Failed to insert test booking: ${error.message}`);
       }
     }
   }
@@ -289,6 +312,19 @@ export class BookingTestUtils {
         new Error('Trustless Work API error: Failed to create escrow')
       );
     }
+
+    // Apply the mock services to override the actual blockchain service imports
+    jest.doMock('../../src/blockchain/soroban', () => ({
+      checkAvailability: mockServices.checkAvailability,
+    }));
+
+    jest.doMock('../../src/blockchain/trustlessWork', () => ({
+      createEscrow: mockServices.createEscrow,
+      cancelEscrow: mockServices.cancelEscrow,
+      getEscrowStatus: mockServices.getEscrowStatus,
+      fundEscrow: mockServices.fundEscrow,
+      releaseEscrow: mockServices.releaseEscrow,
+    }));
   }
 
   setupMockBlockchainSuccess(): void {
@@ -297,6 +333,19 @@ export class BookingTestUtils {
       failureRate: 0,
       timeoutEnabled: false,
     });
+
+    // Apply the mock services to override the actual blockchain service imports
+    jest.doMock('../../src/blockchain/soroban', () => ({
+      checkAvailability: mockServices.checkAvailability,
+    }));
+
+    jest.doMock('../../src/blockchain/trustlessWork', () => ({
+      createEscrow: mockServices.createEscrow,
+      cancelEscrow: mockServices.cancelEscrow,
+      getEscrowStatus: mockServices.getEscrowStatus,
+      fundEscrow: mockServices.fundEscrow,
+      releaseEscrow: mockServices.releaseEscrow,
+    }));
   }
 
   resetBlockchainMocks(): void {

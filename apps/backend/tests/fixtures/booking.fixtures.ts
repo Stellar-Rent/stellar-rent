@@ -189,7 +189,7 @@ export const testBookings: TestBooking[] = [
     user_id: '550e8400-e29b-41d4-a716-446655440020',
     dates: {
       from: '2024-06-01T00:00:00Z',
-      to: '2024-06-05T00:00:00Z',
+      to: '2024-06-03T00:00:00Z',
     },
     guests: 2,
     total: 1000.0,
@@ -339,4 +339,25 @@ export const generateExpiredJWT = (userId: string, email: string): string => {
 
 export const generateInvalidJWT = (): string => {
   return 'invalid.jwt.token';
+};
+
+// Test function to verify escrow address format
+export const testEscrowAddressFormat = (): void => {
+  const testAddress = generateEscrowAddress();
+  if (testAddress.length !== 56 || !testAddress.startsWith('G')) {
+    throw new Error(`Invalid escrow address format: ${testAddress}`);
+  }
+
+  // Test the hardcoded addresses in test fixtures
+  for (const booking of testBookings) {
+    if (booking.escrow_address.length !== 56 || !booking.escrow_address.startsWith('G')) {
+      throw new Error(`Invalid escrow address in test fixture: ${booking.escrow_address}`);
+    }
+  }
+
+  for (const payment of testPaymentData) {
+    if (payment.escrowAddress.length !== 56 || !payment.escrowAddress.startsWith('G')) {
+      throw new Error(`Invalid escrow address in payment fixture: ${payment.escrowAddress}`);
+    }
+  }
 };

@@ -20,7 +20,7 @@ Object.defineProperty(process.env, 'BOOKING_CONTRACT_ADDRESS', {
   writable: true,
 });
 Object.defineProperty(process.env, 'SUPABASE_URL', {
-  value: 'https://test.supabase.co',
+  value: 'https://test.supabase.co/',
   writable: true,
 });
 Object.defineProperty(process.env, 'SUPABASE_SERVICE_ROLE_KEY', {

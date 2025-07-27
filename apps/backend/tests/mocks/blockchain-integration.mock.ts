@@ -94,7 +94,7 @@ export class MockBlockchainServices {
   async cancelEscrow(escrowAddress: string): Promise<void> {
     await this.simulateNetworkDelay();
 
-    if (!escrowAddress || escrowAddress.length < 10) {
+    if (!escrowAddress || escrowAddress.length !== 56 || !escrowAddress.startsWith('G')) {
       throw new Error('Invalid escrow address provided');
     }
 
@@ -152,7 +152,7 @@ export class MockBlockchainServices {
 
   async releaseEscrow(
     escrowId: string,
-    amount?: number
+    amount: string
   ): Promise<{ success: boolean; txHash?: string }> {
     await this.simulateNetworkDelay();
 
@@ -235,7 +235,7 @@ export const createMockBlockchainServices = (config?: MockBlockchainConfig) => {
       ),
     releaseEscrow: jest
       .fn()
-      .mockImplementation((escrowId: string, amount?: number) =>
+      .mockImplementation((escrowId: string, amount: string) =>
         mockServices.releaseEscrow(escrowId, amount)
       ),
   };
