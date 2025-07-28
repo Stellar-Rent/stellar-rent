@@ -437,8 +437,8 @@ fn test_cross_contract_interaction() {
     assert_eq!(reviews.get(0).unwrap().comment, comment);
     
     // Step 4: Verify reputation
-    let reputation = review_client.get_reputation(&target_did);
-    assert!(reputation >= 0, "Reputation must be a valid value");
+    let _reputation = review_client.get_reputation(&target_did);
+    // reputation is u32, always >= 0, so no need to check
     
     // Verify that the final state is consistent
     let final_reviews = review_client.get_reviews_for_user(&target_did);
@@ -470,8 +470,8 @@ fn test_gas_optimization_validation() {
     assert_eq!(reviews.len(), 1);
     
     // Operation 3: Get reputation
-    let reputation = client.get_reputation(&target_did);
-    assert!(reputation >= 0);
+    let _reputation = client.get_reputation(&target_did);
+    // reputation is u32, always >= 0, so no need to check
     
     // Operation 4: Create multiple reviews
     let booking_id2 = Symbol::new(&env, "booking2");
@@ -508,8 +508,8 @@ fn test_deployment_validation_networks() {
     let reviews = client.get_reviews_for_user(&target_did);
     assert_eq!(reviews.len(), 1);
     
-    let reputation = client.get_reputation(&target_did);
-    assert!(reputation >= 0);
+    let _reputation = client.get_reputation(&target_did);
+    // reputation is u32, always >= 0, so no need to check
     
     // Note: For real deployment tests, CI/CD scripts are needed
     assert!(true, "Deployment validation completed - use CI/CD for real tests");
