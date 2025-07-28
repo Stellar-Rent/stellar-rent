@@ -40,7 +40,7 @@
         "description": "Search page with filters, sorting, and map integration",
         "details": "✅ COMPLETED: Search page implemented with filters, sorting, and search params. Filter sidebar functional. Map integration completed with mobile responsiveness. Search synchronization with URL parameters working. Property search with location autocomplete functional.",
         "testStrategy": "Search functionality tested with various filters and map integration",
-        "priority": "medium", 
+        "priority": "medium",
         "dependencies": [3],
         "status": "done",
         "subtasks": []
@@ -53,7 +53,7 @@
         "testStrategy": "Booking flow tested end-to-end",
         "priority": "high",
         "dependencies": [3, 4],
-        "status": "done", 
+        "status": "done",
         "subtasks": []
       },
       {
@@ -76,7 +76,7 @@
             "parentTaskId": 6
           },
           {
-            "id": "6.2", 
+            "id": "6.2",
             "title": "Complete Payment Transaction Flow",
             "description": "Implement complete USDC payment flow for bookings",
             "details": "Transaction building, signing, submission, and confirmation",

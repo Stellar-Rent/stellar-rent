@@ -14,7 +14,6 @@ export interface AvailabilityRangeInput {
   is_available?: boolean;
 }
 
-
 export interface CancellationPolicy {
   policy_type: string;
   refundable_until_days: number;
@@ -70,8 +69,7 @@ export interface FeaturedProperty {
   };
   image: string | null;
   availability: { from: string; to: string }[];
-};
-
+}
 
 export interface CreatePropertyInput extends Omit<Property, 'id' | 'createdAt' | 'updatedAt'> {}
 
@@ -115,8 +113,6 @@ export const propertySchema = z.object({
   cancellation_policy: cancellationPolicySchema.nullable().optional(),
   property_token: z.string().nullable().optional(),
 });
-
-
 
 export const searchPropertiesQuerySchema = z.object({
   city: z.string().optional(),

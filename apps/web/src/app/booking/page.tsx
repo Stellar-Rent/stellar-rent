@@ -1,19 +1,19 @@
 'use client';
 
-import { useState } from 'react';
-import { useTheme } from 'next-themes';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Calendar } from '@/components/ui/calendar';
-import { useWallet } from '@/hooks/useWallet';
-import { format } from 'date-fns';
-import { WalletConnectionModal } from '@/components/booking/WalletConnectionModal';
 import { BookingConfirmation } from '@/components/booking/BookingConfirmation';
-import { useRouter } from 'next/navigation';
-import type { DateRange } from 'react-day-picker';
-import { processPayment } from '@/lib/stellar';
-import { toast } from 'react-hot-toast';
 import { BookingForm } from '@/components/booking/BookingForm';
+import { WalletConnectionModal } from '@/components/booking/WalletConnectionModal';
+import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
+import { Card } from '@/components/ui/card';
+import { useWallet } from '@/hooks/useWallet';
+import { processPayment } from '@/lib/stellar';
+import { format } from 'date-fns';
+import { useTheme } from 'next-themes';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import type { DateRange } from 'react-day-picker';
+import { toast } from 'react-hot-toast';
 
 interface BookingPageProps {
   params: {
@@ -23,15 +23,15 @@ interface BookingPageProps {
 
 export default function BookingPage({ params }: BookingPageProps) {
   const { theme } = useTheme();
-  const router = useRouter();
+  const _router = useRouter();
   const { isConnected, connect, publicKey } = useWallet();
-  const [selectedDates, setSelectedDates] = useState<DateRange | undefined>({
+  const [selectedDates, _setSelectedDates] = useState<DateRange | undefined>({
     from: undefined,
     to: undefined,
   });
-  const [guests, setGuests] = useState(1);
+  const [guests, _setGuests] = useState(1);
   const [showWalletModal, setShowWalletModal] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [_isProcessing, setIsProcessing] = useState(false);
   const [bookingComplete, setBookingComplete] = useState(false);
   const [bookingDetails, setBookingDetails] = useState<{
     bookingId: string;
@@ -60,13 +60,12 @@ export default function BookingPage({ params }: BookingPageProps) {
   const calculateTotal = () => {
     if (!selectedDates?.from || !selectedDates?.to) return 0;
     const nights = Math.ceil(
-      (selectedDates.to.getTime() - selectedDates.from.getTime()) /
-        (1000 * 60 * 60 * 24)
+      (selectedDates.to.getTime() - selectedDates.from.getTime()) / (1000 * 60 * 60 * 24)
     );
     return nights * property.pricePerNight + property.deposit;
   };
 
-  const handlePayment = async () => {
+  const _handlePayment = async () => {
     if (!isConnected || !publicKey) {
       setShowWalletModal(true);
       return;
@@ -80,16 +79,16 @@ export default function BookingPage({ params }: BookingPageProps) {
     try {
       setIsProcessing(true);
       const total = calculateTotal();
-      
+
       // Process payment using Stellar
       const transactionHash = await processPayment(
         publicKey,
         property.hostWallet,
         total.toString()
       );
-      
+
       const bookingId = `BK${Math.random().toString(36).substr(2, 9)}`;
-      
+
       setBookingDetails({
         bookingId,
         transactionHash,
@@ -171,11 +170,8 @@ export default function BookingPage({ params }: BookingPageProps) {
           )
         )}
 
-        <WalletConnectionModal
-          isOpen={showWalletModal}
-          onClose={() => setShowWalletModal(false)}
-        />
+        <WalletConnectionModal isOpen={showWalletModal} onClose={() => setShowWalletModal(false)} />
       </div>
     </div>
   );
-} 
+}

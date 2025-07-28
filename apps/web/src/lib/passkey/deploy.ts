@@ -13,24 +13,19 @@ import { ENV } from '~/lib/passkey/env';
 
 const { RPC_URL, FACTORY_CONTRACT_ID, HORIZON_URL, NETWORK_PASSPHRASE } = ENV;
 
-export async function handleDeploy(
-  bundlerKey: Keypair,
-  contractSalt: Buffer,
-  publicKey?: Buffer
-) {
+export async function handleDeploy(bundlerKey: Keypair, contractSalt: Buffer, publicKey?: Buffer) {
   const rpc = new Server(RPC_URL);
   const deployee = StrKey.encodeContract(
     hash(
       xdr.HashIdPreimage.envelopeTypeContractId(
         new xdr.HashIdPreimageContractId({
           networkId: hash(Buffer.from(NETWORK_PASSPHRASE, 'utf-8')),
-          contractIdPreimage:
-            xdr.ContractIdPreimage.contractIdPreimageFromAddress(
-              new xdr.ContractIdPreimageFromAddress({
-                address: Address.fromString(FACTORY_CONTRACT_ID).toScAddress(),
-                salt: contractSalt,
-              })
-            ),
+          contractIdPreimage: xdr.ContractIdPreimage.contractIdPreimageFromAddress(
+            new xdr.ContractIdPreimageFromAddress({
+              address: Address.fromString(FACTORY_CONTRACT_ID).toScAddress(),
+              salt: contractSalt,
+            })
+          ),
         })
       ).toXDR()
     )
@@ -38,10 +33,7 @@ export async function handleDeploy(
 
   // This is a signup deploy vs a signin deploy. Look up if this contract has been already been deployed, otherwise fail
   if (!publicKey) {
-    await rpc.getContractData(
-      deployee,
-      xdr.ScVal.scvLedgerKeyContractInstance()
-    );
+    await rpc.getContractData(deployee, xdr.ScVal.scvLedgerKeyContractInstance());
     return deployee;
   }
 

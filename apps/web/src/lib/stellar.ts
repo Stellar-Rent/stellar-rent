@@ -1,4 +1,4 @@
-import { TransactionBuilder, Networks, Operation, Asset } from 'stellar-sdk';
+import { Asset, Networks, Operation, TransactionBuilder } from 'stellar-sdk';
 import Server from 'stellar-sdk';
 
 const USDC_ISSUER = 'GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN';
@@ -73,4 +73,4 @@ export async function processPayment(
     console.error('Error processing payment:', error);
     throw error;
   }
-} 
+}
