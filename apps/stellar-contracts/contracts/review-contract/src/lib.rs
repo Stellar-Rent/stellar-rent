@@ -1,6 +1,6 @@
 #![no_std]
 use soroban_sdk::{
-    contract, contracterror, contractimpl, contracttype, Env, Map, String, Symbol, Vec,
+    contract, contracterror, contractimpl, contracttype, symbol_short, Env, Map, String, Symbol, Vec,
 };
 
 #[contracttype]
@@ -82,7 +82,7 @@ impl ReviewContract {
             }
         }
         let review = Review {
-            id: Symbol::short("review"), // id is not used for lookup, keep placeholder
+            id: symbol_short!("review"), // id is not used for lookup, keep placeholder
             booking_id: booking_id.clone(),
             reviewer_did: reviewer_did.clone(),
             target_did: target_did.clone(),
