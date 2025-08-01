@@ -100,21 +100,37 @@ export class BookingService {
   }
 }
 
-export async function confirmBookingPayment(escrowAddress: string) {
+export async function confirmBookingPayment(bookingId: string, transactionHash: string) {
   try {
+    const { data: existingBooking, error: fetchError } = await supabase
+      .from('bookings')
+      .select('*')
+      .eq('id', bookingId)
+      .single();
+
+    if (fetchError || !existingBooking) {
+      throw new BookingError('Booking not found or failed to retrieve', 'NOT_FOUND', fetchError);
+    }
+
     const { data, error } = await supabase
       .from('bookings')
-      .update({ status: 'confirmed' })
-      .eq('escrow_address', escrowAddress)
+      .update({
+        status: 'confirmed',
+        payment_transaction_hash: transactionHash,
+        paid_at: new Date().toISOString(),
+      })
+      .eq('id', bookingId)
       .select()
       .single();
 
     if (error || !data) {
-      throw new BookingError('Failed to confirm booking', 'CONFIRM_FAIL', error);
+      throw new BookingError('Failed to confirm booking status update', 'CONFIRM_FAIL', error);
     }
-
     return data;
   } catch (error) {
+    if (error instanceof BookingError) {
+      throw error;
+    }
     throw new BookingError('Confirmation error', 'CONFIRM_FAIL', error);
   }
 }

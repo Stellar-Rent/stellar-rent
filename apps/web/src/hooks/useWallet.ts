@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { getUSDCBalance } from '~/lib/stellar';
 import {
   checkFreighterConnection,
   checkFreighterPermission,
@@ -18,6 +19,7 @@ interface WalletState {
   isAllowed: boolean;
   isLoading: boolean;
   error: string | null;
+  usdcBalance: string | null;
 }
 
 export function useWallet() {
@@ -30,6 +32,7 @@ export function useWallet() {
     isAllowed: false,
     isLoading: true,
     error: null,
+    usdcBalance: null,
   });
 
   useEffect(() => {
@@ -63,7 +66,11 @@ export function useWallet() {
           ]);
 
           if (!mounted) return;
-
+          const publicKey = addressResult.address || null;
+          let usdcBalance = null;
+          if (publicKey) {
+            usdcBalance = await getUSDCBalance(publicKey);
+          }
           setWalletState({
             isConnected: true,
             publicKey: addressResult.address || null,
@@ -73,6 +80,7 @@ export function useWallet() {
             isAllowed: true,
             isLoading: false,
             error: null,
+            usdcBalance: usdcBalance,
           });
         } else {
           setWalletState((prev) => ({
@@ -82,6 +90,7 @@ export function useWallet() {
             isAllowed,
             isLoading: false,
             error: null,
+            usdcBalance: null,
           }));
         }
       } catch (error) {
@@ -92,6 +101,7 @@ export function useWallet() {
             isInstalled: false,
             isLoading: false,
             error: error instanceof Error ? error.message : 'Unknown error',
+            usdcBalance: null,
           }));
         }
       }
@@ -124,6 +134,8 @@ export function useWallet() {
 
       // Update state
       const networkResult = await getFreighterNetwork();
+      const usdcBalance = await getUSDCBalance(connectResult.address);
+
       setWalletState((prev) => ({
         ...prev,
         isConnected: true,
@@ -133,6 +145,7 @@ export function useWallet() {
         isInstalled: true,
         isAllowed: true,
         error: null,
+        usdcBalance: usdcBalance,
       }));
 
       return connectResult.address;
@@ -141,6 +154,7 @@ export function useWallet() {
       setWalletState((prev) => ({
         ...prev,
         error: error instanceof Error ? error.message : 'Failed to get public key',
+        usdcBalance: null,
       }));
       throw error;
     }
@@ -170,6 +184,7 @@ export function useWallet() {
       publicKey: null,
       network: null,
       networkPassphrase: null,
+      usdcBalance: null,
     }));
   };
 
@@ -181,7 +196,11 @@ export function useWallet() {
         getFreighterAddress(),
         getFreighterNetwork(),
       ]);
-
+      const publicKey = addressResult.address || null;
+      let usdcBalance = null;
+      if (publicKey) {
+        usdcBalance = await getUSDCBalance(publicKey);
+      }
       setWalletState({
         isConnected: connectionStatus.isConnected && !!addressResult.address,
         publicKey: addressResult.address || null,
@@ -191,12 +210,14 @@ export function useWallet() {
         isAllowed: !!addressResult.address,
         isLoading: false,
         error: null,
+        usdcBalance: usdcBalance,
       });
     } catch (error) {
       setWalletState((prev) => ({
         ...prev,
         isLoading: false,
         error: error instanceof Error ? error.message : 'Failed to refresh connection',
+        usdcBalance: null,
       }));
     }
   };

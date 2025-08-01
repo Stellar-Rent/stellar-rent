@@ -36,7 +36,7 @@ export default function LoginPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="max-w-md mx-auto">
+      <div className="max-w-md mx-auto mt-20">
         <h1 className="text-2xl font-bold mb-6 text-center">Login to StellarRent</h1>
 
         <div className="mb-6">

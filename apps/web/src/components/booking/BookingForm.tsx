@@ -1,49 +1,54 @@
 'use client';
-
-import { useState } from 'react';
-import { Card } from '@/components/ui/card';
-import { Calendar } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
-import { format } from 'date-fns';
-import type { DateRange } from 'react-day-picker';
+import { Calendar } from '@/components/ui/calendar';
+import { Card } from '@/components/ui/card';
 import { useWallet } from '@/hooks/useWallet';
-import { WalletConnectionModal } from './WalletConnectionModal';
+import { format } from 'date-fns';
+import { useState } from 'react';
+import type { DateRange } from 'react-day-picker';
 import { toast } from 'react-hot-toast';
 
 interface BookingFormProps {
   onSubmit: (data: {
-    property: { title: string; image: string };
+    property: {
+      id: string;
+      title: string;
+      image: string;
+      pricePerNight: number;
+      deposit: number;
+      commission: number;
+      hostWallet: string;
+    };
     dates: { from: Date; to: Date };
     guests: number;
     totalAmount: number;
+    depositAmount: number;
   }) => void;
+  propertyId: string;
 }
 
-export function BookingForm({ onSubmit }: BookingFormProps) {
+export function BookingForm({ onSubmit, propertyId }: BookingFormProps) {
   const { isConnected, publicKey } = useWallet();
   const [selectedDates, setSelectedDates] = useState<DateRange | undefined>({
     from: undefined,
     to: undefined,
   });
   const [guests, setGuests] = useState(1);
-  const [showWalletModal, setShowWalletModal] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
 
-  // Mock property data - replace with actual data fetching
   const property = {
+    id: propertyId,
     title: 'Luxury Beachfront Villa',
     image: '/images/property-placeholder.jpg',
     pricePerNight: 150,
     deposit: 500,
     commission: 0.00001,
-    hostWallet: 'GCO2IP3MJNUOKS4PUDI4C7LGGMQDJGXG3COYX3WSB4HHNAHKYV5YL3VC', // Host's wallet address
+    hostWallet: 'GCO2IP3MJNUOKS4PUDI4C7LGGMQDJGXG3COYX3WSB4HHNAHKYV5YL3VC',
   };
 
   const calculateTotal = () => {
     if (!selectedDates?.from || !selectedDates?.to) return 0;
     const nights = Math.ceil(
-      (selectedDates.to.getTime() - selectedDates.from.getTime()) /
-        (1000 * 60 * 60 * 24)
+      (selectedDates.to.getTime() - selectedDates.from.getTime()) / (1000 * 60 * 60 * 24)
     );
     return nights * property.pricePerNight + property.deposit;
   };
@@ -54,16 +59,10 @@ export function BookingForm({ onSubmit }: BookingFormProps) {
       return;
     }
 
-    if (!isConnected) {
-      setShowWalletModal(true);
-      return;
-    }
-
     try {
-      setIsProcessing(true);
       const total = calculateTotal();
+      const deposit = property.deposit;
 
-      // Call the parent component's onSubmit with the booking data
       onSubmit({
         property,
         dates: {
@@ -72,33 +71,30 @@ export function BookingForm({ onSubmit }: BookingFormProps) {
         },
         guests,
         totalAmount: total,
+        depositAmount: deposit,
       });
-
-      toast.success('Payment successful!');
     } catch (error) {
-      console.error('Payment failed:', error);
-      toast.error('Payment failed. Please try again.');
-    } finally {
-      setIsProcessing(false);
+      console.error('Error preparing booking:', error);
+      toast.error('Failed to prepare booking. Please try again.');
     }
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
       {/* Left Column - Booking Summary */}
       <div className="space-y-6">
         <Card className="p-6">
-          <h1 className="text-2xl font-bold mb-4">{property.title}</h1>
-          <div className="aspect-video relative rounded-lg overflow-hidden mb-4">
+          <h1 className="mb-4 text-2xl font-bold">{property.title}</h1>
+          <div className="relative mb-4 aspect-video rounded-lg overflow-hidden">
             <img
-              src={property.image}
+              src={property.image || '/placeholder.svg'}
               alt={property.title}
-              className="object-cover w-full h-full"
+              className="h-full w-full object-cover"
             />
           </div>
           <div className="space-y-4">
             <div>
-              <h2 className="text-lg font-semibold mb-2">Selected Dates</h2>
+              <h2 className="mb-2 text-lg font-semibold">Selected Dates</h2>
               {selectedDates?.from && selectedDates?.to ? (
                 <p>
                   {format(selectedDates.from, 'MMM dd, yyyy')} -{' '}
@@ -109,7 +105,7 @@ export function BookingForm({ onSubmit }: BookingFormProps) {
               )}
             </div>
             <div>
-              <h2 className="text-lg font-semibold mb-2">Guests</h2>
+              <h2 className="mb-2 text-lg font-semibold">Guests</h2>
               <div className="flex items-center space-x-4">
                 <Button
                   variant="outline"
@@ -119,11 +115,7 @@ export function BookingForm({ onSubmit }: BookingFormProps) {
                   -
                 </Button>
                 <span>{guests}</span>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setGuests(guests + 1)}
-                >
+                <Button variant="outline" size="icon" onClick={() => setGuests(guests + 1)}>
                   +
                 </Button>
               </div>
@@ -131,11 +123,10 @@ export function BookingForm({ onSubmit }: BookingFormProps) {
           </div>
         </Card>
       </div>
-
       {/* Right Column - Calendar and Payment */}
       <div className="space-y-6">
         <Card className="p-6">
-          <h2 className="text-xl font-bold mb-4">Select Dates</h2>
+          <h2 className="mb-4 text-xl font-bold">Select Dates</h2>
           <Calendar
             mode="range"
             selected={selectedDates}
@@ -143,9 +134,8 @@ export function BookingForm({ onSubmit }: BookingFormProps) {
             className="rounded-md border"
           />
         </Card>
-
         <Card className="p-6">
-          <h2 className="text-xl font-bold mb-4">Cost Breakdown</h2>
+          <h2 className="mb-4 text-xl font-bold">Cost Breakdown</h2>
           <div className="space-y-2">
             <div className="flex justify-between">
               <span>Nightly Rate</span>
@@ -159,32 +149,22 @@ export function BookingForm({ onSubmit }: BookingFormProps) {
               <span>Commission</span>
               <span>${property.commission} USD</span>
             </div>
-            <div className="border-t pt-2 mt-2">
+            <div className="mt-2 border-t pt-2">
               <div className="flex justify-between font-bold">
                 <span>Total</span>
                 <span>${calculateTotal()}</span>
               </div>
             </div>
           </div>
-
           <Button
-            className="w-full mt-6 bg-[#4A90E2] hover:bg-[#357ABD]"
+            className="mt-6 w-full bg-[#4A90E2] hover:bg-[#357ABD]"
             onClick={handleSubmit}
-            disabled={!selectedDates?.from || !selectedDates?.to || isProcessing}
+            disabled={!selectedDates?.from || !selectedDates?.to}
           >
-            {isProcessing
-              ? 'Processing...'
-              : isConnected
-              ? 'Pay with USDC'
-              : 'Connect Wallet'}
+            Proceed to Payment
           </Button>
         </Card>
       </div>
-
-      <WalletConnectionModal
-        isOpen={showWalletModal}
-        onClose={() => setShowWalletModal(false)}
-      />
     </div>
   );
-} 
+}
