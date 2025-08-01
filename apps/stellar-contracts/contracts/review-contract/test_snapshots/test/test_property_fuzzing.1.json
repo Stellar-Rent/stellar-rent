@@ -1,0 +1,2883 @@
+{
+  "generators": {
+    "address": 1,
+    "nonce": 0
+  },
+  "auth": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    []
+  ],
+  "ledger": {
+    "protocol_version": 22,
+    "sequence_number": 0,
+    "timestamp": 0,
+    "network_id": "0000000000000000000000000000000000000000000000000000000000000000",
+    "base_reserve": 0,
+    "min_persistent_entry_ttl": 4096,
+    "min_temp_entry_ttl": 16,
+    "max_entry_ttl": 6312000,
+    "ledger_entries": [
+      [
+        {
+          "contract_data": {
+            "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+            "key": {
+              "vec": [
+                {
+                  "symbol": "ReviewMap"
+                },
+                {
+                  "symbol": "targetA"
+                }
+              ]
+            },
+            "durability": "persistent"
+          }
+        },
+        [
+          {
+            "last_modified_ledger_seq": 0,
+            "data": {
+              "contract_data": {
+                "ext": "v0",
+                "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+                "key": {
+                  "vec": [
+                    {
+                      "symbol": "ReviewMap"
+                    },
+                    {
+                      "symbol": "targetA"
+                    }
+                  ]
+                },
+                "durability": "persistent",
+                "val": {
+                  "vec": [
+                    {
+                      "map": [
+                        {
+                          "key": {
+                            "symbol": "booking_id"
+                          },
+                          "val": {
+                            "symbol": "bookingA"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "comment"
+                          },
+                          "val": {
+                            "string": "Valid comment"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "id"
+                          },
+                          "val": {
+                            "symbol": "review"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "rating"
+                          },
+                          "val": {
+                            "u32": 5
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "reviewer_did"
+                          },
+                          "val": {
+                            "symbol": "reviewerA"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "target_did"
+                          },
+                          "val": {
+                            "symbol": "targetA"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "timestamp"
+                          },
+                          "val": {
+                            "u64": 0
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            "ext": "v0"
+          },
+          4095
+        ]
+      ],
+      [
+        {
+          "contract_data": {
+            "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+            "key": {
+              "vec": [
+                {
+                  "symbol": "ReviewMap"
+                },
+                {
+                  "symbol": "targetB"
+                }
+              ]
+            },
+            "durability": "persistent"
+          }
+        },
+        [
+          {
+            "last_modified_ledger_seq": 0,
+            "data": {
+              "contract_data": {
+                "ext": "v0",
+                "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+                "key": {
+                  "vec": [
+                    {
+                      "symbol": "ReviewMap"
+                    },
+                    {
+                      "symbol": "targetB"
+                    }
+                  ]
+                },
+                "durability": "persistent",
+                "val": {
+                  "vec": [
+                    {
+                      "map": [
+                        {
+                          "key": {
+                            "symbol": "booking_id"
+                          },
+                          "val": {
+                            "symbol": "bookingB"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "comment"
+                          },
+                          "val": {
+                            "string": "Valid comment"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "id"
+                          },
+                          "val": {
+                            "symbol": "review"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "rating"
+                          },
+                          "val": {
+                            "u32": 5
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "reviewer_did"
+                          },
+                          "val": {
+                            "symbol": "reviewerB"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "target_did"
+                          },
+                          "val": {
+                            "symbol": "targetB"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "timestamp"
+                          },
+                          "val": {
+                            "u64": 0
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            "ext": "v0"
+          },
+          4095
+        ]
+      ],
+      [
+        {
+          "contract_data": {
+            "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+            "key": {
+              "vec": [
+                {
+                  "symbol": "ReviewMap"
+                },
+                {
+                  "symbol": "targetC"
+                }
+              ]
+            },
+            "durability": "persistent"
+          }
+        },
+        [
+          {
+            "last_modified_ledger_seq": 0,
+            "data": {
+              "contract_data": {
+                "ext": "v0",
+                "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+                "key": {
+                  "vec": [
+                    {
+                      "symbol": "ReviewMap"
+                    },
+                    {
+                      "symbol": "targetC"
+                    }
+                  ]
+                },
+                "durability": "persistent",
+                "val": {
+                  "vec": [
+                    {
+                      "map": [
+                        {
+                          "key": {
+                            "symbol": "booking_id"
+                          },
+                          "val": {
+                            "symbol": "bookingC"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "comment"
+                          },
+                          "val": {
+                            "string": "Valid comment"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "id"
+                          },
+                          "val": {
+                            "symbol": "review"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "rating"
+                          },
+                          "val": {
+                            "u32": 5
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "reviewer_did"
+                          },
+                          "val": {
+                            "symbol": "reviewerC"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "target_did"
+                          },
+                          "val": {
+                            "symbol": "targetC"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "timestamp"
+                          },
+                          "val": {
+                            "u64": 0
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            "ext": "v0"
+          },
+          4095
+        ]
+      ],
+      [
+        {
+          "contract_data": {
+            "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+            "key": {
+              "vec": [
+                {
+                  "symbol": "ReviewMap"
+                },
+                {
+                  "symbol": "targetD"
+                }
+              ]
+            },
+            "durability": "persistent"
+          }
+        },
+        [
+          {
+            "last_modified_ledger_seq": 0,
+            "data": {
+              "contract_data": {
+                "ext": "v0",
+                "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+                "key": {
+                  "vec": [
+                    {
+                      "symbol": "ReviewMap"
+                    },
+                    {
+                      "symbol": "targetD"
+                    }
+                  ]
+                },
+                "durability": "persistent",
+                "val": {
+                  "vec": [
+                    {
+                      "map": [
+                        {
+                          "key": {
+                            "symbol": "booking_id"
+                          },
+                          "val": {
+                            "symbol": "bookingD"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "comment"
+                          },
+                          "val": {
+                            "string": "Valid comment"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "id"
+                          },
+                          "val": {
+                            "symbol": "review"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "rating"
+                          },
+                          "val": {
+                            "u32": 5
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "reviewer_did"
+                          },
+                          "val": {
+                            "symbol": "reviewerD"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "target_did"
+                          },
+                          "val": {
+                            "symbol": "targetD"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "timestamp"
+                          },
+                          "val": {
+                            "u64": 0
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            "ext": "v0"
+          },
+          4095
+        ]
+      ],
+      [
+        {
+          "contract_data": {
+            "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+            "key": {
+              "vec": [
+                {
+                  "symbol": "ReviewMap"
+                },
+                {
+                  "symbol": "targetE"
+                }
+              ]
+            },
+            "durability": "persistent"
+          }
+        },
+        [
+          {
+            "last_modified_ledger_seq": 0,
+            "data": {
+              "contract_data": {
+                "ext": "v0",
+                "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+                "key": {
+                  "vec": [
+                    {
+                      "symbol": "ReviewMap"
+                    },
+                    {
+                      "symbol": "targetE"
+                    }
+                  ]
+                },
+                "durability": "persistent",
+                "val": {
+                  "vec": [
+                    {
+                      "map": [
+                        {
+                          "key": {
+                            "symbol": "booking_id"
+                          },
+                          "val": {
+                            "symbol": "bookingE"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "comment"
+                          },
+                          "val": {
+                            "string": "Valid comment"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "id"
+                          },
+                          "val": {
+                            "symbol": "review"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "rating"
+                          },
+                          "val": {
+                            "u32": 5
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "reviewer_did"
+                          },
+                          "val": {
+                            "symbol": "reviewerE"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "target_did"
+                          },
+                          "val": {
+                            "symbol": "targetE"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "timestamp"
+                          },
+                          "val": {
+                            "u64": 0
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            "ext": "v0"
+          },
+          4095
+        ]
+      ],
+      [
+        {
+          "contract_data": {
+            "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+            "key": {
+              "vec": [
+                {
+                  "symbol": "ReviewMap"
+                },
+                {
+                  "symbol": "targetF"
+                }
+              ]
+            },
+            "durability": "persistent"
+          }
+        },
+        [
+          {
+            "last_modified_ledger_seq": 0,
+            "data": {
+              "contract_data": {
+                "ext": "v0",
+                "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+                "key": {
+                  "vec": [
+                    {
+                      "symbol": "ReviewMap"
+                    },
+                    {
+                      "symbol": "targetF"
+                    }
+                  ]
+                },
+                "durability": "persistent",
+                "val": {
+                  "vec": [
+                    {
+                      "map": [
+                        {
+                          "key": {
+                            "symbol": "booking_id"
+                          },
+                          "val": {
+                            "symbol": "bookingF"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "comment"
+                          },
+                          "val": {
+                            "string": "Valid comment"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "id"
+                          },
+                          "val": {
+                            "symbol": "review"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "rating"
+                          },
+                          "val": {
+                            "u32": 5
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "reviewer_did"
+                          },
+                          "val": {
+                            "symbol": "reviewerF"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "target_did"
+                          },
+                          "val": {
+                            "symbol": "targetF"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "timestamp"
+                          },
+                          "val": {
+                            "u64": 0
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            "ext": "v0"
+          },
+          4095
+        ]
+      ],
+      [
+        {
+          "contract_data": {
+            "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+            "key": {
+              "vec": [
+                {
+                  "symbol": "ReviewMap"
+                },
+                {
+                  "symbol": "targetG"
+                }
+              ]
+            },
+            "durability": "persistent"
+          }
+        },
+        [
+          {
+            "last_modified_ledger_seq": 0,
+            "data": {
+              "contract_data": {
+                "ext": "v0",
+                "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+                "key": {
+                  "vec": [
+                    {
+                      "symbol": "ReviewMap"
+                    },
+                    {
+                      "symbol": "targetG"
+                    }
+                  ]
+                },
+                "durability": "persistent",
+                "val": {
+                  "vec": [
+                    {
+                      "map": [
+                        {
+                          "key": {
+                            "symbol": "booking_id"
+                          },
+                          "val": {
+                            "symbol": "bookingG"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "comment"
+                          },
+                          "val": {
+                            "string": "Valid comment"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "id"
+                          },
+                          "val": {
+                            "symbol": "review"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "rating"
+                          },
+                          "val": {
+                            "u32": 5
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "reviewer_did"
+                          },
+                          "val": {
+                            "symbol": "reviewerG"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "target_did"
+                          },
+                          "val": {
+                            "symbol": "targetG"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "timestamp"
+                          },
+                          "val": {
+                            "u64": 0
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            "ext": "v0"
+          },
+          4095
+        ]
+      ],
+      [
+        {
+          "contract_data": {
+            "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+            "key": {
+              "vec": [
+                {
+                  "symbol": "ReviewMap"
+                },
+                {
+                  "symbol": "targetH"
+                }
+              ]
+            },
+            "durability": "persistent"
+          }
+        },
+        [
+          {
+            "last_modified_ledger_seq": 0,
+            "data": {
+              "contract_data": {
+                "ext": "v0",
+                "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+                "key": {
+                  "vec": [
+                    {
+                      "symbol": "ReviewMap"
+                    },
+                    {
+                      "symbol": "targetH"
+                    }
+                  ]
+                },
+                "durability": "persistent",
+                "val": {
+                  "vec": [
+                    {
+                      "map": [
+                        {
+                          "key": {
+                            "symbol": "booking_id"
+                          },
+                          "val": {
+                            "symbol": "bookingH"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "comment"
+                          },
+                          "val": {
+                            "string": "Valid comment"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "id"
+                          },
+                          "val": {
+                            "symbol": "review"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "rating"
+                          },
+                          "val": {
+                            "u32": 5
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "reviewer_did"
+                          },
+                          "val": {
+                            "symbol": "reviewerH"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "target_did"
+                          },
+                          "val": {
+                            "symbol": "targetH"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "timestamp"
+                          },
+                          "val": {
+                            "u64": 0
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            "ext": "v0"
+          },
+          4095
+        ]
+      ],
+      [
+        {
+          "contract_data": {
+            "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+            "key": {
+              "vec": [
+                {
+                  "symbol": "ReviewMap"
+                },
+                {
+                  "symbol": "targetI"
+                }
+              ]
+            },
+            "durability": "persistent"
+          }
+        },
+        [
+          {
+            "last_modified_ledger_seq": 0,
+            "data": {
+              "contract_data": {
+                "ext": "v0",
+                "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+                "key": {
+                  "vec": [
+                    {
+                      "symbol": "ReviewMap"
+                    },
+                    {
+                      "symbol": "targetI"
+                    }
+                  ]
+                },
+                "durability": "persistent",
+                "val": {
+                  "vec": [
+                    {
+                      "map": [
+                        {
+                          "key": {
+                            "symbol": "booking_id"
+                          },
+                          "val": {
+                            "symbol": "bookingI"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "comment"
+                          },
+                          "val": {
+                            "string": "Valid comment"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "id"
+                          },
+                          "val": {
+                            "symbol": "review"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "rating"
+                          },
+                          "val": {
+                            "u32": 5
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "reviewer_did"
+                          },
+                          "val": {
+                            "symbol": "reviewerI"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "target_did"
+                          },
+                          "val": {
+                            "symbol": "targetI"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "timestamp"
+                          },
+                          "val": {
+                            "u64": 0
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            "ext": "v0"
+          },
+          4095
+        ]
+      ],
+      [
+        {
+          "contract_data": {
+            "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+            "key": {
+              "vec": [
+                {
+                  "symbol": "ReviewMap"
+                },
+                {
+                  "symbol": "targetJ"
+                }
+              ]
+            },
+            "durability": "persistent"
+          }
+        },
+        [
+          {
+            "last_modified_ledger_seq": 0,
+            "data": {
+              "contract_data": {
+                "ext": "v0",
+                "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+                "key": {
+                  "vec": [
+                    {
+                      "symbol": "ReviewMap"
+                    },
+                    {
+                      "symbol": "targetJ"
+                    }
+                  ]
+                },
+                "durability": "persistent",
+                "val": {
+                  "vec": [
+                    {
+                      "map": [
+                        {
+                          "key": {
+                            "symbol": "booking_id"
+                          },
+                          "val": {
+                            "symbol": "bookingJ"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "comment"
+                          },
+                          "val": {
+                            "string": "Valid comment"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "id"
+                          },
+                          "val": {
+                            "symbol": "review"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "rating"
+                          },
+                          "val": {
+                            "u32": 5
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "reviewer_did"
+                          },
+                          "val": {
+                            "symbol": "reviewerJ"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "target_did"
+                          },
+                          "val": {
+                            "symbol": "targetJ"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "timestamp"
+                          },
+                          "val": {
+                            "u64": 0
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            "ext": "v0"
+          },
+          4095
+        ]
+      ],
+      [
+        {
+          "contract_data": {
+            "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+            "key": {
+              "vec": [
+                {
+                  "symbol": "ReviewMap"
+                },
+                {
+                  "symbol": "targetK"
+                }
+              ]
+            },
+            "durability": "persistent"
+          }
+        },
+        [
+          {
+            "last_modified_ledger_seq": 0,
+            "data": {
+              "contract_data": {
+                "ext": "v0",
+                "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+                "key": {
+                  "vec": [
+                    {
+                      "symbol": "ReviewMap"
+                    },
+                    {
+                      "symbol": "targetK"
+                    }
+                  ]
+                },
+                "durability": "persistent",
+                "val": {
+                  "vec": [
+                    {
+                      "map": [
+                        {
+                          "key": {
+                            "symbol": "booking_id"
+                          },
+                          "val": {
+                            "symbol": "bookingK"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "comment"
+                          },
+                          "val": {
+                            "string": "Valid comment"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "id"
+                          },
+                          "val": {
+                            "symbol": "review"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "rating"
+                          },
+                          "val": {
+                            "u32": 5
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "reviewer_did"
+                          },
+                          "val": {
+                            "symbol": "reviewerK"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "target_did"
+                          },
+                          "val": {
+                            "symbol": "targetK"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "timestamp"
+                          },
+                          "val": {
+                            "u64": 0
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            "ext": "v0"
+          },
+          4095
+        ]
+      ],
+      [
+        {
+          "contract_data": {
+            "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+            "key": {
+              "vec": [
+                {
+                  "symbol": "ReviewMap"
+                },
+                {
+                  "symbol": "targetL"
+                }
+              ]
+            },
+            "durability": "persistent"
+          }
+        },
+        [
+          {
+            "last_modified_ledger_seq": 0,
+            "data": {
+              "contract_data": {
+                "ext": "v0",
+                "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+                "key": {
+                  "vec": [
+                    {
+                      "symbol": "ReviewMap"
+                    },
+                    {
+                      "symbol": "targetL"
+                    }
+                  ]
+                },
+                "durability": "persistent",
+                "val": {
+                  "vec": [
+                    {
+                      "map": [
+                        {
+                          "key": {
+                            "symbol": "booking_id"
+                          },
+                          "val": {
+                            "symbol": "bookingL"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "comment"
+                          },
+                          "val": {
+                            "string": "Valid comment"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "id"
+                          },
+                          "val": {
+                            "symbol": "review"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "rating"
+                          },
+                          "val": {
+                            "u32": 5
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "reviewer_did"
+                          },
+                          "val": {
+                            "symbol": "reviewerL"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "target_did"
+                          },
+                          "val": {
+                            "symbol": "targetL"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "timestamp"
+                          },
+                          "val": {
+                            "u64": 0
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            "ext": "v0"
+          },
+          4095
+        ]
+      ],
+      [
+        {
+          "contract_data": {
+            "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+            "key": {
+              "vec": [
+                {
+                  "symbol": "ReviewMap"
+                },
+                {
+                  "symbol": "targetM"
+                }
+              ]
+            },
+            "durability": "persistent"
+          }
+        },
+        [
+          {
+            "last_modified_ledger_seq": 0,
+            "data": {
+              "contract_data": {
+                "ext": "v0",
+                "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+                "key": {
+                  "vec": [
+                    {
+                      "symbol": "ReviewMap"
+                    },
+                    {
+                      "symbol": "targetM"
+                    }
+                  ]
+                },
+                "durability": "persistent",
+                "val": {
+                  "vec": [
+                    {
+                      "map": [
+                        {
+                          "key": {
+                            "symbol": "booking_id"
+                          },
+                          "val": {
+                            "symbol": "bookingM"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "comment"
+                          },
+                          "val": {
+                            "string": "Valid comment"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "id"
+                          },
+                          "val": {
+                            "symbol": "review"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "rating"
+                          },
+                          "val": {
+                            "u32": 5
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "reviewer_did"
+                          },
+                          "val": {
+                            "symbol": "reviewerM"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "target_did"
+                          },
+                          "val": {
+                            "symbol": "targetM"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "timestamp"
+                          },
+                          "val": {
+                            "u64": 0
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            "ext": "v0"
+          },
+          4095
+        ]
+      ],
+      [
+        {
+          "contract_data": {
+            "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+            "key": {
+              "vec": [
+                {
+                  "symbol": "ReviewMap"
+                },
+                {
+                  "symbol": "targetN"
+                }
+              ]
+            },
+            "durability": "persistent"
+          }
+        },
+        [
+          {
+            "last_modified_ledger_seq": 0,
+            "data": {
+              "contract_data": {
+                "ext": "v0",
+                "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+                "key": {
+                  "vec": [
+                    {
+                      "symbol": "ReviewMap"
+                    },
+                    {
+                      "symbol": "targetN"
+                    }
+                  ]
+                },
+                "durability": "persistent",
+                "val": {
+                  "vec": [
+                    {
+                      "map": [
+                        {
+                          "key": {
+                            "symbol": "booking_id"
+                          },
+                          "val": {
+                            "symbol": "bookingN"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "comment"
+                          },
+                          "val": {
+                            "string": "Valid comment"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "id"
+                          },
+                          "val": {
+                            "symbol": "review"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "rating"
+                          },
+                          "val": {
+                            "u32": 5
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "reviewer_did"
+                          },
+                          "val": {
+                            "symbol": "reviewerN"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "target_did"
+                          },
+                          "val": {
+                            "symbol": "targetN"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "timestamp"
+                          },
+                          "val": {
+                            "u64": 0
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            "ext": "v0"
+          },
+          4095
+        ]
+      ],
+      [
+        {
+          "contract_data": {
+            "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+            "key": {
+              "vec": [
+                {
+                  "symbol": "ReviewMap"
+                },
+                {
+                  "symbol": "targetO"
+                }
+              ]
+            },
+            "durability": "persistent"
+          }
+        },
+        [
+          {
+            "last_modified_ledger_seq": 0,
+            "data": {
+              "contract_data": {
+                "ext": "v0",
+                "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+                "key": {
+                  "vec": [
+                    {
+                      "symbol": "ReviewMap"
+                    },
+                    {
+                      "symbol": "targetO"
+                    }
+                  ]
+                },
+                "durability": "persistent",
+                "val": {
+                  "vec": [
+                    {
+                      "map": [
+                        {
+                          "key": {
+                            "symbol": "booking_id"
+                          },
+                          "val": {
+                            "symbol": "bookingO"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "comment"
+                          },
+                          "val": {
+                            "string": "Valid comment"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "id"
+                          },
+                          "val": {
+                            "symbol": "review"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "rating"
+                          },
+                          "val": {
+                            "u32": 5
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "reviewer_did"
+                          },
+                          "val": {
+                            "symbol": "reviewerO"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "target_did"
+                          },
+                          "val": {
+                            "symbol": "targetO"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "timestamp"
+                          },
+                          "val": {
+                            "u64": 0
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            "ext": "v0"
+          },
+          4095
+        ]
+      ],
+      [
+        {
+          "contract_data": {
+            "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+            "key": {
+              "vec": [
+                {
+                  "symbol": "ReviewMap"
+                },
+                {
+                  "symbol": "targetP"
+                }
+              ]
+            },
+            "durability": "persistent"
+          }
+        },
+        [
+          {
+            "last_modified_ledger_seq": 0,
+            "data": {
+              "contract_data": {
+                "ext": "v0",
+                "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+                "key": {
+                  "vec": [
+                    {
+                      "symbol": "ReviewMap"
+                    },
+                    {
+                      "symbol": "targetP"
+                    }
+                  ]
+                },
+                "durability": "persistent",
+                "val": {
+                  "vec": [
+                    {
+                      "map": [
+                        {
+                          "key": {
+                            "symbol": "booking_id"
+                          },
+                          "val": {
+                            "symbol": "bookingP"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "comment"
+                          },
+                          "val": {
+                            "string": "Valid comment"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "id"
+                          },
+                          "val": {
+                            "symbol": "review"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "rating"
+                          },
+                          "val": {
+                            "u32": 5
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "reviewer_did"
+                          },
+                          "val": {
+                            "symbol": "reviewerP"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "target_did"
+                          },
+                          "val": {
+                            "symbol": "targetP"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "timestamp"
+                          },
+                          "val": {
+                            "u64": 0
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            "ext": "v0"
+          },
+          4095
+        ]
+      ],
+      [
+        {
+          "contract_data": {
+            "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+            "key": {
+              "vec": [
+                {
+                  "symbol": "ReviewMap"
+                },
+                {
+                  "symbol": "targetQ"
+                }
+              ]
+            },
+            "durability": "persistent"
+          }
+        },
+        [
+          {
+            "last_modified_ledger_seq": 0,
+            "data": {
+              "contract_data": {
+                "ext": "v0",
+                "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+                "key": {
+                  "vec": [
+                    {
+                      "symbol": "ReviewMap"
+                    },
+                    {
+                      "symbol": "targetQ"
+                    }
+                  ]
+                },
+                "durability": "persistent",
+                "val": {
+                  "vec": [
+                    {
+                      "map": [
+                        {
+                          "key": {
+                            "symbol": "booking_id"
+                          },
+                          "val": {
+                            "symbol": "bookingQ"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "comment"
+                          },
+                          "val": {
+                            "string": "Valid comment"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "id"
+                          },
+                          "val": {
+                            "symbol": "review"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "rating"
+                          },
+                          "val": {
+                            "u32": 5
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "reviewer_did"
+                          },
+                          "val": {
+                            "symbol": "reviewerQ"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "target_did"
+                          },
+                          "val": {
+                            "symbol": "targetQ"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "timestamp"
+                          },
+                          "val": {
+                            "u64": 0
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            "ext": "v0"
+          },
+          4095
+        ]
+      ],
+      [
+        {
+          "contract_data": {
+            "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+            "key": {
+              "vec": [
+                {
+                  "symbol": "ReviewMap"
+                },
+                {
+                  "symbol": "targetR"
+                }
+              ]
+            },
+            "durability": "persistent"
+          }
+        },
+        [
+          {
+            "last_modified_ledger_seq": 0,
+            "data": {
+              "contract_data": {
+                "ext": "v0",
+                "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+                "key": {
+                  "vec": [
+                    {
+                      "symbol": "ReviewMap"
+                    },
+                    {
+                      "symbol": "targetR"
+                    }
+                  ]
+                },
+                "durability": "persistent",
+                "val": {
+                  "vec": [
+                    {
+                      "map": [
+                        {
+                          "key": {
+                            "symbol": "booking_id"
+                          },
+                          "val": {
+                            "symbol": "bookingR"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "comment"
+                          },
+                          "val": {
+                            "string": "Valid comment"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "id"
+                          },
+                          "val": {
+                            "symbol": "review"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "rating"
+                          },
+                          "val": {
+                            "u32": 5
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "reviewer_did"
+                          },
+                          "val": {
+                            "symbol": "reviewerR"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "target_did"
+                          },
+                          "val": {
+                            "symbol": "targetR"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "timestamp"
+                          },
+                          "val": {
+                            "u64": 0
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            "ext": "v0"
+          },
+          4095
+        ]
+      ],
+      [
+        {
+          "contract_data": {
+            "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+            "key": {
+              "vec": [
+                {
+                  "symbol": "ReviewMap"
+                },
+                {
+                  "symbol": "targetS"
+                }
+              ]
+            },
+            "durability": "persistent"
+          }
+        },
+        [
+          {
+            "last_modified_ledger_seq": 0,
+            "data": {
+              "contract_data": {
+                "ext": "v0",
+                "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+                "key": {
+                  "vec": [
+                    {
+                      "symbol": "ReviewMap"
+                    },
+                    {
+                      "symbol": "targetS"
+                    }
+                  ]
+                },
+                "durability": "persistent",
+                "val": {
+                  "vec": [
+                    {
+                      "map": [
+                        {
+                          "key": {
+                            "symbol": "booking_id"
+                          },
+                          "val": {
+                            "symbol": "bookingS"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "comment"
+                          },
+                          "val": {
+                            "string": "Valid comment"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "id"
+                          },
+                          "val": {
+                            "symbol": "review"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "rating"
+                          },
+                          "val": {
+                            "u32": 5
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "reviewer_did"
+                          },
+                          "val": {
+                            "symbol": "reviewerS"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "target_did"
+                          },
+                          "val": {
+                            "symbol": "targetS"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "timestamp"
+                          },
+                          "val": {
+                            "u64": 0
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            "ext": "v0"
+          },
+          4095
+        ]
+      ],
+      [
+        {
+          "contract_data": {
+            "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+            "key": {
+              "vec": [
+                {
+                  "symbol": "ReviewMap"
+                },
+                {
+                  "symbol": "targetT"
+                }
+              ]
+            },
+            "durability": "persistent"
+          }
+        },
+        [
+          {
+            "last_modified_ledger_seq": 0,
+            "data": {
+              "contract_data": {
+                "ext": "v0",
+                "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+                "key": {
+                  "vec": [
+                    {
+                      "symbol": "ReviewMap"
+                    },
+                    {
+                      "symbol": "targetT"
+                    }
+                  ]
+                },
+                "durability": "persistent",
+                "val": {
+                  "vec": [
+                    {
+                      "map": [
+                        {
+                          "key": {
+                            "symbol": "booking_id"
+                          },
+                          "val": {
+                            "symbol": "bookingT"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "comment"
+                          },
+                          "val": {
+                            "string": "Valid comment"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "id"
+                          },
+                          "val": {
+                            "symbol": "review"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "rating"
+                          },
+                          "val": {
+                            "u32": 5
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "reviewer_did"
+                          },
+                          "val": {
+                            "symbol": "reviewerT"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "target_did"
+                          },
+                          "val": {
+                            "symbol": "targetT"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "timestamp"
+                          },
+                          "val": {
+                            "u64": 0
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            "ext": "v0"
+          },
+          4095
+        ]
+      ],
+      [
+        {
+          "contract_data": {
+            "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+            "key": {
+              "vec": [
+                {
+                  "symbol": "ReviewMap"
+                },
+                {
+                  "symbol": "targetU"
+                }
+              ]
+            },
+            "durability": "persistent"
+          }
+        },
+        [
+          {
+            "last_modified_ledger_seq": 0,
+            "data": {
+              "contract_data": {
+                "ext": "v0",
+                "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+                "key": {
+                  "vec": [
+                    {
+                      "symbol": "ReviewMap"
+                    },
+                    {
+                      "symbol": "targetU"
+                    }
+                  ]
+                },
+                "durability": "persistent",
+                "val": {
+                  "vec": [
+                    {
+                      "map": [
+                        {
+                          "key": {
+                            "symbol": "booking_id"
+                          },
+                          "val": {
+                            "symbol": "bookingU"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "comment"
+                          },
+                          "val": {
+                            "string": "Valid comment"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "id"
+                          },
+                          "val": {
+                            "symbol": "review"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "rating"
+                          },
+                          "val": {
+                            "u32": 5
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "reviewer_did"
+                          },
+                          "val": {
+                            "symbol": "reviewerU"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "target_did"
+                          },
+                          "val": {
+                            "symbol": "targetU"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "timestamp"
+                          },
+                          "val": {
+                            "u64": 0
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            "ext": "v0"
+          },
+          4095
+        ]
+      ],
+      [
+        {
+          "contract_data": {
+            "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+            "key": {
+              "vec": [
+                {
+                  "symbol": "ReviewMap"
+                },
+                {
+                  "symbol": "targetV"
+                }
+              ]
+            },
+            "durability": "persistent"
+          }
+        },
+        [
+          {
+            "last_modified_ledger_seq": 0,
+            "data": {
+              "contract_data": {
+                "ext": "v0",
+                "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+                "key": {
+                  "vec": [
+                    {
+                      "symbol": "ReviewMap"
+                    },
+                    {
+                      "symbol": "targetV"
+                    }
+                  ]
+                },
+                "durability": "persistent",
+                "val": {
+                  "vec": [
+                    {
+                      "map": [
+                        {
+                          "key": {
+                            "symbol": "booking_id"
+                          },
+                          "val": {
+                            "symbol": "bookingV"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "comment"
+                          },
+                          "val": {
+                            "string": "Valid comment"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "id"
+                          },
+                          "val": {
+                            "symbol": "review"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "rating"
+                          },
+                          "val": {
+                            "u32": 5
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "reviewer_did"
+                          },
+                          "val": {
+                            "symbol": "reviewerV"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "target_did"
+                          },
+                          "val": {
+                            "symbol": "targetV"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "timestamp"
+                          },
+                          "val": {
+                            "u64": 0
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            "ext": "v0"
+          },
+          4095
+        ]
+      ],
+      [
+        {
+          "contract_data": {
+            "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+            "key": {
+              "vec": [
+                {
+                  "symbol": "ReviewMap"
+                },
+                {
+                  "symbol": "targetW"
+                }
+              ]
+            },
+            "durability": "persistent"
+          }
+        },
+        [
+          {
+            "last_modified_ledger_seq": 0,
+            "data": {
+              "contract_data": {
+                "ext": "v0",
+                "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+                "key": {
+                  "vec": [
+                    {
+                      "symbol": "ReviewMap"
+                    },
+                    {
+                      "symbol": "targetW"
+                    }
+                  ]
+                },
+                "durability": "persistent",
+                "val": {
+                  "vec": [
+                    {
+                      "map": [
+                        {
+                          "key": {
+                            "symbol": "booking_id"
+                          },
+                          "val": {
+                            "symbol": "bookingW"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "comment"
+                          },
+                          "val": {
+                            "string": "Valid comment"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "id"
+                          },
+                          "val": {
+                            "symbol": "review"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "rating"
+                          },
+                          "val": {
+                            "u32": 5
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "reviewer_did"
+                          },
+                          "val": {
+                            "symbol": "reviewerW"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "target_did"
+                          },
+                          "val": {
+                            "symbol": "targetW"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "timestamp"
+                          },
+                          "val": {
+                            "u64": 0
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            "ext": "v0"
+          },
+          4095
+        ]
+      ],
+      [
+        {
+          "contract_data": {
+            "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+            "key": {
+              "vec": [
+                {
+                  "symbol": "ReviewMap"
+                },
+                {
+                  "symbol": "targetX"
+                }
+              ]
+            },
+            "durability": "persistent"
+          }
+        },
+        [
+          {
+            "last_modified_ledger_seq": 0,
+            "data": {
+              "contract_data": {
+                "ext": "v0",
+                "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+                "key": {
+                  "vec": [
+                    {
+                      "symbol": "ReviewMap"
+                    },
+                    {
+                      "symbol": "targetX"
+                    }
+                  ]
+                },
+                "durability": "persistent",
+                "val": {
+                  "vec": [
+                    {
+                      "map": [
+                        {
+                          "key": {
+                            "symbol": "booking_id"
+                          },
+                          "val": {
+                            "symbol": "bookingX"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "comment"
+                          },
+                          "val": {
+                            "string": "Valid comment"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "id"
+                          },
+                          "val": {
+                            "symbol": "review"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "rating"
+                          },
+                          "val": {
+                            "u32": 5
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "reviewer_did"
+                          },
+                          "val": {
+                            "symbol": "reviewerX"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "target_did"
+                          },
+                          "val": {
+                            "symbol": "targetX"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "timestamp"
+                          },
+                          "val": {
+                            "u64": 0
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            "ext": "v0"
+          },
+          4095
+        ]
+      ],
+      [
+        {
+          "contract_data": {
+            "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+            "key": {
+              "vec": [
+                {
+                  "symbol": "ReviewMap"
+                },
+                {
+                  "symbol": "targetY"
+                }
+              ]
+            },
+            "durability": "persistent"
+          }
+        },
+        [
+          {
+            "last_modified_ledger_seq": 0,
+            "data": {
+              "contract_data": {
+                "ext": "v0",
+                "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+                "key": {
+                  "vec": [
+                    {
+                      "symbol": "ReviewMap"
+                    },
+                    {
+                      "symbol": "targetY"
+                    }
+                  ]
+                },
+                "durability": "persistent",
+                "val": {
+                  "vec": [
+                    {
+                      "map": [
+                        {
+                          "key": {
+                            "symbol": "booking_id"
+                          },
+                          "val": {
+                            "symbol": "bookingY"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "comment"
+                          },
+                          "val": {
+                            "string": "Valid comment"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "id"
+                          },
+                          "val": {
+                            "symbol": "review"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "rating"
+                          },
+                          "val": {
+                            "u32": 5
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "reviewer_did"
+                          },
+                          "val": {
+                            "symbol": "reviewerY"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "target_did"
+                          },
+                          "val": {
+                            "symbol": "targetY"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "timestamp"
+                          },
+                          "val": {
+                            "u64": 0
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            "ext": "v0"
+          },
+          4095
+        ]
+      ],
+      [
+        {
+          "contract_data": {
+            "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+            "key": {
+              "vec": [
+                {
+                  "symbol": "ReviewMap"
+                },
+                {
+                  "symbol": "targetZ"
+                }
+              ]
+            },
+            "durability": "persistent"
+          }
+        },
+        [
+          {
+            "last_modified_ledger_seq": 0,
+            "data": {
+              "contract_data": {
+                "ext": "v0",
+                "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+                "key": {
+                  "vec": [
+                    {
+                      "symbol": "ReviewMap"
+                    },
+                    {
+                      "symbol": "targetZ"
+                    }
+                  ]
+                },
+                "durability": "persistent",
+                "val": {
+                  "vec": [
+                    {
+                      "map": [
+                        {
+                          "key": {
+                            "symbol": "booking_id"
+                          },
+                          "val": {
+                            "symbol": "bookingZ"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "comment"
+                          },
+                          "val": {
+                            "string": "Valid comment"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "id"
+                          },
+                          "val": {
+                            "symbol": "review"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "rating"
+                          },
+                          "val": {
+                            "u32": 5
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "reviewer_did"
+                          },
+                          "val": {
+                            "symbol": "reviewerZ"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "target_did"
+                          },
+                          "val": {
+                            "symbol": "targetZ"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "timestamp"
+                          },
+                          "val": {
+                            "u64": 0
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            "ext": "v0"
+          },
+          4095
+        ]
+      ],
+      [
+        {
+          "contract_data": {
+            "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+            "key": "ledger_key_contract_instance",
+            "durability": "persistent"
+          }
+        },
+        [
+          {
+            "last_modified_ledger_seq": 0,
+            "data": {
+              "contract_data": {
+                "ext": "v0",
+                "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+                "key": "ledger_key_contract_instance",
+                "durability": "persistent",
+                "val": {
+                  "contract_instance": {
+                    "executable": {
+                      "wasm": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                    },
+                    "storage": null
+                  }
+                }
+              }
+            },
+            "ext": "v0"
+          },
+          4095
+        ]
+      ],
+      [
+        {
+          "contract_code": {
+            "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        [
+          {
+            "last_modified_ledger_seq": 0,
+            "data": {
+              "contract_code": {
+                "ext": "v0",
+                "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "code": ""
+              }
+            },
+            "ext": "v0"
+          },
+          4095
+        ]
+      ]
+    ]
+  },
+  "events": []
+}

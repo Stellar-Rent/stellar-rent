@@ -1,6 +1,8 @@
 #![no_std]
 use soroban_sdk::{
+
     contract, contractimpl, contracttype, symbol_short, vec, Address, Env, Symbol, Vec, String,
+
 };
 
 #[contracttype]
@@ -130,12 +132,15 @@ impl PropertyListingContract {
         env.storage().persistent().get(&key)
     }
 
+
     /// Get all listings (simplified implementation)
     pub fn get_all_listings(env: Env) -> Vec<PropertyListing> {
         // Note: This is a simplified implementation
         // In production, you'd want pagination and proper iteration
         vec![&env]
+
     }
 }
 
+#[cfg(test)]
 mod test;
