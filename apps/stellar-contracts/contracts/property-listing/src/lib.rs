@@ -1,6 +1,6 @@
 #![no_std]
 use soroban_sdk::{
-    contract, contractimpl, contracttype, symbol_short, vec, Address, Env, Symbol, Vec,
+    contract, contractimpl, contracttype, vec, Address, Env, Symbol, Vec,
 };
 
 #[contracttype]
@@ -135,11 +135,12 @@ impl PropertyListingContract {
 
     // Gets all property listings
     pub fn get_all_listings(env: &Env) -> Vec<PropertyListing> {
-        let mut listings = vec![env];
+        let listings = vec![env];
         // Note: In a real implementation, you would need to implement a way to iterate over all listings
         // This is a simplified version that would need to be expanded based on your specific needs
         listings
     }
 }
 
+#[cfg(test)]
 mod test;
