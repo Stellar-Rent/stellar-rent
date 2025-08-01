@@ -1,3 +1,27 @@
+/**
+ * MODIFICATION SUMMARY - PropertyListingContract Integration
+ *
+ * Changed: Added BlockchainVerification component to property detail page
+ * Reason: OnlyDust task requirement to display blockchain verification status to users
+ * Impact: Users can now see if property data is verified on blockchain with hash display and verification controls
+ * Dependencies: Added BlockchainVerification component import
+ * Breaking Changes: None - purely additive UI enhancement
+ *
+ * Integration Details:
+ * - BlockchainVerification component shows verification status with visual indicators
+ * - Displays blockchain hash with copy-to-clipboard functionality
+ * - Provides manual verification trigger for users
+ * - Shows last verification timestamp and error states
+ *
+ * Related Files:
+ * - apps/web/src/components/blockchain/BlockchainVerification.tsx (verification component)
+ * - apps/web/src/services/blockchain.ts (blockchain service utilities)
+ * - apps/backend/src/controllers/property.controller.ts (verification API endpoint)
+ * - apps/backend/src/blockchain/propertyListingContract.ts (blockchain client)
+ *
+ * GitHub Issue: https://github.com/Stellar-Rent/stellar-rent/issues/99
+ */
+
 "use client";
 
 import type React from 'react';
@@ -35,6 +59,7 @@ import { PropertyCalendar } from './PropertyCalendar';
 import { PropertyImageGallery } from './PropertyImageGallery';
 import { PropertyMap } from './PropertyMap';
 import { PropertyReviewsSection } from './PropertyReviewsSection';
+import { BlockchainVerification } from '../../blockchain/BlockchainVerification';
 
 export const PropertyDetail = ({ id }: PropertyDetailProps) => {
   const [selectedDates, setSelectedDates] = useState<DateRange | undefined>();
@@ -238,6 +263,9 @@ export const PropertyDetail = ({ id }: PropertyDetailProps) => {
                 ))}
               </div>
             </Card>
+
+            {/* Blockchain Verification */}
+            <BlockchainVerification propertyId={id} />
 
             {/* Policies */}
             <Card className="p-6">

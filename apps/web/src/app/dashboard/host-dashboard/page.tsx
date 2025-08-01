@@ -1,4 +1,28 @@
 /* eslint-disable @next/next/no-img-element */
+/**
+ * MODIFICATION SUMMARY - PropertyListingContract Integration
+ *
+ * Changed: Added BlockchainVerification component to PropertyCard in host dashboard
+ * Reason: OnlyDust task requirement to show blockchain verification status in property management interface
+ * Impact: Hosts can now see blockchain verification status for each property with compact status badges
+ * Dependencies: Added BlockchainVerification component import
+ * Breaking Changes: None - purely additive UI enhancement
+ *
+ * Integration Details:
+ * - BlockchainVerification component displays compact verification status in property cards
+ * - Shows verification badges with visual indicators (verified/unverified/error states)
+ * - Provides quick verification status overview for property management
+ * - Integrates seamlessly with existing property card layout
+ *
+ * Related Files:
+ * - apps/web/src/components/blockchain/BlockchainVerification.tsx (verification component)
+ * - apps/web/src/components/blockchain/BlockchainStatusBadge.tsx (status badge component)
+ * - apps/web/src/services/blockchain.ts (blockchain service utilities)
+ * - apps/backend/src/controllers/property.controller.ts (verification API endpoint)
+ *
+ * GitHub Issue: https://github.com/Stellar-Rent/stellar-rent/issues/99
+ */
+
 'use client';
 import {
   Bath,
@@ -28,6 +52,7 @@ import {
 } from 'lucide-react';
 import type React from 'react';
 import { useEffect, useState } from 'react';
+import { BlockchainVerification } from '../../../components/blockchain/BlockchainVerification';
 
 interface Property {
   id: number;
@@ -344,6 +369,11 @@ const HostDashboard = () => {
             <p className="text-lg font-bold text-green-600">${property.earnings}</p>
             <p className="text-sm dark:text-white text-gray-600">Earned</p>
           </div>
+        </div>
+
+        {/* Blockchain Verification */}
+        <div className="mb-4">
+          <BlockchainVerification propertyId={property.id.toString()} className="text-xs" />
         </div>
 
         <div className="flex space-x-2">

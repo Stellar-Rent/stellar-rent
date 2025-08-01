@@ -1,3 +1,21 @@
+/**
+ * MODIFICATION SUMMARY - PropertyListingContract Integration
+ *
+ * Changed: Added verifyPropertyController function for blockchain data integrity verification
+ * Reason: OnlyDust task requirement to provide API endpoint for property verification against blockchain
+ * Impact: New GET /api/properties/:id/verify endpoint enables frontend to verify property data integrity
+ * Dependencies: Added verifyPropertyWithBlockchain import from property.service.ts
+ * Breaking Changes: None - purely additive functionality
+ *
+ * Related Files:
+ * - apps/backend/src/services/property.service.ts (verification logic implementation)
+ * - apps/backend/src/routes/property.route.ts (route registration)
+ * - apps/backend/src/blockchain/propertyListingContract.ts (blockchain client)
+ * - apps/web/src/components/blockchain/BlockchainVerification.tsx (frontend verification UI)
+ *
+ * GitHub Issue: https://github.com/Stellar-Rent/stellar-rent/issues/99
+ */
+
 import type { Request, Response } from 'express';
 import { z } from 'zod';
 import {
@@ -16,6 +34,7 @@ import {
   searchProperties,
   updateProperty,
   updatePropertyAvailability,
+  verifyPropertyWithBlockchain,
 } from '../services/property.service';
 import {
   availabilityRangeSchema,
@@ -833,6 +852,60 @@ export async function getFeaturedPropertiesController(
     res.json(formatSuccessResponse(response));
   } catch (error) {
     console.error('getFeaturedPropertiesController error:', error);
+    res.status(500).json(formatErrorResponse('Internal server error'));
+  }
+}
+
+/**
+ * Verify property data integrity with blockchain
+ */
+export async function verifyPropertyController(
+  req: Request,
+  res: Response
+): Promise<void> {
+  try {
+    const paramValidation = z.object({
+      id: z.string().uuid('Invalid property ID format'),
+    });
+
+    const validation = paramValidation.safeParse(req.params);
+    if (!validation.success) {
+      res
+        .status(400)
+        .json(
+          formatErrorResponse(
+            'Invalid request parameters',
+            validation.error.errors
+          )
+        );
+      return;
+    }
+
+    const { id } = validation.data;
+
+    // Verify property with blockchain
+    const result = await verifyPropertyWithBlockchain(id);
+
+    if (!result.success) {
+      const statusCode = result.error === 'Property not found' ? 404 : 500;
+      res
+        .status(statusCode)
+        .json(
+          formatErrorResponse(result.error || 'Unknown error', result.details)
+        );
+      return;
+    }
+
+    res
+      .status(200)
+      .json(
+        formatSuccessResponse(
+          result.data,
+          'Property verification completed'
+        )
+      );
+  } catch (error) {
+    console.error('Verify property controller error:', error);
     res.status(500).json(formatErrorResponse('Internal server error'));
   }
 }
