@@ -27,10 +27,14 @@ import BookingCard from './components/booking-card';
 import { BookingModal, CancelModal } from './components/modal';
 import ProfileManagement from './components/profile-management';
 import WalletTransactions from './components/wallet-transaction';
+import BookingHistory from '@/components/dashboard/BookingHistory';
+import NotificationSystem from '@/components/dashboard/NotificationSystem';
 
 const TenantDashboard: React.FC = () => {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'bookings' | 'profile' | 'wallet'>('bookings');
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [selectedBooking, setSelectedBooking] = useState<BookingType | null>(null);
@@ -159,6 +163,30 @@ const TenantDashboard: React.FC = () => {
     await refetchAll();
   };
 
+  const handleMarkAsRead = (id: string) => {
+    setNotifications(prev => 
+      prev.map(notification => 
+        notification.id === id ? { ...notification, read: true } : notification
+      )
+    );
+    setUnreadNotifications(prev => Math.max(0, prev - 1));
+  };
+
+  const handleMarkAllAsRead = () => {
+    setNotifications(prev => prev.map(notification => ({ ...notification, read: true })));
+    setUnreadNotifications(0);
+  };
+
+  const handleDeleteNotification = (id: string) => {
+    setNotifications(prev => prev.filter(notification => notification.id !== id));
+    setUnreadNotifications(prev => Math.max(0, prev - 1));
+  };
+
+  const handleDeleteAllNotifications = () => {
+    setNotifications([]);
+    setUnreadNotifications(0);
+  };
+
   // Toast Component
   const ToastNotification = () => {
     if (!toast.show) return null;
@@ -264,9 +292,14 @@ const TenantDashboard: React.FC = () => {
                   className={`w-6 h-6 ${isLoadingBookings || isLoadingProfile || isLoadingWallet ? 'animate-spin' : ''}`}
                 />
               </button>
-              <button type="button" className="text-gray-500 dark:text-white">
-                <Bell className="w-6 h-6" />
-              </button>
+              <NotificationSystem
+                notifications={notifications}
+                onMarkAsRead={handleMarkAsRead}
+                onMarkAllAsRead={handleMarkAllAsRead}
+                onDeleteNotification={handleDeleteNotification}
+                onDeleteAllNotifications={handleDeleteAllNotifications}
+                unreadCount={unreadNotifications}
+              />
               <button type="button" className="text-gray-500 dark:text-white">
                 <Settings className="w-6 h-6" />
               </button>
@@ -320,120 +353,13 @@ const TenantDashboard: React.FC = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {activeTab === 'bookings' && (
-          <div>
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 space-y-4 sm:space-y-0">
-              <div>
-                <h2 className="text-3xl font-bold text-gray-900 dark:text-white">My Bookings</h2>
-                <p className="text-gray-600 dark:text-white mt-1">
-                  Manage your reservations and travel history
-                </p>
-              </div>
-              <div className="flex items-center space-x-2">
-                {bookingsError && (
-                  <span className="text-red-500 text-sm">Error loading bookings</span>
-                )}
-                <button
-                  type="button"
-                  onClick={handleRefresh}
-                  disabled={isLoadingBookings}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center transition-colors"
-                >
-                  <RefreshCw
-                    className={`w-4 h-4 mr-2 ${isLoadingBookings ? 'animate-spin' : ''}`}
-                  />
-                  Refresh
-                </button>
-              </div>
-            </div>
-
-            {bookingsError ? (
-              <ErrorDisplay
-                error={bookingsError}
-                onRetry={handleRefresh}
-                title="Failed to load bookings"
-              />
-            ) : isLoadingBookings ? (
-              <LoadingDisplay message="Loading your bookings..." />
-            ) : (
-              <>
-                <div className="flex flex-col sm:flex-row gap-4 mb-8">
-                  <div className="relative flex-1">
-                    <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="text"
-                      placeholder="Search bookings..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg bg-transparent dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
-                  <div className="relative" ref={dropdownRef}>
-                    <button
-                      type="button"
-                      onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                      className="w-full sm:w-48 px-4 py-3 border border-gray-300 rounded-lg bg-white dark:bg-[#0B1D39] dark:text-white text-left flex items-center justify-between hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                    >
-                      <span className="text-gray-700 dark:text-white">
-                        {getCurrentFilterLabel()}
-                      </span>
-                      <ChevronDown
-                        className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
-                          isDropdownOpen ? 'rotate-180' : ''
-                        }`}
-                      />
-                    </button>
-                    {isDropdownOpen && (
-                      <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-[#0B1D39] border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-50 overflow-hidden">
-                        {filterOptions.map((option) => (
-                          <button
-                            key={option.value}
-                            type="button"
-                            onClick={() => {
-                              setFilterStatus(option.value);
-                              setIsDropdownOpen(false);
-                            }}
-                            className="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center justify-between group transition-colors"
-                          >
-                            <span className="text-gray-700 dark:text-white group-hover:text-gray-900 dark:group-hover:text-white">
-                              {option.label}
-                            </span>
-                            {filterStatus === option.value && (
-                              <Check className="w-4 h-4 text-blue-500" />
-                            )}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredBookings.map((booking) => (
-                    <BookingCard
-                      key={booking.id}
-                      booking={booking}
-                      onViewDetails={handleViewDetails}
-                      onCancel={handleCancelBooking}
-                    />
-                  ))}
-                </div>
-
-                {filteredBookings.length === 0 && (
-                  <div className="text-center py-12">
-                    <Home className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-xl font-medium text-gray-900 dark:text-white mb-2">
-                      No bookings found
-                    </h3>
-                    <p className="text-gray-600 dark:text-white">
-                      {bookings.length === 0
-                        ? "You don't have any bookings yet"
-                        : 'Try adjusting your search or filters'}
-                    </p>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
+          <BookingHistory
+            bookings={bookings}
+            isLoading={isLoadingBookings}
+            onViewDetails={handleViewDetails}
+            onRefresh={handleRefresh}
+            error={bookingsError}
+          />
         )}
 
         {activeTab === 'profile' &&
@@ -446,7 +372,17 @@ const TenantDashboard: React.FC = () => {
           ) : isLoadingProfile ? (
             <LoadingDisplay message="Loading your profile..." />
           ) : user ? (
-            <ProfileManagement user={user} onUpdateUser={handleUpdateUser} />
+            <ProfileManagement 
+              user={user} 
+              onUpdateProfile={handleUpdateUser}
+              onUploadAvatar={async () => true} 
+              onDeleteAccount={async () => {
+                if (confirm('Are you sure you want to delete your account?')) {
+                  return true;
+                }
+                return false;
+              }}
+            />
           ) : (
             <div className="text-center py-12">
               <User className="w-16 h-16 text-gray-400 mx-auto mb-4" />

@@ -24,7 +24,7 @@ export default function RootLayout({
       <body className={`${quicksand.className} min-h-screen bg-[#0B1320] text-white antialiased`}>
         <div id="theme-portal-root" />
         <Providers>
-          <main className="flex-1 flex flex-col pr-16">{children}</main>
+          <main className="flex-1 flex flex-col">{children}</main>
           <Toaster position="top-right" />
         </Providers>
       </body>
