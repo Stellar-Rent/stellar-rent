@@ -1,7 +1,8 @@
-import { Asset, Horizon, Networks, Operation, TransactionBuilder } from 'stellar-sdk'; // Changed from Server to Horizon
-// Removed: type BalanceLineAsset
+import { Asset, Horizon, Operation, TransactionBuilder } from 'stellar-sdk';
+import Server from 'stellar-sdk';
+import { HORIZON_URL, NETWORK_PASSPHRASE, USDC_ISSUER  } from './config/config';
 
-const USDC_ISSUER = 'GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN';
+
 const USDC_ASSET = new Asset('USDC', USDC_ISSUER);
 
 export async function createPaymentTransaction(
@@ -10,12 +11,12 @@ export async function createPaymentTransaction(
   amount: string
 ) {
   try {
-    const server = new Horizon.Server('https://horizon-testnet.stellar.org');
+    const server = new Horizon.Server(HORIZON_URL);
     const sourceAccount = await server.loadAccount(sourcePublicKey);
 
     const transaction = new TransactionBuilder(sourceAccount, {
       fee: '100',
-      networkPassphrase: Networks.TESTNET,
+      networkPassphrase: NETWORK_PASSPHRASE,
     })
       .addOperation(
         Operation.payment({
@@ -34,11 +35,11 @@ export async function createPaymentTransaction(
   }
 }
 
+
 export async function submitTransaction(signedTransaction: string) {
   try {
-    const server = new Horizon.Server('https://horizon-testnet.stellar.org');
-    const tx = TransactionBuilder.fromXDR(signedTransaction, Networks.TESTNET);
-    const result = await server.submitTransaction(tx);
+    const server = new Server(HORIZON_URL);
+    const result = await server.submitTransaction(signedTransaction);
     return result.hash;
   } catch (error) {
     console.error('Error submitting transaction:', error);
@@ -81,13 +82,12 @@ export async function processPayment(
  */
 export async function getUSDCBalance(publicKey: string): Promise<string> {
   try {
-    const server = new Horizon.Server('https://horizon-testnet.stellar.org'); // Use testnet Horizon for client-side
+    const server = new Horizon.Server(HORIZON_URL); 
     const account = await server.loadAccount(publicKey);
 
     // Filter for asset balances and then find USDC
     const usdcBalance = account.balances.find((balance) => {
       if (balance.asset_type === 'credit_alphanum4' || balance.asset_type === 'credit_alphanum12') {
-        // TypeScript should correctly narrow the type here, no explicit assertion needed
         return balance.asset_code === USDC_ASSET.code && balance.asset_issuer === USDC_ASSET.issuer;
       }
       return false;
@@ -96,6 +96,6 @@ export async function getUSDCBalance(publicKey: string): Promise<string> {
     return usdcBalance ? usdcBalance.balance : '0';
   } catch (error) {
     console.error(`Error fetching USDC balance for ${publicKey}:`, error);
-    return '0'; // Return '0' on error or if account not found
+    return '0';
   }
 }
