@@ -10,9 +10,7 @@ function getAuthToken() {
 
 let controller: AbortController | null = null;
 
-export const createListing = async (
-  data: ListingFormValues
-): Promise<unknown> => {
+export const createListing = async (data: ListingFormValues): Promise<unknown> => {
   const token = getAuthToken();
   if (!token) {
     toast.error('Authentication token not found.');
@@ -48,12 +46,7 @@ export const createListing = async (
     toast.success('Listing created successfully!');
     return result;
   } catch (err: unknown) {
-    if (
-      typeof err === 'object' &&
-      err !== null &&
-      'name' in err &&
-      err.name === 'AbortError'
-    ) {
+    if (typeof err === 'object' && err !== null && 'name' in err && err.name === 'AbortError') {
       return;
     }
 

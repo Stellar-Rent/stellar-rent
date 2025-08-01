@@ -11,6 +11,7 @@ import type {
 } from '../types/property.types';
 // import{ checkB }
 import { propertySchema, updatePropertySchema } from '../types/property.types';
+import { cacheService } from './cache.service';
 
 // Allowed amenities list
 const ALLOWED_AMENITIES = [
@@ -226,7 +227,8 @@ export async function getPropertyById(id: string): Promise<ServiceResponse<Prope
   try {
     const { data: property, error } = await supabase
       .from('properties')
-      .select(`
+      .select(
+        `
         id,
         title,
         description,
@@ -248,7 +250,8 @@ export async function getPropertyById(id: string): Promise<ServiceResponse<Prope
         cancellation_policy,
         created_at,
         updated_at
-      `)
+      `
+      )
       .eq('id', id)
       .single();
 
@@ -283,10 +286,18 @@ export async function getPropertyById(id: string): Promise<ServiceResponse<Prope
       ownerId: property.owner_id,
       status: property.status as 'available' | 'booked' | 'maintenance',
       availability:
-        property.availability?.map((range: { from?: string; to?: string; start_date?: string; end_date?: string; is_available?: boolean }) => ({
-          from: range.start_date || range.from,
-          to: range.end_date || range.to,
-        })) || [],
+        property.availability?.map(
+          (range: {
+            from?: string;
+            to?: string;
+            start_date?: string;
+            end_date?: string;
+            is_available?: boolean;
+          }) => ({
+            from: range.start_date || range.from,
+            to: range.end_date || range.to,
+          })
+        ) || [],
       securityDeposit: property.security_deposit,
       cancellationPolicy: property.cancellation_policy,
       createdAt: property.created_at,
@@ -449,7 +460,6 @@ export async function getFeaturedProperties(): Promise<ServiceResponse<FeaturedP
   }
 }
 
-
 /**
  * Delete property
  */
@@ -507,7 +517,7 @@ export async function getPropertiesByOwner(
       .order(sort_by, { ascending: sort_order === 'asc' })
       .range(offset, offset + limit - 1);
 
-    const { data: properties, error, count } = await query;
+    const { data: properties, error } = await query;
 
     if (error) {
       console.error('Database query error:', error);
@@ -538,23 +548,45 @@ export async function getPropertiesByOwner(
 }
 
 /**
- * Search properties with filters
+ * Search properties with filters (optimized with caching)
  */
 export async function searchProperties(
   filters: PropertySearchFilters = {},
   options: PropertySearchOptions = {}
 ): Promise<ServiceResponse<PropertyListResponse>> {
   try {
+    const startTime = Date.now();
+
+    // Generate cache key
+    const cacheKey = `search:${JSON.stringify(filters)}:${JSON.stringify(options)}`;
+
+    // Try to get from cache first
+    const cachedResult = await cacheService.getCachedSearchResults(
+      cacheKey,
+      filters,
+      options.page || 1,
+      options.limit || 10
+    );
+
+    if (cachedResult) {
+      console.log(`📖 Cache hit for search: ${cacheKey}`);
+      return {
+        success: true,
+        data: cachedResult as PropertyListResponse,
+      };
+    }
+
     const { page = 1, limit = 10, sort_by = 'created_at', sort_order = 'desc' } = options;
     const offset = (page - 1) * limit;
 
     let query = supabase
       .from('properties')
       .select('*', { count: 'exact' })
+      .eq('status', 'available')
       .order(sort_by, { ascending: sort_order === 'asc' })
       .range(offset, offset + limit - 1);
 
-    // Apply filters
+    // Apply optimized filters using indexes
     if (filters.city) {
       query = query.ilike('city', `%${filters.city}%`);
     }
@@ -576,14 +608,11 @@ export async function searchProperties(
     if (filters.max_guests !== undefined) {
       query = query.gte('max_guests', filters.max_guests);
     }
-    if (filters.status) {
-      query = query.eq('status', filters.status);
-    }
     if (filters.amenities && filters.amenities.length > 0) {
       query = query.contains('amenities', filters.amenities);
     }
 
-    const { data: properties, error, count } = await query;
+    const { data: properties, error } = await query;
 
     if (error) {
       console.error('Database search error:', error);
@@ -596,6 +625,7 @@ export async function searchProperties(
 
     let filteredProperties = properties as Property[];
 
+    // Apply availability filtering if dates provided
     if (filters.from && filters.to) {
       const fromDate = new Date(filters.from);
       const toDate = new Date(filters.to);
@@ -607,42 +637,58 @@ export async function searchProperties(
         };
       }
 
-      // Use fromDate and toDate as needed, e.g.:
-      // - Pass to checkBookingAvailability
-      // - Convert to UNIX timestamp if needed
-
-      // Limit concurrency to 10 at a time
-
-      const limit = pLimit(10);
+      // Use optimized availability checking with database function
+      const availabilityLimit = pLimit(5); // Reduced concurrency for better performance
 
       const checked = await Promise.all(
         filteredProperties.map((property) =>
-          limit(async () => {
+          availabilityLimit(async () => {
             try {
-              return (await checkBookingAvailability(
-                property.id,
-                fromDate.toISOString(),
-                toDate.toISOString()
-              ))
-                ? property
-                : null;
+              // Use database function for availability check
+              const { data: isAvailable, error: availabilityError } = await supabase.rpc(
+                'is_property_available',
+                {
+                  property_id: property.id,
+                  check_in_date: fromDate.toISOString().split('T')[0],
+                  check_out_date: toDate.toISOString().split('T')[0],
+                }
+              );
+
+              if (availabilityError) {
+                console.error(
+                  `Availability check error for property ${property.id}:`,
+                  availabilityError
+                );
+                return property; // Include property if check fails
+              }
+
+              return isAvailable ? property : null;
             } catch (e) {
-              // Optionally log or handle error
-              return null;
+              console.error(`Error checking availability for property ${property.id}:`, e);
+              return property; // Include property if check fails
             }
           })
         )
       );
       filteredProperties = checked.filter(Boolean) as Property[];
     }
+
+    const result: PropertyListResponse = {
+      properties: filteredProperties,
+      total: filteredProperties.length,
+      page,
+      limit,
+    };
+
+    // Cache the result
+    await cacheService.cacheSearchResults(cacheKey, filters, page, limit, result);
+
+    const searchTime = Date.now() - startTime;
+    console.log(`🔍 Search completed in ${searchTime}ms (${filteredProperties.length} results)`);
+
     return {
       success: true,
-      data: {
-        properties: filteredProperties,
-        total: filteredProperties.length,
-        page,
-        limit,
-      },
+      data: result,
     };
   } catch (error) {
     console.error('Property search error:', error);
@@ -678,9 +724,9 @@ export async function updatePropertyAvailability(
     }
 
     const mappedAvailability = availability.map((range: AvailabilityRangeInput) => ({
-        from: (range.start_date ?? range.from) || '',
-        to: (range.end_date ?? range.to) || '',
-      }));
+      from: (range.start_date ?? range.from) || '',
+      to: (range.end_date ?? range.to) || '',
+    }));
     return await updateProperty(id, { availability: mappedAvailability });
   } catch (error) {
     console.error('Update property availability error:', error);

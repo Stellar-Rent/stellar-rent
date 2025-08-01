@@ -2,10 +2,7 @@
   "name": "stellar-rent",
   "version": "0.1.0",
   "private": true,
-  "workspaces": [
-    "apps/*",
-    "services/*"
-  ],
+  "workspaces": ["apps/*", "services/*"],
   "scripts": {
     "build": "bun run build",
     "dev": "bun run dev",
@@ -32,10 +29,7 @@
     "standard-version": "^9.5.0"
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx}": [
-      "biome check --apply",
-      "biome format --write"
-    ]
+    "*.{js,jsx,ts,tsx}": ["biome check --apply", "biome format --write"]
   },
   "dependencies": {
     "@stellar/stellar-sdk": "^13.3.0",

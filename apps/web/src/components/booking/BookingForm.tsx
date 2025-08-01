@@ -1,14 +1,14 @@
 'use client';
 
-import { useState } from 'react';
-import { Card } from '@/components/ui/card';
-import { Calendar } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
-import { format } from 'date-fns';
-import type { DateRange } from 'react-day-picker';
+import { Calendar } from '@/components/ui/calendar';
+import { Card } from '@/components/ui/card';
 import { useWallet } from '@/hooks/useWallet';
-import { WalletConnectionModal } from './WalletConnectionModal';
+import { format } from 'date-fns';
+import { useState } from 'react';
+import type { DateRange } from 'react-day-picker';
 import { toast } from 'react-hot-toast';
+import { WalletConnectionModal } from './WalletConnectionModal';
 
 interface BookingFormProps {
   onSubmit: (data: {
@@ -42,8 +42,7 @@ export function BookingForm({ onSubmit }: BookingFormProps) {
   const calculateTotal = () => {
     if (!selectedDates?.from || !selectedDates?.to) return 0;
     const nights = Math.ceil(
-      (selectedDates.to.getTime() - selectedDates.from.getTime()) /
-        (1000 * 60 * 60 * 24)
+      (selectedDates.to.getTime() - selectedDates.from.getTime()) / (1000 * 60 * 60 * 24)
     );
     return nights * property.pricePerNight + property.deposit;
   };
@@ -90,11 +89,7 @@ export function BookingForm({ onSubmit }: BookingFormProps) {
         <Card className="p-6">
           <h1 className="text-2xl font-bold mb-4">{property.title}</h1>
           <div className="aspect-video relative rounded-lg overflow-hidden mb-4">
-            <img
-              src={property.image}
-              alt={property.title}
-              className="object-cover w-full h-full"
-            />
+            <img src={property.image} alt={property.title} className="object-cover w-full h-full" />
           </div>
           <div className="space-y-4">
             <div>
@@ -119,11 +114,7 @@ export function BookingForm({ onSubmit }: BookingFormProps) {
                   -
                 </Button>
                 <span>{guests}</span>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setGuests(guests + 1)}
-                >
+                <Button variant="outline" size="icon" onClick={() => setGuests(guests + 1)}>
                   +
                 </Button>
               </div>
@@ -172,19 +163,12 @@ export function BookingForm({ onSubmit }: BookingFormProps) {
             onClick={handleSubmit}
             disabled={!selectedDates?.from || !selectedDates?.to || isProcessing}
           >
-            {isProcessing
-              ? 'Processing...'
-              : isConnected
-              ? 'Pay with USDC'
-              : 'Connect Wallet'}
+            {isProcessing ? 'Processing...' : isConnected ? 'Pay with USDC' : 'Connect Wallet'}
           </Button>
         </Card>
       </div>
 
-      <WalletConnectionModal
-        isOpen={showWalletModal}
-        onClose={() => setShowWalletModal(false)}
-      />
+      <WalletConnectionModal isOpen={showWalletModal} onClose={() => setShowWalletModal(false)} />
     </div>
   );
-} 
+}

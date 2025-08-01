@@ -32,9 +32,7 @@ export function BookingConfirmation({
       <div className="text-center space-y-2">
         <CheckCircle2Icon className="w-16 h-16 text-green-500 mx-auto" />
         <h1 className="text-2xl font-bold">Booking Confirmed!</h1>
-        <p className="text-muted-foreground">
-          Your booking has been successfully processed
-        </p>
+        <p className="text-muted-foreground">Your booking has been successfully processed</p>
       </div>
 
       <Card className="p-6">
@@ -49,8 +47,7 @@ export function BookingConfirmation({
                 <span className="font-medium">Property:</span> {property.title}
               </p>
               <p>
-                <span className="font-medium">Dates:</span>{' '}
-                {format(dates.from, 'MMM dd, yyyy')} -{' '}
+                <span className="font-medium">Dates:</span> {format(dates.from, 'MMM dd, yyyy')} -{' '}
                 {format(dates.to, 'MMM dd, yyyy')}
               </p>
               <p>
@@ -70,8 +67,8 @@ export function BookingConfirmation({
                 <span className="font-mono text-sm">{transactionHash}</span>
               </p>
               <p className="text-sm text-muted-foreground">
-                Your payment has been processed and is now in escrow. The funds
-                will be released to the host after your stay.
+                Your payment has been processed and is now in escrow. The funds will be released to
+                the host after your stay.
               </p>
             </div>
           </div>
@@ -88,4 +85,4 @@ export function BookingConfirmation({
       </Card>
     </div>
   );
-} 
+}

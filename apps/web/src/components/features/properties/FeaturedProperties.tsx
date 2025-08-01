@@ -1,16 +1,13 @@
-"use client";
+'use client';
 
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import {
-  getFeaturedProperties,
-  getAvailabilityStatus,
-} from "@/lib/data/properties";
-import type { PropertyCardProps } from "@/lib/types/property";
-import { Heart, MapPin, Star } from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
-import { useInView } from "react-intersection-observer";
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { getAvailabilityStatus, getFeaturedProperties } from '@/lib/data/properties';
+import type { PropertyCardProps } from '@/lib/types/property';
+import { Heart, MapPin, Star } from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useInView } from 'react-intersection-observer';
 
 // Property Card Component
 const PropertyCard = ({ property }: PropertyCardProps) => {
@@ -23,19 +20,19 @@ const PropertyCard = ({ property }: PropertyCardProps) => {
 
   const getAvailabilityBadge = () => {
     switch (availabilityStatus) {
-      case "available":
+      case 'available':
         return (
           <span className="h-fit px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
             Available
           </span>
         );
-      case "limited":
+      case 'limited':
         return (
           <span className="h-fit px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100">
             Limited
           </span>
         );
-      case "booked":
+      case 'booked':
         return (
           <span className="h-fit px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100">
             Booked
@@ -48,7 +45,7 @@ const PropertyCard = ({ property }: PropertyCardProps) => {
     <div
       ref={ref}
       className={`transition-all duration-500 ${
-        inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+        inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
       }`}
     >
       <Card className="overflow-hidden h-full hover:shadow-lg transition-shadow duration-300">
@@ -74,7 +71,7 @@ const PropertyCard = ({ property }: PropertyCardProps) => {
 
           <div className="relative h-full w-full overflow-hidden">
             <Image
-              src={property.images[0] || "/placeholder.svg"}
+              src={property.images[0] || '/placeholder.svg'}
               alt={property.title}
               fill
               className="object-cover transition-transform duration-300 group-hover:scale-105"
@@ -89,9 +86,7 @@ const PropertyCard = ({ property }: PropertyCardProps) => {
 
         <div className="p-4">
           <div className="flex justify-between w-full">
-            <h3 className="font-semibold text-lg mb-1 line-clamp-1">
-              {property.title}
-            </h3>
+            <h3 className="font-semibold text-lg mb-1 line-clamp-1">{property.title}</h3>
             {getAvailabilityBadge()}
           </div>
           <p className="text-muted-foreground text-sm mb-3 flex items-center">
@@ -106,15 +101,9 @@ const PropertyCard = ({ property }: PropertyCardProps) => {
             <span>USDC accepted</span>
           </div>
 
-          <Button
-            asChild
-            className="w-full"
-            disabled={availabilityStatus === "booked"}
-          >
+          <Button asChild className="w-full" disabled={availabilityStatus === 'booked'}>
             <Link href={`/property/${property.id}`}>
-              {availabilityStatus === "booked"
-                ? "Fully Booked"
-                : "View Details"}
+              {availabilityStatus === 'booked' ? 'Fully Booked' : 'View Details'}
             </Link>
           </Button>
         </div>
@@ -131,12 +120,10 @@ export const FeaturedProperties = () => {
     <section className="py-16 bg-gradient-to-b from-white to-blue-50 dark:from-[#0B1D39] dark:to-[#071429]">
       <div className="container mx-auto px-4">
         <div className="flex flex-col items-center mb-12 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Featured Properties
-          </h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">Featured Properties</h2>
           <p className="text-muted-foreground max-w-2xl">
-            Discover our handpicked selection of premium properties available
-            for rent with cryptocurrency.
+            Discover our handpicked selection of premium properties available for rent with
+            cryptocurrency.
           </p>
         </div>
 

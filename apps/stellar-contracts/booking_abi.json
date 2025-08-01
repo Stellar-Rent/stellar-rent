@@ -163,12 +163,7 @@
       {
         "name": "BookingStatus",
         "type": "enum",
-        "variants": [
-          "Pending",
-          "Confirmed",
-          "Completed",
-          "Cancelled"
-        ]
+        "variants": ["Pending", "Confirmed", "Completed", "Cancelled"]
       },
       {
         "name": "Booking",

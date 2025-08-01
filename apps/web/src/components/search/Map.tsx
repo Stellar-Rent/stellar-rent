@@ -1,29 +1,22 @@
-"use client";
+'use client';
 
-import {
-  MapContainer,
-  TileLayer,
-  Marker,
-  Popup,
-  Tooltip,
-  ZoomControl
-} from "react-leaflet";
-import type { LatLngExpression } from "leaflet";
-import "leaflet/dist/leaflet.css";
-import L, { marker } from "leaflet";
+import type { LatLngExpression } from 'leaflet';
+import { MapContainer, Marker, Popup, TileLayer, Tooltip, ZoomControl } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L, { marker } from 'leaflet';
 
-delete (L.Icon.Default.prototype as any)._getIconUrl;
+(L.Icon.Default.prototype as any)._getIconUrl = undefined;
 
 // Custom pointer icon
 const customIcon = new L.Icon({
-  iconUrl: "/map-pointer.png",
+  iconUrl: '/map-pointer.png',
   iconSize: [32, 32],
   iconAnchor: [16, 32],
   popupAnchor: [0, -32],
-  shadowUrl: require("leaflet/dist/images/marker-shadow.png"),
+  shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
   shadowSize: [40, 40],
   shadowAnchor: [13, 40],
-  className: "custom-map-icon"
+  className: 'custom-map-icon',
 });
 
 type MapProps = {
@@ -37,9 +30,7 @@ type MapProps = {
 export default function PropertyMap({ center, markers }: MapProps) {
   if (!center || !markers) {
     return (
-      <div className="w-full h-full flex items-center justify-center">
-        Map data unavailable
-      </div>
+      <div className="w-full h-full flex items-center justify-center">Map data unavailable</div>
     );
   }
   return (
@@ -57,7 +48,7 @@ export default function PropertyMap({ center, markers }: MapProps) {
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
 
-      {markers.map((marker, idx) => (
+      {markers.map((marker, _idx) => (
         <Marker
           position={marker.position}
           icon={customIcon}

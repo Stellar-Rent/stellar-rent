@@ -1,23 +1,23 @@
-"use client";
+'use client';
 
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import type { PropertyMapProps } from "@/lib/types/property";
-import { ExternalLink, MapPin, Navigation } from "lucide-react";
-import { useState } from "react";
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import type { PropertyMapProps } from '@/lib/types/property';
+import { ExternalLink, MapPin, Navigation } from 'lucide-react';
+import { useState } from 'react';
 
 export function PropertyMap({
   address,
   coordinates = { lat: -34.6037, lng: -58.3816 }, // Default to Buenos Aires
   neighborhoodInfo = {
-    walkability: "Very Walkable",
-    transitScore: "Excellent",
-    bikeScore: "Bikeable",
-    restaurants: "5 min walk",
-    grocery: "3 min walk",
-    publicTransit: "2 min walk",
+    walkability: 'Very Walkable',
+    transitScore: 'Excellent',
+    bikeScore: 'Bikeable',
+    restaurants: '5 min walk',
+    grocery: '3 min walk',
+    publicTransit: '2 min walk',
   },
-  className = "",
+  className = '',
 }: PropertyMapProps) {
   const [mapError, _setMapError] = useState(false);
 
@@ -44,7 +44,7 @@ export function PropertyMap({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => window.open(getDirectionsUrl(), "_blank")}
+              onClick={() => window.open(getDirectionsUrl(), '_blank')}
               className="flex items-center gap-2"
             >
               <Navigation className="w-4 h-4" />
@@ -53,7 +53,7 @@ export function PropertyMap({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => window.open(getGoogleMapsUrl(), "_blank")}
+              onClick={() => window.open(getGoogleMapsUrl(), '_blank')}
               className="flex items-center gap-2"
             >
               <ExternalLink className="w-4 h-4" />
@@ -78,7 +78,7 @@ export function PropertyMap({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => window.open(getGoogleMapsUrl(), "_blank")}
+                  onClick={() => window.open(getGoogleMapsUrl(), '_blank')}
                   className="mt-2"
                 >
                   View on Google Maps
@@ -93,7 +93,7 @@ export function PropertyMap({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => window.open(getGoogleMapsUrl(), "_blank")}
+                  onClick={() => window.open(getGoogleMapsUrl(), '_blank')}
                 >
                   View on Google Maps
                 </Button>
@@ -109,29 +109,21 @@ export function PropertyMap({
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Walkability</span>
-                <span className="font-medium">
-                  {neighborhoodInfo.walkability}
-                </span>
+                <span className="font-medium">{neighborhoodInfo.walkability}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Transit Score</span>
-                <span className="font-medium">
-                  {neighborhoodInfo.transitScore}
-                </span>
+                <span className="font-medium">{neighborhoodInfo.transitScore}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Bike Score</span>
-                <span className="font-medium">
-                  {neighborhoodInfo.bikeScore}
-                </span>
+                <span className="font-medium">{neighborhoodInfo.bikeScore}</span>
               </div>
             </div>
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Restaurants</span>
-                <span className="font-medium">
-                  {neighborhoodInfo.restaurants}
-                </span>
+                <span className="font-medium">{neighborhoodInfo.restaurants}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Grocery</span>
@@ -139,9 +131,7 @@ export function PropertyMap({
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Public Transit</span>
-                <span className="font-medium">
-                  {neighborhoodInfo.publicTransit}
-                </span>
+                <span className="font-medium">{neighborhoodInfo.publicTransit}</span>
               </div>
             </div>
           </div>
