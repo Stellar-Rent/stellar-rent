@@ -1,17 +1,18 @@
 import { useEffect, useRef, useCallback } from 'react';
-
-interface RealTimeUpdate {
-  type: 'booking' | 'payment' | 'notification' | 'message';
-  data: any;
-  timestamp: Date;
-}
+import type { 
+  RealTimeUpdate, 
+  BookingUpdate, 
+  PaymentUpdate, 
+  Notification, 
+  MessageUpdate 
+} from '../types/shared';
 
 interface UseRealTimeUpdatesProps {
   userId?: string;
-  onBookingUpdate?: (data: any) => void;
-  onPaymentUpdate?: (data: any) => void;
-  onNotificationUpdate?: (data: any) => void;
-  onMessageUpdate?: (data: any) => void;
+  onBookingUpdate?: (data: BookingUpdate) => void;
+  onPaymentUpdate?: (data: PaymentUpdate) => void;
+  onNotificationUpdate?: (data: Notification) => void;
+  onMessageUpdate?: (data: MessageUpdate) => void;
   onError?: (error: Error) => void;
   enabled?: boolean;
 }
@@ -163,7 +164,7 @@ export const useRealTimeUpdates = ({
     }
   }, [onBookingUpdate, onPaymentUpdate, onNotificationUpdate, onMessageUpdate]);
 
-  const sendMessage = useCallback((message: any) => {
+  const sendMessage = useCallback((message: RealTimeUpdate) => {
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify(message));
     } else {
@@ -203,10 +204,10 @@ import { useState } from 'react';
 
 // Hook for managing real-time notifications
 export const useRealTimeNotifications = (userId?: string) => {
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
-  const addNotification = useCallback((notification: any) => {
+  const addNotification = useCallback((notification: Notification) => {
     const newNotification = {
       ...notification,
       id: `notif-${Date.now()}`,
@@ -284,10 +285,10 @@ export const useRealTimeNotifications = (userId?: string) => {
 
 // Hook for managing real-time booking updates
 export const useRealTimeBookings = (userId?: string) => {
-  const [bookings, setBookings] = useState<any[]>([]);
+  const [bookings, setBookings] = useState<BookingUpdate[]>([]);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
 
-  const updateBooking = useCallback((bookingData: any) => {
+  const updateBooking = useCallback((bookingData: BookingUpdate) => {
     setBookings(prev => {
       const existingIndex = prev.findIndex(b => b.id === bookingData.id);
       if (existingIndex >= 0) {
