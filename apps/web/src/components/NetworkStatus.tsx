@@ -29,55 +29,65 @@ const NetworkStatus: React.FC<NetworkStatusProps> = ({
     };
   }, []);
 
-  const getStatusColor = () => {
-    if (!isOnline) return 'text-red-500';
-    if (!isConnected) return 'text-yellow-500';
-    return 'text-green-500';
+  // Define status configuration with explicit color mappings
+  const getStatusConfig = () => {
+    if (!isOnline) {
+      return {
+        textColor: 'text-red-500',
+        bgColor: 'bg-red-500',
+        icon: <WifiOff className="w-4 h-4" />,
+        text: 'Offline'
+      };
+    }
+    if (!isConnected) {
+      return {
+        textColor: 'text-yellow-500',
+        bgColor: 'bg-yellow-500',
+        icon: <AlertCircle className="w-4 h-4" />,
+        text: 'Reconnecting...'
+      };
+    }
+    return {
+      textColor: 'text-green-500',
+      bgColor: 'bg-green-500',
+      icon: <Wifi className="w-4 h-4" />,
+      text: 'Connected'
+    };
   };
 
-  const getStatusIcon = () => {
-    if (!isOnline) return <WifiOff className="w-4 h-4" />;
-    if (!isConnected) return <AlertCircle className="w-4 h-4" />;
-    return <Wifi className="w-4 h-4" />;
-  };
-
-  const getStatusText = () => {
-    if (!isOnline) return 'Offline';
-    if (!isConnected) return 'Reconnecting...';
-    return 'Connected';
-  };
+  const statusConfig = getStatusConfig();
 
   if (!showDetails) {
     return (
-      <div className={`flex items-center space-x-1 ${getStatusColor()}`}>
-        {getStatusIcon()}
-        <span className="text-xs font-medium">{getStatusText()}</span>
+      <div className={`flex items-center space-x-1 ${statusConfig.textColor}`}>
+        {statusConfig.icon}
+        <span className="text-xs font-medium">{statusConfig.text}</span>
       </div>
     );
   }
 
   return (
-    <div className="bg-white dark:bg-[#0B1D39] rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-3">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          {getStatusIcon()}
-          <div>
-            <p className={`text-sm font-medium ${getStatusColor()}`}>
-              {getStatusText()}
-            </p>
-            {lastUpdate && (
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                Last update: {lastUpdate.toLocaleTimeString()}
+          <div className="bg-white dark:bg-[#0B1D39] rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            {statusConfig.icon}
+            <div>
+              <p className={`text-sm font-medium ${statusConfig.textColor}`}>
+                {statusConfig.text}
               </p>
-            )}
+              {lastUpdate && (
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Last update: {lastUpdate.toLocaleTimeString()}
+                </p>
+              )}
+            </div>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <div className={`w-2 h-2 rounded-full ${statusConfig.bgColor}`} />
           </div>
         </div>
-        
-        <div className="flex items-center space-x-2">
-          <div className={`w-2 h-2 rounded-full ${getStatusColor().replace('text-', 'bg-')}`} />
-        </div>
       </div>
-    </div>
   );
 };
 
