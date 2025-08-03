@@ -29,6 +29,7 @@ export const useRealTimeUpdates = ({
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const reconnectAttemptsRef = useRef(0);
+  const isSimulationConnectedRef = useRef(false);
   const maxReconnectAttempts = 5;
   const reconnectDelay = 1000; // Start with 1 second
 
@@ -47,6 +48,7 @@ export const useRealTimeUpdates = ({
       setTimeout(() => {
         console.log('✅ Connected to real-time updates');
         reconnectAttemptsRef.current = 0;
+        isSimulationConnectedRef.current = true;
       }, 100);
 
       // Simulate incoming messages
@@ -115,6 +117,8 @@ export const useRealTimeUpdates = ({
       wsRef.current.close();
       wsRef.current = null;
     }
+    // Reset simulation connection state
+    isSimulationConnectedRef.current = false;
     if (reconnectTimeoutRef.current) {
       clearTimeout(reconnectTimeoutRef.current);
       reconnectTimeoutRef.current = null;
@@ -193,7 +197,7 @@ export const useRealTimeUpdates = ({
   }, [disconnect]);
 
   return {
-    isConnected: wsRef.current?.readyState === WebSocket.OPEN,
+    isConnected: wsRef.current?.readyState === WebSocket.OPEN || isSimulationConnectedRef.current,
     sendMessage,
     connect,
     disconnect,
