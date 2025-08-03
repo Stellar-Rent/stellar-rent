@@ -2,6 +2,17 @@
 const nextConfig = {
   reactStrictMode: true,
   transpilePackages: ['@stellar-rent/ui'],
+  images: {
+    domains: ['images.unsplash.com'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+        port: '',
+        pathname: '/**',
+      },
+    ],
+  },
   webpack: (config) => {
     config.resolve.fallback = { fs: false, net: false, tls: false };
     config.experiments = {
