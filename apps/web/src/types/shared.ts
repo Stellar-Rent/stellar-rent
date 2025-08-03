@@ -185,4 +185,40 @@ export interface NotificationFilters {
   isRead?: boolean;
   priority?: string;
   userId: string;
+}
+
+// Real-time update types
+export interface BookingUpdate {
+  id: string;
+  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
+  propertyTitle: string;
+  checkIn: string;
+  checkOut: string;
+  totalAmount?: number;
+  guestName?: string;
+  guestEmail?: string;
+}
+
+export interface PaymentUpdate {
+  id: string;
+  amount: number;
+  status: 'pending' | 'completed' | 'failed';
+  bookingId: string;
+  currency?: string;
+  transactionHash?: string;
+}
+
+export interface MessageUpdate {
+  id: string;
+  senderId: string;
+  senderName: string;
+  content: string;
+  timestamp: string;
+  isRead: boolean;
+}
+
+export interface RealTimeUpdate<T = BookingUpdate | PaymentUpdate | Notification | MessageUpdate> {
+  type: 'booking' | 'payment' | 'notification' | 'message';
+  data: T;
+  timestamp: Date;
 } 
