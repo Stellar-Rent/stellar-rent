@@ -86,6 +86,22 @@ interface WalletAuthResponse {
   };
 }
 
+// Utility function to safely convert filters to URL parameters
+const createURLParams = (baseParams: Record<string, string>, filters?: BookingFilters | PropertyFilters | Record<string, unknown>): URLSearchParams => {
+  const params = new URLSearchParams(baseParams);
+  
+  if (filters) {
+    for (const [key, value] of Object.entries(filters)) {
+      if (value !== undefined && value !== null) {
+        // Convert all values to strings for URLSearchParams
+        params.append(key, String(value));
+      }
+    }
+  }
+  
+  return params;
+};
+
 export const apiUtils = {
   async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
@@ -153,7 +169,7 @@ export const profileAPI = {
 
 export const bookingAPI = {
   async getBookings(userId: string, filters?: BookingFilters): Promise<APIResponse<Booking[]>> {
-    const params = new URLSearchParams({ userId, ...filters });
+    const params = createURLParams({ userId }, filters);
     return apiUtils.request(`/bookings?${params}`);
   },
 
@@ -180,15 +196,15 @@ export const bookingAPI = {
     });
   },
 
-  async getBookingHistory(userId: string, filters?: any) {
-    const params = new URLSearchParams({ userId, ...filters });
+  async getBookingHistory(userId: string, filters?: BookingFilters): Promise<APIResponse<Booking[]>> {
+    const params = createURLParams({ userId }, filters);
     return apiUtils.request(`/bookings/history?${params}`);
   },
 };
 
 export const propertyAPI = {
-  async getProperties(userId: string, filters?: any) {
-    const params = new URLSearchParams({ userId, ...filters });
+  async getProperties(userId: string, filters?: PropertyFilters): Promise<APIResponse<Property[]>> {
+    const params = createURLParams({ userId }, filters);
     return apiUtils.request(`/properties?${params}`);
   },
 
@@ -223,7 +239,7 @@ export const propertyAPI = {
     });
   },
 
-  async getPropertyAnalytics(propertyId: string, dateRange?: DateRangeFilter): Promise<APIResponse<any>> {
+  async getPropertyAnalytics(propertyId: string, dateRange?: DateRangeFilter): Promise<APIResponse<Record<string, unknown>>> {
     const params = new URLSearchParams({ propertyId, ...dateRange });
     return apiUtils.request(`/properties/${propertyId}/analytics?${params}`);
   },
@@ -241,7 +257,7 @@ export const walletAPI = {
     return apiUtils.request(`/wallet/${userId}/balance`);
   },
 
-  async getTransactionHistory(userId: string, filters?: any) {
+  async getTransactionHistory(userId: string, filters?: Record<string, unknown>) {
     const params = new URLSearchParams({ userId, ...filters });
     return apiUtils.request(`/wallet/${userId}/transactions?${params}`);
   },
@@ -253,7 +269,7 @@ export const walletAPI = {
     });
   },
 
-  async withdrawFunds(userId: string, amount: number, accountDetails: any) {
+  async withdrawFunds(userId: string, amount: number, accountDetails: Record<string, unknown>) {
     return apiUtils.request(`/wallet/${userId}/withdraw`, {
       method: 'POST',
       body: JSON.stringify({ amount, accountDetails }),
@@ -262,7 +278,7 @@ export const walletAPI = {
 };
 
 export const notificationAPI = {
-  async getNotifications(userId: string, filters?: any) {
+  async getNotifications(userId: string, filters?: Record<string, unknown>) {
     const params = new URLSearchParams({ userId, ...filters });
     return apiUtils.request(`/notifications?${params}`);
   },
@@ -301,51 +317,37 @@ export const dashboardAPI = {
     return apiUtils.request(`/dashboard/${userType}/${userId}/activity`);
   },
 
-  async getEarningsAnalytics(userId: string, dateRange?: any) {
+  async getEarningsAnalytics(userId: string, dateRange?: Record<string, unknown>) {
     const params = new URLSearchParams({ userId, ...dateRange });
     return apiUtils.request(`/dashboard/host/${userId}/earnings?${params}`);
   },
 
-  async getBookingAnalytics(userId: string, userType: 'host' | 'tenant', dateRange?: any) {
+  async getBookingAnalytics(userId: string, userType: 'host' | 'tenant', dateRange?: Record<string, unknown>) {
     const params = new URLSearchParams({ userId, ...dateRange });
     return apiUtils.request(`/dashboard/${userType}/${userId}/bookings/analytics?${params}`);
   },
 };
 
-export const handleAPIError = (error: any) => {
-  if (error.message?.includes('401')) {
+export const handleAPIError = (error: unknown) => {
+  const errorMessage = error instanceof Error ? error.message : String(error);
+  
+  if (errorMessage.includes('401')) {
     apiUtils.clearAuth();
     window.location.href = '/login';
     return 'Session expired. Please login again.';
   }
   
-  if (error.message?.includes('403')) {
+  if (errorMessage.includes('403')) {
     return 'You do not have permission to perform this action.';
   }
   
-  if (error.message?.includes('404')) {
+  if (errorMessage.includes('404')) {
     return 'The requested resource was not found.';
   }
   
-  if (error.message?.includes('500')) {
+  if (errorMessage.includes('500')) {
     return 'Server error. Please try again later.';
   }
   
-  return error.message || 'An unexpected error occurred.';
+  return errorMessage || 'An unexpected error occurred.';
 };
-
-export interface APIResponse<T> {
-  data: T;
-  message?: string;
-  error?: string;
-}
-
-export interface PaginatedResponse<T> {
-  data: T[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
-}
