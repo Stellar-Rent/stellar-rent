@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import type { 
   RealTimeUpdate, 
   BookingUpdate, 
@@ -199,8 +199,6 @@ export const useRealTimeUpdates = ({
     disconnect,
   };
 };
-
-import { useState } from 'react';
 
 // Hook for managing real-time notifications
 export const useRealTimeNotifications = (userId?: string) => {
