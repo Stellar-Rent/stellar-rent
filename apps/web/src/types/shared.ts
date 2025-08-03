@@ -221,4 +221,41 @@ export interface RealTimeUpdate<T = BookingUpdate | PaymentUpdate | Notification
   type: 'booking' | 'payment' | 'notification' | 'message';
   data: T;
   timestamp: Date;
+}
+
+// Property update types
+export interface PropertyUpdateData {
+  title?: string;
+  location?: string;
+  price?: number;
+  bedrooms?: number;
+  bathrooms?: number;
+  guests?: number;
+  description?: string;
+  propertyType?: string;
+  status?: 'active' | 'inactive' | 'maintenance';
+  amenities?: string[];
+  rules?: string;
+}
+
+export interface PropertyAvailabilityData {
+  dates: string[];
+  isAvailable: boolean;
+  price?: number;
+  notes?: string;
+}
+
+export interface DateRangeFilter {
+  startDate?: string;
+  endDate?: string;
+  period?: 'week' | 'month' | 'quarter' | 'year';
+}
+
+export interface AccountDetails {
+  accountNumber: string;
+  routingNumber?: string;
+  accountType: 'checking' | 'savings';
+  bankName?: string;
+  swiftCode?: string;
+  iban?: string;
 } 
