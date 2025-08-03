@@ -1,3 +1,19 @@
+import type { 
+  BookingFilters,
+  PropertyFilters,
+  NotificationFilters,
+  APIResponse,
+  PaginatedResponse,
+  BookingFormData,
+  PropertyFormData,
+  ProfileFormData,
+  UserProfile,
+  Booking,
+  Property,
+  Transaction,
+  Notification
+} from '../types/shared';
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
 export const apiUtils = {
@@ -40,7 +56,7 @@ export const profileAPI = {
     return apiUtils.request(`/profile/${userId}`);
   },
 
-  async updateUserProfile(userId: string, updates: any) {
+  async updateUserProfile(userId: string, updates: Partial<ProfileFormData>): Promise<APIResponse<UserProfile>> {
     return apiUtils.request(`/profile/${userId}`, {
       method: 'PUT',
       body: JSON.stringify(updates),
@@ -66,7 +82,7 @@ export const profileAPI = {
 };
 
 export const bookingAPI = {
-  async getBookings(userId: string, filters?: any) {
+  async getBookings(userId: string, filters?: BookingFilters): Promise<APIResponse<Booking[]>> {
     const params = new URLSearchParams({ userId, ...filters });
     return apiUtils.request(`/bookings?${params}`);
   },
@@ -75,7 +91,7 @@ export const bookingAPI = {
     return apiUtils.request(`/bookings/${bookingId}`);
   },
 
-  async createBooking(bookingData: any) {
+  async createBooking(bookingData: BookingFormData): Promise<APIResponse<Booking>> {
     return apiUtils.request('/bookings', {
       method: 'POST',
       body: JSON.stringify(bookingData),
