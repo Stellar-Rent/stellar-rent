@@ -65,6 +65,7 @@ const ProfileManagement: React.FC<ProfileManagementProps> = ({
   const [uploadProgress, setUploadProgress] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Form state
@@ -145,15 +146,18 @@ const ProfileManagement: React.FC<ProfileManagementProps> = ({
     const file = event.target.files?.[0];
     if (!file) return;
 
+    // Clear any previous errors
+    setUploadError(null);
+
     // Validate file type
     if (!file.type.startsWith('image/')) {
-      alert('Please select an image file');
+      setUploadError('Please select a valid image file (JPEG, PNG, GIF, etc.)');
       return;
     }
 
     // Validate file size (5MB limit)
     if (file.size > 5 * 1024 * 1024) {
-      alert('File size must be less than 5MB');
+      setUploadError('File size must be less than 5MB');
       return;
     }
 
@@ -185,11 +189,13 @@ const ProfileManagement: React.FC<ProfileManagementProps> = ({
       setTimeout(() => {
         setShowAvatarUpload(false);
         setUploadProgress(0);
+        setUploadError(null); // Clear error on success
       }, 1000);
     } catch (error) {
       console.error('Failed to upload avatar:', error);
       setShowAvatarUpload(false);
       setUploadProgress(0);
+      setUploadError('Failed to upload avatar. Please try again.');
     } finally {
       // Clean up object URL to prevent memory leaks
       if (objectUrl) {
@@ -274,6 +280,16 @@ const ProfileManagement: React.FC<ProfileManagementProps> = ({
                   <Camera className="w-4 h-4" />
                 </button>
               </div>
+              
+              {/* Upload Error Message */}
+              {uploadError && (
+                <div className="mt-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                  <div className="flex items-center">
+                    <AlertCircle className="w-4 h-4 text-red-500 mr-2 flex-shrink-0" />
+                    <span className="text-sm text-red-700 dark:text-red-300">{uploadError}</span>
+                  </div>
+                </div>
+              )}
               <div className="flex-1">
                 <h3 className="text-2xl font-bold dark:text-white text-gray-900">{user.name}</h3>
                 <p className="text-gray-600 dark:text-gray-400">{user.email}</p>
