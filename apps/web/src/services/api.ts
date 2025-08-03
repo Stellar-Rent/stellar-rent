@@ -20,6 +20,22 @@ import type {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
+// Utility function to safely convert filters to URL parameters
+const createURLParams = (baseParams: Record<string, string>, filters?: Record<string, any>): URLSearchParams => {
+  const params = new URLSearchParams(baseParams);
+  
+  if (filters) {
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        // Convert all values to strings for URLSearchParams
+        params.append(key, String(value));
+      }
+    });
+  }
+  
+  return params;
+};
+
 export const apiUtils = {
   async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
@@ -87,7 +103,7 @@ export const profileAPI = {
 
 export const bookingAPI = {
   async getBookings(userId: string, filters?: BookingFilters): Promise<APIResponse<Booking[]>> {
-    const params = new URLSearchParams({ userId, ...filters });
+    const params = createURLParams({ userId }, filters);
     return apiUtils.request(`/bookings?${params}`);
   },
 
@@ -114,15 +130,15 @@ export const bookingAPI = {
     });
   },
 
-  async getBookingHistory(userId: string, filters?: any) {
-    const params = new URLSearchParams({ userId, ...filters });
+  async getBookingHistory(userId: string, filters?: BookingFilters): Promise<APIResponse<Booking[]>> {
+    const params = createURLParams({ userId }, filters);
     return apiUtils.request(`/bookings/history?${params}`);
   },
 };
 
 export const propertyAPI = {
-  async getProperties(userId: string, filters?: any) {
-    const params = new URLSearchParams({ userId, ...filters });
+  async getProperties(userId: string, filters?: PropertyFilters): Promise<APIResponse<Property[]>> {
+    const params = createURLParams({ userId }, filters);
     return apiUtils.request(`/properties?${params}`);
   },
 
