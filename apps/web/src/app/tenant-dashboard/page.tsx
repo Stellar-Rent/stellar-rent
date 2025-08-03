@@ -156,6 +156,59 @@ const TenantDashboard: React.FC = () => {
     }
   };
 
+  const handleUploadAvatar = async (file: File): Promise<boolean> => {
+    try {
+      if (!user?.id) {
+        showToast('User ID not found', 'error');
+        return false;
+      }
+
+      const success = await apiUploadAvatar(user.id, file);
+      if (success) {
+        showToast('Avatar uploaded successfully', 'success');
+        // Refresh user data to get updated avatar
+        await refetchAll();
+        return true;
+      }
+      
+      showToast('Failed to upload avatar', 'error');
+      return false;
+    } catch (error) {
+      console.error('Error uploading avatar:', error);
+      showToast('An error occurred while uploading avatar', 'error');
+      return false;
+    }
+  };
+
+  const handleDeleteAccount = async (): Promise<boolean> => {
+    try {
+      if (!user?.id) {
+        showToast('User ID not found', 'error');
+        return false;
+      }
+
+      const confirmed = confirm('Are you sure you want to delete your account? This action cannot be undone.');
+      if (!confirmed) {
+        return false;
+      }
+
+      const success = await apiDeleteAccount(user.id);
+      if (success) {
+        showToast('Account deleted successfully', 'success');
+        // Redirect to home page after account deletion
+        router.push('/');
+        return true;
+      }
+      
+      showToast('Failed to delete account', 'error');
+      return false;
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      showToast('An error occurred while deleting account', 'error');
+      return false;
+    }
+  };
+
   const handleExportTransactions = (): void => {
     apiExportTransactions();
   };
@@ -385,13 +438,8 @@ const TenantDashboard: React.FC = () => {
             <ProfileManagement 
               user={user} 
               onUpdateProfile={handleUpdateUser}
-              onUploadAvatar={async () => true} 
-              onDeleteAccount={async () => {
-                if (confirm('Are you sure you want to delete your account?')) {
-                  return true;
-                }
-                return false;
-              }}
+              onUploadAvatar={handleUploadAvatar} 
+              onDeleteAccount={handleDeleteAccount}
             />
           ) : (
             <div className="text-center py-12">
