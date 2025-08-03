@@ -141,7 +141,7 @@ const ProfileManagement: React.FC<ProfileManagementProps> = ({
     }
   };
 
-  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -157,9 +157,14 @@ const ProfileManagement: React.FC<ProfileManagementProps> = ({
       return;
     }
 
+    let objectUrl: string | null = null;
+    
     try {
       setUploadProgress(0);
       setShowAvatarUpload(true);
+
+      // Create object URL for preview
+      objectUrl = URL.createObjectURL(file);
 
       // Simulate upload progress
       const interval = setInterval(() => {
@@ -185,8 +190,13 @@ const ProfileManagement: React.FC<ProfileManagementProps> = ({
       console.error('Failed to upload avatar:', error);
       setShowAvatarUpload(false);
       setUploadProgress(0);
+    } finally {
+      // Clean up object URL to prevent memory leaks
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
     }
-  };
+  }, [onUploadAvatar]);
 
   const triggerFileUpload = () => {
     fileInputRef.current?.click();
