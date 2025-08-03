@@ -23,24 +23,7 @@ import {
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import Image from 'next/image';
-
-interface Booking {
-  id: string;
-  propertyTitle: string;
-  propertyImage: string;
-  location: string;
-  checkIn: string;
-  checkOut: string;
-  guests: number;
-  totalAmount: number;
-  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
-  bookingDate: string;
-  propertyId: string;
-  escrowAddress?: string;
-  transactionHash?: string;
-  canCancel: boolean;
-  canReview: boolean;
-}
+import type { Booking, FilterState } from '../../types/shared';
 
 interface BookingHistoryProps {
   bookings: Booking[];
@@ -50,14 +33,6 @@ interface BookingHistoryProps {
   onLeaveReview?: (booking: Booking) => void;
   isLoading?: boolean;
   error?: string | null;
-}
-
-interface FilterState {
-  status: string;
-  dateRange: string;
-  searchTerm: string;
-  sortBy: string;
-  sortOrder: 'asc' | 'desc';
 }
 
 const BookingHistory: React.FC<BookingHistoryProps> = ({
