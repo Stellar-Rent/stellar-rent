@@ -179,8 +179,17 @@ const TenantDashboard: React.FC = () => {
   };
 
   const handleDeleteNotification = (id: string) => {
-    setNotifications(prev => prev.filter(notification => notification.id !== id));
-    setUnreadNotifications(prev => Math.max(0, prev - 1));
+    setNotifications(prev => {
+      const notificationToDelete = prev.find(notification => notification.id === id);
+      const isUnread = notificationToDelete?.read === false;
+      
+      // Only decrement unread count if the deleted notification was unread
+      if (isUnread) {
+        setUnreadNotifications(prevCount => Math.max(0, prevCount - 1));
+      }
+      
+      return prev.filter(notification => notification.id !== id);
+    });
   };
 
   const handleDeleteAllNotifications = () => {
