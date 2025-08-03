@@ -1,23 +1,21 @@
+// Re-export all types from shared file for backward compatibility
+export * from './shared';
+
+// Legacy types for backward compatibility
 export interface DashboardBooking {
   id: string;
-  user_id?: string;
-  property_id?: string;
   propertyTitle: string;
   propertyLocation: string;
   propertyImage: string;
+  hostName: string;
   checkIn: string;
   checkOut: string;
-  totalAmount: number;
   bookingDate: string;
-  hostName: string;
-  canCancel: boolean;
   guests: number;
+  totalAmount: number;
   status: 'pending' | 'confirmed' | 'ongoing' | 'completed' | 'cancelled';
   rating?: number;
-  transaction_hash?: string;
-  escrow_address?: string;
-  created_at?: string;
-  updated_at?: string;
+  review?: string;
 }
 
 export interface LegacyBooking {
@@ -40,17 +38,20 @@ export interface UserProfile {
   id: string;
   name: string;
   email: string;
-  phone: string;
-  avatar: string;
-  publicKey?: string;
-  memberSince: string;
-  verified: boolean;
+  phone?: string;
   location?: string;
   bio?: string;
-  preferences: {
+  avatar: string;
+  verified: boolean;
+  memberSince: string;
+  publicKey?: string;
+  preferences?: {
     currency: string;
     language: string;
     notifications: boolean;
+    emailNotifications?: boolean;
+    smsNotifications?: boolean;
+    marketingEmails?: boolean;
   };
 }
 
@@ -158,4 +159,96 @@ declare global {
       signTransaction: (transaction: string) => Promise<string>;
     };
   }
+}
+
+// Dashboard Types
+export interface DashboardProperty {
+  id: number;
+  title: string;
+  location: string;
+  price: number;
+  bedrooms: number;
+  bathrooms: number;
+  guests: number;
+  rating: number;
+  reviews: number;
+  image: string;
+  status: 'active' | 'inactive' | 'maintenance';
+  bookings: number;
+  earnings: number;
+  description?: string;
+  amenities?: string[];
+  propertyType?: string;
+  rules?: string;
+  occupancyRate?: number;
+  averageRating?: number;
+  totalBookings?: number;
+  monthlyEarnings?: number;
+}
+
+export interface Notification {
+  id: string;
+  type: 'booking' | 'payment' | 'review' | 'system' | 'message' | 'reminder';
+  title: string;
+  message: string;
+  timestamp: Date;
+  read: boolean;
+  actionUrl?: string;
+  actionText?: string;
+  priority: 'low' | 'medium' | 'high';
+  metadata?: {
+    bookingId?: string;
+    propertyId?: string;
+    amount?: number;
+    rating?: number;
+    userId?: string;
+  };
+}
+
+export interface AnalyticsData {
+  overview: {
+    totalBookings: number;
+    totalEarnings: number;
+    averageRating: number;
+    totalProperties: number;
+    activeBookings: number;
+    completedBookings: number;
+    cancelledBookings: number;
+    totalGuests: number;
+  };
+  trends: {
+    bookings: { date: string; count: number; revenue: number }[];
+    ratings: { date: string; average: number; count: number }[];
+    occupancy: { date: string; rate: number }[];
+  };
+  topProperties: {
+    id: number;
+    title: string;
+    bookings: number;
+    revenue: number;
+    rating: number;
+    occupancyRate: number;
+  }[];
+  revenueBreakdown: {
+    category: string;
+    amount: number;
+    percentage: number;
+  }[];
+  monthlyStats: {
+    month: string;
+    bookings: number;
+    revenue: number;
+    guests: number;
+  }[];
+}
+
+export interface PropertyCalendarBooking {
+  id: string;
+  checkIn: Date;
+  checkOut: Date;
+  status: 'confirmed' | 'pending' | 'cancelled' | 'completed';
+  guestName: string;
+  guests: number;
+  totalAmount: number;
+  propertyId: number;
 }

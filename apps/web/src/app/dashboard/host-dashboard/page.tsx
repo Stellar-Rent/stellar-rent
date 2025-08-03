@@ -1,27 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
-/**
- * MODIFICATION SUMMARY - PropertyListingContract Integration
- *
- * Changed: Added BlockchainVerification component to PropertyCard in host dashboard
- * Reason: OnlyDust task requirement to show blockchain verification status in property management interface
- * Impact: Hosts can now see blockchain verification status for each property with compact status badges
- * Dependencies: Added BlockchainVerification component import
- * Breaking Changes: None - purely additive UI enhancement
- *
- * Integration Details:
- * - BlockchainVerification component displays compact verification status in property cards
- * - Shows verification badges with visual indicators (verified/unverified/error states)
- * - Provides quick verification status overview for property management
- * - Integrates seamlessly with existing property card layout
- *
- * Related Files:
- * - apps/web/src/components/blockchain/BlockchainVerification.tsx (verification component)
- * - apps/web/src/components/blockchain/BlockchainStatusBadge.tsx (status badge component)
- * - apps/web/src/services/blockchain.ts (blockchain service utilities)
- * - apps/backend/src/controllers/property.controller.ts (verification API endpoint)
- *
- * GitHub Issue: https://github.com/Stellar-Rent/stellar-rent/issues/99
- */
 
 'use client';
 import {
@@ -30,8 +6,10 @@ import {
   Bell,
   Calendar,
   Check,
+  CheckCircle,
   ChevronDown,
   ChevronRight,
+  Clock,
   DollarSign,
   Download,
   Edit3,
@@ -53,6 +31,12 @@ import {
 import type React from 'react';
 import { useEffect, useState } from 'react';
 import { BlockchainVerification } from '../../../components/blockchain/BlockchainVerification';
+import PropertyManagement from '@/components/dashboard/PropertyManagement';
+import NotificationSystem from '@/components/dashboard/NotificationSystem';
+import BookingHistory from '@/components/dashboard/BookingHistory';
+import ProfileManagement from '@/components/dashboard/ProfileManagement';
+import NetworkStatus from '@/components/NetworkStatus';
+import { useRealTimeNotifications } from '@/hooks/useRealTimeUpdates';
 
 interface Property {
   id: number;
@@ -65,13 +49,51 @@ interface Property {
   rating: number;
   reviews: number;
   image: string;
-  status: 'active' | 'inactive';
+  status: 'active' | 'inactive' | 'maintenance';
   bookings: number;
   earnings: number;
   description?: string;
   amenities?: string[];
   propertyType?: string;
   rules?: string;
+}
+
+interface Booking {
+  id: string;
+  propertyTitle: string;
+  propertyImage: string;
+  location: string;
+  checkIn: string;
+  checkOut: string;
+  guests: number;
+  totalAmount: number;
+  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
+  bookingDate: string;
+  propertyId: string;
+  escrowAddress?: string;
+  transactionHash?: string;
+  canCancel: boolean;
+  canReview: boolean;
+  guestName: string;
+  guestEmail: string;
+}
+
+interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  avatar: string;
+  phone?: string;
+  location?: string;
+  bio?: string;
+  memberSince: string;
+  totalBookings: number;
+  totalSpent: number;
+  preferences: {
+    notifications: boolean;
+    emailUpdates: boolean;
+    pushNotifications: boolean;
+  };
 }
 
 // Mock data for demonstration
@@ -153,6 +175,79 @@ const mockEarnings = {
     { id: 5, date: '2025-05-20', property: 'Cozy Beach House', amount: 180, status: 'completed' },
   ],
 };
+
+const mockBookings: Booking[] = [
+  {
+    id: '1',
+    propertyTitle: 'Luxury Downtown Apartment',
+    propertyImage: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400',
+    location: 'New York, NY',
+    checkIn: '2025-06-15',
+    checkOut: '2025-06-20',
+    guests: 2,
+    totalAmount: 1250,
+    status: 'confirmed',
+    bookingDate: '2025-05-28',
+    propertyId: '1',
+    escrowAddress: 'GCO2IP3MJNUOKS4PUDI4C7LGGMQDJGXG3COYX3WSB4HHNAHKYV5YL3VC',
+    canCancel: true,
+    canReview: false,
+    guestName: 'Sarah Johnson',
+    guestEmail: 'sarah.johnson@example.com',
+  },
+  {
+    id: '2',
+    propertyTitle: 'Cozy Beach House',
+    propertyImage: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400',
+    location: 'Miami, FL',
+    checkIn: '2025-07-10',
+    checkOut: '2025-07-15',
+    guests: 4,
+    totalAmount: 900,
+    status: 'pending',
+    bookingDate: '2025-05-26',
+    propertyId: '2',
+    canCancel: true,
+    canReview: false,
+    guestName: 'Mike Chen',
+    guestEmail: 'mike.chen@example.com',
+  },
+  {
+    id: '3',
+    propertyTitle: 'Mountain Cabin Retreat',
+    propertyImage: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=400',
+    location: 'Aspen, CO',
+    checkIn: '2025-05-20',
+    checkOut: '2025-05-25',
+    guests: 3,
+    totalAmount: 1600,
+    status: 'completed',
+    bookingDate: '2025-04-15',
+    propertyId: '3',
+    canCancel: false,
+    canReview: true,
+    guestName: 'Emily Davis',
+    guestEmail: 'emily.davis@example.com',
+  },
+];
+
+const mockUser: UserProfile = {
+  id: '1',
+  name: 'John Smith',
+  email: 'john.smith@example.com',
+  avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100',
+  phone: '+1 (555) 987-6543',
+  location: 'New York, NY',
+  bio: 'Experienced property host with a passion for providing exceptional guest experiences.',
+  memberSince: '2022',
+  totalBookings: 45,
+  totalSpent: 0,
+  preferences: {
+    notifications: true,
+    emailUpdates: true,
+    pushNotifications: false,
+  },
+};
 interface PropertyCardProps {
   property: Property;
 }
@@ -179,14 +274,18 @@ const HostDashboard = () => {
     images: [] as string[],
     rules: '',
   });
-  const [user] = useState({
-    name: 'John Smith',
-    email: 'john.smith@example.com',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100',
-    hostSince: '2022',
-    properties: 3,
-    totalEarnings: 8470,
-  });
+  const [user, setUser] = useState(mockUser);
+  const [bookings, setBookings] = useState(mockBookings);
+
+  const {
+    notifications,
+    unreadCount: unreadNotifications,
+    addNotification,
+    markAsRead: handleMarkAsRead,
+    markAllAsRead: handleMarkAllAsRead,
+    deleteNotification: handleDeleteNotification,
+    deleteAllNotifications: handleDeleteAllNotifications,
+  } = useRealTimeNotifications(user.id);
 
   const filteredProperties = properties.filter((property) => {
     const matchesSearch =
@@ -267,6 +366,69 @@ const HostDashboard = () => {
         ? prev.amenities.filter((a) => a !== amenity)
         : [...prev.amenities, amenity],
     }));
+  };
+
+
+
+  const handleCancelBooking = async (bookingId: string) => {
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      setBookings(prev => 
+        prev.map(booking => 
+          booking.id === bookingId 
+            ? { ...booking, status: 'cancelled' as const, canCancel: false }
+            : booking
+        )
+      );
+      
+      addNotification({
+        type: 'booking',
+        title: 'Booking Cancelled',
+        message: 'A booking has been cancelled',
+        priority: 'medium',
+      });
+      
+    } catch (error) {
+      console.error('Failed to cancel booking:', error);
+    }
+  };
+
+  const handleUpdateProfile = async (updatedProfile: Partial<UserProfile>) => {
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      setUser(prev => ({ ...prev, ...updatedProfile }));
+      
+      addNotification({
+        type: 'system',
+        title: 'Profile Updated',
+        message: 'Your profile has been successfully updated',
+        priority: 'low',
+      });
+      
+    } catch (error) {
+      console.error('Failed to update profile:', error);
+    }
+  };
+
+  const handleUploadAvatar = async (file: File) => {
+    try {
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      const avatarUrl = URL.createObjectURL(file);
+      setUser(prev => ({ ...prev, avatar: avatarUrl }));
+      
+      addNotification({
+        type: 'system',
+        title: 'Avatar Updated',
+        message: 'Your profile picture has been successfully updated',
+        priority: 'low',
+      });
+      
+    } catch (error) {
+      console.error('Failed to upload avatar:', error);
+    }
   };
 
   const generateCalendar = () => {
@@ -869,18 +1031,24 @@ const HostDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-[5%]  bg-gradient-to-b from-white to-blue-50 dark:from-[#0B1D39] dark:to-[#071429] dark:text-white">
+    <div className="min-h-screen bg-gray-50 bg-gradient-to-b from-white to-blue-50 dark:from-[#0B1D39] dark:to-[#071429] dark:text-white">
       {/* Header */}
-      <header className="bg-white dark:bg-[#0B1D39]/90 dark:text-white  shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <header className="bg-white dark:bg-[#0B1D39]/90 dark:text-white shadow-sm border-b">
+        <div className="w-full px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Host Dashboard</h1>
             </div>
             <div className="flex items-center space-x-4">
-              <button type="button" className="text-gray-500  dark:text-white">
-                <Bell className="w-6 h-6" />
-              </button>
+              <NetworkStatus isConnected={true} />
+              <NotificationSystem
+                notifications={notifications}
+                onMarkAsRead={handleMarkAsRead}
+                onMarkAllAsRead={handleMarkAllAsRead}
+                onDeleteNotification={handleDeleteNotification}
+                onDeleteAllNotifications={handleDeleteAllNotifications}
+                unreadCount={unreadNotifications}
+              />
               <button type="button" className="text-gray-500 dark:text-white">
                 <Settings className="w-6 h-6" />
               </button>
@@ -896,11 +1064,12 @@ const HostDashboard = () => {
       </header>
 
       {/* Navigation Tabs */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+      <div className="w-full px-4 sm:px-6 lg:px-8 mt-6">
         <div className="border-b border-gray-200">
           <nav className="flex space-x-8">
             {[
               { id: 'properties', label: 'My Properties', icon: Home },
+              { id: 'bookings', label: 'Bookings', icon: Calendar },
               { id: 'earnings', label: 'Earnings', icon: DollarSign },
               { id: 'profile', label: 'Profile', icon: User },
               { id: 'wallet', label: 'Wallet', icon: Wallet },
@@ -927,69 +1096,101 @@ const HostDashboard = () => {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
         {activeTab === 'properties' && (
+          <PropertyManagement
+            properties={properties}
+            isLoading={false}
+            onAddProperty={(property) => {
+              const newPropertyWithId = {
+                ...property,
+                id: Date.now(),
+                rating: 0,
+                reviews: 0,
+                bookings: 0,
+                earnings: 0,
+              };
+              setProperties([...properties, newPropertyWithId]);
+            }}
+            onUpdateProperty={(id, updates) => {
+              setProperties(properties.map(p => 
+                p.id === id ? { ...p, ...updates } : p
+              ));
+            }}
+            onDeleteProperty={(id) => {
+              setProperties(properties.filter(p => p.id !== id));
+            }}
+            onToggleStatus={(id, status) => {
+              setProperties(properties.map(p => 
+                p.id === id ? { ...p, status } : p
+              ));
+            }}
+          />
+        )}
+
+        {activeTab === 'bookings' && (
           <div>
-            {/* Properties Header */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 space-y-4 sm:space-y-0">
-              <div>
-                <h2 className="text-3xl font-bold text-gray-900 dark:text-white">My Properties</h2>
-                <p className="text-gray-600 dark:text-white mt-1">
-                  Manage your listings and bookings
-                </p>
-              </div>
-              <button
-                type="button"
-                className="bg-blue-600 text-white  px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center"
-                onClick={() => setShowAddPropertyModal(true)}
-              >
-                <Plus className="w-5 h-5 mr-2" />
-                Add Property
-              </button>
+            <div className="mb-8">
+              <h2 className="text-3xl font-bold dark:text-white text-gray-900">Property Bookings</h2>
+              <p className="text-gray-600 dark:text-white mt-1">Manage bookings for your properties</p>
             </div>
 
-            {/* Search and Filters */}
-            <div className="flex flex-col sm:flex-row gap-4 mb-8 dark:text-white">
-              <div className="relative flex-1 text-black">
-                <Search className="w-5 h-5 absolute left-3 dark:text-white  top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <input
-                  id="search"
-                  type="text"
-                  placeholder="Search properties..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border dark:text-white border-gray-300 bg-transparent rounded-lg  "
-                />
+            {/* Statistics Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+              <div className="bg-white dark:bg-[#0B1D39]/90 dark:text-white shadow p-6 rounded-xl">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium dark:text-white text-gray-600">Total Bookings</p>
+                    <p className="text-3xl font-bold dark:text-white text-gray-900">{bookings.length}</p>
+                  </div>
+                  <div className="bg-blue-100 p-3 rounded-full">
+                    <Calendar className="w-6 h-6 text-blue-600" />
+                  </div>
+                </div>
               </div>
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="px-4 py-3 border border-gray-300 dark:text-white dark:bg-transparent rounded-lg bg-transparent text-black focus:ring-0 border focus:ring-blue-500 focus:border-black"
-              >
-                <option value="all">All Status</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
+
+              <div className="bg-white dark:bg-[#0B1D39]/90 dark:text-white p-6 rounded-xl shadow">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium dark:text-white text-gray-600">Pending</p>
+                    <p className="text-3xl font-bold text-yellow-600">{bookings.filter(b => b.status === 'pending').length}</p>
+                  </div>
+                  <div className="bg-yellow-100 p-3 rounded-full">
+                    <Clock className="w-6 h-6 text-yellow-600" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white dark:bg-[#0B1D39]/90 dark:text-white p-6 rounded-xl shadow">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium dark:text-white text-gray-600">Confirmed</p>
+                    <p className="text-3xl font-bold text-blue-600">{bookings.filter(b => b.status === 'confirmed').length}</p>
+                  </div>
+                  <div className="bg-blue-100 p-3 rounded-full">
+                    <CheckCircle className="w-6 h-6 text-blue-600" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white dark:bg-[#0B1D39]/90 dark:text-white p-6 rounded-xl shadow">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium dark:text-white text-gray-600">Completed</p>
+                    <p className="text-3xl font-bold text-green-600">{bookings.filter(b => b.status === 'completed').length}</p>
+                  </div>
+                  <div className="bg-green-100 p-3 rounded-full">
+                    <Check className="w-6 h-6 text-green-600" />
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {/* Properties Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-              {filteredProperties.map((property) => (
-                <PropertyCard key={property.id} property={property} />
-              ))}
-            </div>
-
-            {filteredProperties.length === 0 && (
-              <div className="text-center py-12">
-                <Home className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-xl font-medium text-gray-900 dark:text-white mb-2">
-                  No properties found
-                </h3>
-                <p className="text-gray-600 dark:text-white">
-                  Try adjusting your search or filters
-                </p>
-              </div>
-            )}
+            <BookingHistory
+              bookings={bookings}
+              onCancelBooking={handleCancelBooking}
+              isLoading={false}
+            />
           </div>
         )}
 
@@ -1129,118 +1330,12 @@ const HostDashboard = () => {
         )}
 
         {activeTab === 'profile' && (
-          <div className="max-w-2xl flex justify-center mx-auto flex-col">
-            <div className="mb-8">
-              <h2 className="text-3xl dark:text-white font-bold text-gray-900">Profile Settings</h2>
-              <p className="text-gray-600 dark:text-white mt-1">Manage your account information</p>
-            </div>
-
-            <div className="bg-white dark:bg-[#0B1D39]/90 dark:text-white rounded-xl shadow-lg overflow-hidden">
-              <div className="p-6">
-                <div className="flex items-center space-x-6 mb-8">
-                  <img src={user.avatar} alt={user.name} className="w-24 h-24 rounded-full" />
-                  <div>
-                    <h3 className="text-2xl font-bold dark:text-white text-gray-900">
-                      {user.name}
-                    </h3>
-                    <p className="text-gray-600 dark:text-white">{user.email}</p>
-                    <p className="text-sm dark:text-white text-gray-500 mt-1">
-                      Host since {user.hostSince}
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    className="ml-auto bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-                  >
-                    Edit Photo
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-black">
-                  <div>
-                    <label
-                      htmlFor="name"
-                      className="block text-sm  dark:text-white font-medium text-gray-700 mb-2"
-                    >
-                      Full Name
-                    </label>
-                    <input
-                      id="name"
-                      type="text"
-                      defaultValue={user.name}
-                      className="w-full px-3 py-2 dark:text-white bg-transparent border border-gray-300 rounded-lg focus:ring-0 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label
-                      htmlFor="email"
-                      className="block dark:text-white text-sm font-medium text-gray-700 mb-2"
-                    >
-                      Email
-                    </label>
-                    <input
-                      id="email"
-                      type="email"
-                      defaultValue={user.email}
-                      className="w-full px-3 py-2 dark:text-white border border-gray-300 rounded-lg focus:ring-0 bg-transparent focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label
-                      htmlFor="phone"
-                      className="block text-sm dark:text-white font-medium text-gray-700 mb-2"
-                    >
-                      Phone
-                    </label>
-                    <input
-                      id="phone"
-                      type="tel"
-                      placeholder="+1 (555) 123-4567"
-                      className="w-full px-3 py-2 border dark:text-white border-gray-300 rounded-lg focus:ring-0 bg-transparent focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label
-                      htmlFor="location"
-                      className="block text-sm dark:text-white font-medium text-gray-700 mb-2"
-                    >
-                      Location
-                    </label>
-                    <input
-                      id="location"
-                      type="text"
-                      placeholder="City, State"
-                      className="w-full px-3 py-2 dark:text-white border border-gray-300 rounded-lg focus:ring-0 bg-transparent focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
-                </div>
-
-                <div className="mt-6">
-                  <label
-                    htmlFor="bio"
-                    className="block dark:text-white text-sm font-medium text-gray-700 mb-2"
-                  >
-                    Bio
-                  </label>
-                  <textarea
-                    id="bio"
-                    rows={4}
-                    placeholder="Tell guests about yourself..."
-                    className="w-full px-3 py-2 dark:text-white border border-gray-300 text-black rounded-lg focus:ring-0 bg-transparent focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div className="mt-8 flex justify-end">
-                  <button
-                    type="button"
-                    className="bg-blue-600 dark:text-white text-white px-6 py-2 rounded-lg hover:bg-blue-700"
-                  >
-                    Save Changes
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+          <ProfileManagement
+            user={user}
+            onUpdateProfile={handleUpdateProfile}
+            onUploadAvatar={handleUploadAvatar}
+            isLoading={false}
+          />
         )}
 
         {activeTab === 'wallet' && (
