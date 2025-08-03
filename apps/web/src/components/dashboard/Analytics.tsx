@@ -121,7 +121,7 @@ const Analytics: React.FC<AnalyticsProps> = ({
     title: string;
     value: string | number;
     change?: number;
-    icon: any;
+    icon: React.ComponentType<{ className?: string }>;
     color?: string;
   }) => (
     <div className="bg-white dark:bg-[#0B1D39] rounded-lg p-6 shadow-sm">
@@ -157,7 +157,7 @@ const Analytics: React.FC<AnalyticsProps> = ({
     </div>
   );
 
-  const SimpleBarChart = ({ data, height = 200 }: { data: any[]; height?: number }) => (
+  const SimpleBarChart = ({ data, height = 200 }: { data: Array<{ label: string; value: number }>; height?: number }) => (
     <div className="relative" style={{ height }}>
       <div className="flex items-end justify-between h-full space-x-2">
         {data.map((item, index) => {
@@ -180,7 +180,7 @@ const Analytics: React.FC<AnalyticsProps> = ({
     </div>
   );
 
-  const SimpleLineChart = ({ data, height = 200 }: { data: any[]; height?: number }) => (
+  const SimpleLineChart = ({ data, height = 200 }: { data: Array<{ label: string; value: number }>; height?: number }) => (
     <div className="relative" style={{ height }}>
       <svg className="w-full h-full" viewBox={`0 0 ${data.length * 40} ${height}`}>
         <polyline
