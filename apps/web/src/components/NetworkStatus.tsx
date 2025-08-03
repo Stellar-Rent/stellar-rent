@@ -14,7 +14,7 @@ const NetworkStatus: React.FC<NetworkStatusProps> = ({
   lastUpdate,
   showDetails = false,
 }) => {
-  const [isOnline, setIsOnline] = useState(true);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
