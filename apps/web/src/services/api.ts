@@ -11,7 +11,11 @@ import type {
   Booking,
   Property,
   Transaction,
-  Notification
+  Notification,
+  PropertyUpdateData,
+  PropertyAvailabilityData,
+  DateRangeFilter,
+  AccountDetails
 } from '../types/shared';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
@@ -126,14 +130,14 @@ export const propertyAPI = {
     return apiUtils.request(`/properties/${propertyId}`);
   },
 
-  async createProperty(propertyData: any) {
+  async createProperty(propertyData: PropertyFormData): Promise<APIResponse<Property>> {
     return apiUtils.request('/properties', {
       method: 'POST',
       body: JSON.stringify(propertyData),
     });
   },
 
-  async updateProperty(propertyId: string, updates: any) {
+  async updateProperty(propertyId: string, updates: PropertyUpdateData): Promise<APIResponse<Property>> {
     return apiUtils.request(`/properties/${propertyId}`, {
       method: 'PUT',
       body: JSON.stringify(updates),
@@ -153,12 +157,12 @@ export const propertyAPI = {
     });
   },
 
-  async getPropertyAnalytics(propertyId: string, dateRange?: any) {
+  async getPropertyAnalytics(propertyId: string, dateRange?: DateRangeFilter): Promise<APIResponse<any>> {
     const params = new URLSearchParams({ propertyId, ...dateRange });
     return apiUtils.request(`/properties/${propertyId}/analytics?${params}`);
   },
 
-  async updatePropertyAvailability(propertyId: string, availability: any) {
+  async updatePropertyAvailability(propertyId: string, availability: PropertyAvailabilityData): Promise<APIResponse<Property>> {
     return apiUtils.request(`/properties/${propertyId}/availability`, {
       method: 'PUT',
       body: JSON.stringify(availability),
