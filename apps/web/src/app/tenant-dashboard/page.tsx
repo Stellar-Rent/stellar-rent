@@ -22,6 +22,7 @@ import type {
   LegacyBooking as BookingType,
   Transaction,
   LegacyUserProfile as UserProfile,
+  Notification,
 } from '@/types';
 import BookingCard from './components/booking-card';
 import { BookingModal, CancelModal } from './components/modal';
@@ -33,7 +34,7 @@ import NotificationSystem from '@/components/dashboard/NotificationSystem';
 const TenantDashboard: React.FC = () => {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'bookings' | 'profile' | 'wallet'>('bookings');
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
