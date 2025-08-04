@@ -1,68 +1,94 @@
 'use client';
 
-import { AlertTriangle, CheckCircle, Globe } from 'lucide-react';
-import { useWallet } from '../hooks/useWallet';
+import { Wifi, WifiOff, AlertCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
-export default function NetworkStatus() {
-  const { network, isConnected, isLoading } = useWallet();
+interface NetworkStatusProps {
+  isConnected?: boolean;
+  lastUpdate?: Date | null;
+  showDetails?: boolean;
+}
 
-  if (isLoading || !isConnected) {
-    return null;
-  }
+const NetworkStatus: React.FC<NetworkStatusProps> = ({
+  isConnected = true,
+  lastUpdate,
+  showDetails = false,
+}) => {
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
 
-  const getNetworkInfo = () => {
-    switch (network?.toUpperCase()) {
-      case 'TESTNET':
-      case 'TEST':
-        return {
-          name: 'Testnet',
-          color: 'text-blue-600 dark:text-blue-400',
-          bgColor: 'bg-blue-50 dark:bg-blue-900/20',
-          borderColor: 'border-blue-200 dark:border-blue-800',
-          icon: CheckCircle,
-          description: 'Safe for testing',
-        };
-      case 'PUBLIC':
-      case 'MAINNET':
-        return {
-          name: 'Mainnet',
-          color: 'text-green-600 dark:text-green-400',
-          bgColor: 'bg-green-50 dark:bg-green-900/20',
-          borderColor: 'border-green-200 dark:border-green-800',
-          icon: CheckCircle,
-          description: 'Live network',
-        };
-      case 'FUTURENET':
-        return {
-          name: 'Futurenet',
-          color: 'text-purple-600 dark:text-purple-400',
-          bgColor: 'bg-purple-50 dark:bg-purple-900/20',
-          borderColor: 'border-purple-200 dark:border-purple-800',
-          icon: AlertTriangle,
-          description: 'Experimental',
-        };
-      default:
-        return {
-          name: 'Unknown',
-          color: 'text-gray-600 dark:text-gray-400',
-          bgColor: 'bg-gray-50 dark:bg-gray-900/20',
-          borderColor: 'border-gray-200 dark:border-gray-800',
-          icon: Globe,
-          description: 'Unknown network',
-        };
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  // Define status configuration with explicit color mappings
+  const getStatusConfig = () => {
+    if (!isOnline) {
+      return {
+        textColor: 'text-red-500',
+        bgColor: 'bg-red-500',
+        icon: <WifiOff className="w-4 h-4" />,
+        text: 'Offline'
+      };
     }
+    if (!isConnected) {
+      return {
+        textColor: 'text-yellow-500',
+        bgColor: 'bg-yellow-500',
+        icon: <AlertCircle className="w-4 h-4" />,
+        text: 'Reconnecting...'
+      };
+    }
+    return {
+      textColor: 'text-green-500',
+      bgColor: 'bg-green-500',
+      icon: <Wifi className="w-4 h-4" />,
+      text: 'Connected'
+    };
   };
 
-  const networkInfo = getNetworkInfo();
-  const IconComponent = networkInfo.icon;
+  const statusConfig = getStatusConfig();
+
+  if (!showDetails) {
+    return (
+      <div className={`flex items-center space-x-1 ${statusConfig.textColor}`}>
+        {statusConfig.icon}
+        <span className="text-xs font-medium">{statusConfig.text}</span>
+      </div>
+    );
+  }
 
   return (
-    <div
-      className={`inline-flex items-center gap-2 rounded-md border px-2 py-1 text-xs ${networkInfo.bgColor} ${networkInfo.borderColor}`}
-    >
-      <IconComponent className={`h-3 w-3 ${networkInfo.color}`} />
-      <span className={networkInfo.color}>{networkInfo.name}</span>
-      <span className="text-gray-500 dark:text-gray-400">{networkInfo.description}</span>
-    </div>
+          <div className="bg-white dark:bg-[#0B1D39] rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            {statusConfig.icon}
+            <div>
+              <p className={`text-sm font-medium ${statusConfig.textColor}`}>
+                {statusConfig.text}
+              </p>
+              {lastUpdate && (
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Last update: {lastUpdate.toLocaleTimeString()}
+                </p>
+              )}
+            </div>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <div className={`w-2 h-2 rounded-full ${statusConfig.bgColor}`} />
+          </div>
+        </div>
+      </div>
   );
-}
+};
+
+export default NetworkStatus;
