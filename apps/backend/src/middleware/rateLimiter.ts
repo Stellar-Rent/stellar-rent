@@ -50,4 +50,3 @@ export const challengeRateLimit = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
-

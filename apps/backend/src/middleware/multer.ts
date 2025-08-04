@@ -7,7 +7,7 @@ export const upload = multer({
     fileSize: 5 * 1024 * 1024, // 5MB limit
     files: 1, // Only allow 1 file per request
   },
-  fileFilter: (req, file, cb) => {
+  fileFilter: (_req, file, cb) => {
     // Only allow image files for avatars
     if (file.mimetype.startsWith('image/')) {
       cb(null, true);

@@ -95,7 +95,7 @@ export const isAuthenticated = (): boolean => {
       logout();
       return false;
     }
-  } catch (e) {
+  } catch (_e) {
     // If token can't be decoded, consider it invalid
     logout();
     return false;

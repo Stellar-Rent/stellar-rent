@@ -1,7 +1,7 @@
-import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import type { RegisterFormData } from '../validations/auth.schema';
+import { useState } from 'react';
 import { authService } from '../services/authService';
+import type { RegisterFormData } from '../validations/auth.schema';
 
 export const useRegister = () => {
   const router = useRouter();
@@ -12,15 +12,15 @@ export const useRegister = () => {
     try {
       setIsLoading(true);
       setError(null);
-      
+
       const response = await authService.register(data);
-      
+
       // Only access localStorage on the client side
       if (typeof window !== 'undefined') {
         localStorage.setItem('token', response.token);
         localStorage.setItem('user', JSON.stringify(response.user));
       }
-      
+
       // Redirect to login page
       router.push('/login');
     } catch (err) {
@@ -35,4 +35,4 @@ export const useRegister = () => {
     isLoading,
     error,
   };
-}; 
+};

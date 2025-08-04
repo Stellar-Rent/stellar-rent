@@ -60,11 +60,7 @@ export const useStellar = () => {
       if (!bundlerKey.current) throw new Error('Bundler key not found');
       if (!contractSalt || !publicKey) throw new Error('Invalid public keys');
       setCreatingDeployee(true);
-      const deployee = await handleDeploy(
-        bundlerKey.current,
-        contractSalt,
-        publicKey
-      );
+      const deployee = await handleDeploy(bundlerKey.current, contractSalt, publicKey);
       setStoredDeployee(deployee);
       setDeployee(deployee);
     } catch (error) {

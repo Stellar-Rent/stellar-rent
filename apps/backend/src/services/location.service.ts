@@ -5,6 +5,7 @@ import type {
   LocationServiceResponse,
   LocationSuggestion,
 } from '../types/location.types';
+import { cacheService } from './cache.service';
 
 export class LocationService {
   private supabase: SupabaseClient;
@@ -14,7 +15,7 @@ export class LocationService {
   }
 
   /**
-   * Get location suggestions based on user query
+   * Get location suggestions based on user query (with caching)
    * @param query - Search query string
    * @param limit - Maximum number of results to return (default: 20)
    * @returns Promise with location suggestions
@@ -35,6 +36,17 @@ export class LocationService {
             total: 0,
             query,
           },
+        };
+      }
+
+      // Try to get from cache first
+      const cachedResult = await cacheService.getCachedLocationSuggestions(sanitizedQuery, limit);
+
+      if (cachedResult) {
+        console.log(`📖 Cache hit for location suggestions: ${sanitizedQuery}`);
+        return {
+          success: true,
+          data: cachedResult as LocationAutocompleteResponse,
         };
       }
 
@@ -70,13 +82,18 @@ export class LocationService {
       // Process and deduplicate results
       const suggestions = this.processLocationResults(data, sanitizedQuery, limit);
 
+      const result = {
+        suggestions,
+        total: suggestions.length,
+        query,
+      };
+
+      // Cache the result
+      await cacheService.cacheLocationSuggestions(sanitizedQuery, limit, result);
+
       return {
         success: true,
-        data: {
-          suggestions,
-          total: suggestions.length,
-          query,
-        },
+        data: result,
       };
     } catch (error) {
       console.error('Location service error:', error);
@@ -194,7 +211,7 @@ export class LocationService {
   }
 
   /**
-   * Get popular locations (most frequently used in properties)
+   * Get popular locations (most frequently used in properties) with caching
    * @param limit - Maximum number of results
    * @returns Promise with popular locations
    */
@@ -202,11 +219,23 @@ export class LocationService {
     limit = 10
   ): Promise<LocationServiceResponse<LocationAutocompleteResponse>> {
     try {
+      // Try to get from cache first
+      const cachedResult = await cacheService.getCachedPopularLocations(limit);
+
+      if (cachedResult) {
+        console.log(`📖 Cache hit for popular locations (limit: ${limit})`);
+        return {
+          success: true,
+          data: cachedResult as LocationAutocompleteResponse,
+        };
+      }
+
+      // Use materialized view for better performance
       const { data, error } = await this.supabase
-        .from('properties')
+        .from('popular_searches')
         .select('city, country')
-        .eq('status', 'available')
-        .order('created_at', { ascending: false });
+        .order('property_count', { ascending: false })
+        .limit(limit);
 
       if (error) {
         console.error('Database error in popular locations:', error);
@@ -228,45 +257,27 @@ export class LocationService {
         };
       }
 
-      // Count frequency of each location
-      const locationCounts = new Map<
-        string,
-        { location: { city: string; country: string }; count: number }
-      >();
+      // Convert to suggestions format
+      const suggestions = data.map(
+        (item): LocationSuggestion => ({
+          city: item.city,
+          country: item.country,
+          match_type: 'city' as const,
+        })
+      );
 
-      for (const item of data) {
-        const key = `${item.city.toLowerCase()}-${item.country.toLowerCase()}`;
-        const existing = locationCounts.get(key);
+      const result = {
+        suggestions,
+        total: suggestions.length,
+        query: '',
+      };
 
-        if (existing) {
-          existing.count++;
-        } else {
-          locationCounts.set(key, {
-            location: { city: item.city, country: item.country },
-            count: 1,
-          });
-        }
-      }
-
-      // Sort by frequency and convert to suggestions
-      const suggestions = Array.from(locationCounts.values())
-        .sort((a, b) => b.count - a.count)
-        .slice(0, limit)
-        .map(
-          (item): LocationSuggestion => ({
-            city: item.location.city,
-            country: item.location.country,
-            match_type: 'city' as const,
-          })
-        );
+      // Cache the result
+      await cacheService.cachePopularLocations(limit, result);
 
       return {
         success: true,
-        data: {
-          suggestions,
-          total: suggestions.length,
-          query: '',
-        },
+        data: result,
       };
     } catch (error) {
       console.error('Popular locations service error:', error);

@@ -1,7 +1,7 @@
 'use client';
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useWallet } from '@/hooks/useWallet';
 
 interface WalletConnectionModalProps {
@@ -36,17 +36,10 @@ export function WalletConnectionModal({ isOpen, onClose }: WalletConnectionModal
             <li>Other Stellar-compatible wallets</li>
           </ul>
           <div className="space-y-2">
-            <Button
-              className="w-full bg-[#4A90E2] hover:bg-[#357ABD]"
-              onClick={handleConnect}
-            >
+            <Button className="w-full bg-[#4A90E2] hover:bg-[#357ABD]" onClick={handleConnect}>
               Connect Wallet
             </Button>
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={onClose}
-            >
+            <Button variant="outline" className="w-full" onClick={onClose}>
               Cancel
             </Button>
           </div>
@@ -54,4 +47,4 @@ export function WalletConnectionModal({ isOpen, onClose }: WalletConnectionModal
       </DialogContent>
     </Dialog>
   );
-} 
+}

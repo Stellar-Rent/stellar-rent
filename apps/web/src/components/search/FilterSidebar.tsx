@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import {
   MapIcon,
@@ -7,20 +7,20 @@ import {
   StarIcon,
   TreePineIcon,
   WavesIcon,
-  WifiIcon
-} from "lucide-react";
-import { useEffect, useState } from "react";
+  WifiIcon,
+} from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger
-} from "@/components/ui/dialog";
-import type { LatLngExpression } from "leaflet";
-import dynamic from "next/dynamic";
-import "leaflet/dist/leaflet.css";
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import type { LatLngExpression } from 'leaflet';
+import dynamic from 'next/dynamic';
+import 'leaflet/dist/leaflet.css';
 
 interface Filters {
   price: number;
@@ -40,15 +40,15 @@ interface FilterSidebarProps {
 }
 
 const AMENITIES = [
-  { name: "Wifi", icon: <WifiIcon size={18} /> },
-  { name: "Pool", icon: <WavesIcon size={18} /> },
-  { name: "Pet Friendly", icon: <PawPrintIcon size={18} /> },
-  { name: "Parking space", icon: <ParkingCircleIcon size={18} /> },
-  { name: "Garden", icon: <TreePineIcon size={18} /> }
+  { name: 'Wifi', icon: <WifiIcon size={18} /> },
+  { name: 'Pool', icon: <WavesIcon size={18} /> },
+  { name: 'Pet Friendly', icon: <PawPrintIcon size={18} /> },
+  { name: 'Parking space', icon: <ParkingCircleIcon size={18} /> },
+  { name: 'Garden', icon: <TreePineIcon size={18} /> },
 ];
 
-const PropertyMap = dynamic(() => import("@/components/search/Map"), {
-  ssr: false
+const PropertyMap = dynamic(() => import('@/components/search/Map'), {
+  ssr: false,
 });
 
 export default function FilterSidebar({
@@ -56,14 +56,10 @@ export default function FilterSidebar({
   minAndMaxPrice,
   onFiltersChange,
   center,
-  markers
+  markers,
 }: FilterSidebarProps) {
-  const [price, setPrice] = useState(
-    filters.price === 0 ? minAndMaxPrice[0] : filters.price
-  );
-  const [amenities, setAmenities] = useState<{ [key: string]: boolean }>(
-    filters.amenities || {}
-  );
+  const [price, setPrice] = useState(filters.price === 0 ? minAndMaxPrice[0] : filters.price);
+  const [amenities, setAmenities] = useState<{ [key: string]: boolean }>(filters.amenities || {});
   const [rating, setRating] = useState(filters.rating || 0);
 
   useEffect(() => {
@@ -103,24 +99,19 @@ export default function FilterSidebar({
 
       {/* Amenities */}
       <div className="w-full sm:w-auto">
-        <h4 className="font-semibold text-sm mb-1 hidden md:block">
-          Amenities
-        </h4>
+        <h4 className="font-semibold text-sm mb-1 hidden md:block">Amenities</h4>
         <div className="grid grid-cols-3 gap-2 md:flex md:flex-col">
           {AMENITIES.map(({ name, icon }) => {
             const key = name.toLowerCase();
             return (
-              <label
-                key={key}
-                className="flex items-center gap-1 text-sm cursor-pointer"
-              >
+              <label key={key} className="flex items-center gap-1 text-sm cursor-pointer">
                 <input
                   type="checkbox"
                   checked={!!amenities[key]}
                   onChange={(e) =>
                     setAmenities((prev) => ({
                       ...prev,
-                      [key]: e.target.checked
+                      [key]: e.target.checked,
                     }))
                   }
                 />
@@ -134,9 +125,7 @@ export default function FilterSidebar({
 
       {/* Rating */}
       <div className="w-full sm:w-auto">
-        <h4 className="font-semibold text-sm mb-1 hidden md:block">
-          Minimum Rating
-        </h4>
+        <h4 className="font-semibold text-sm mb-1 hidden md:block">Minimum Rating</h4>
         <div className="flex items-center gap-2">
           <StarIcon size={16} className="sm:hidden" />
           <select
@@ -178,9 +167,7 @@ export default function FilterSidebar({
           </DialogTrigger>
           <DialogContent className="max-w-[95vw]">
             <DialogHeader>
-              <DialogTitle className="text-center mb-2">
-                Property Map
-              </DialogTitle>
+              <DialogTitle className="text-center mb-2">Property Map</DialogTitle>
             </DialogHeader>
             <div className="w-full lg:w-[40%] h-[80vh] md:hidden mt-4 lg:mt-12 rounded-2xl border m-0 lg:m-6 block">
               <PropertyMap center={center} markers={markers} />

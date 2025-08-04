@@ -1,30 +1,26 @@
-"use client";
-import Image from "next/image";
-import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
-import type { FullPropertyProps } from "public/mock-data";
-import { MOCK_PROPERTIES } from "public/mock-data";
-import { format } from "date-fns/format";
-import { MapPin, Star, Users, Home, Calendar, Wallet } from "lucide-react";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { CalendarIcon } from "lucide-react";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger
-} from "@/components/ui/popover";
+'use client';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { format } from 'date-fns/format';
+import { Calendar, Home, MapPin, Star, Users, Wallet } from 'lucide-react';
+import { CalendarIcon } from 'lucide-react';
+import Image from 'next/image';
+import { useSearchParams } from 'next/navigation';
+import type { FullPropertyProps } from 'public/mock-data';
+import { MOCK_PROPERTIES } from 'public/mock-data';
+import { useEffect, useState } from 'react';
 
 export default function PropertyDetailPage() {
   const searchParams = useSearchParams();
-  const propertyId = searchParams.get("propertyId");
+  const propertyId = searchParams.get('propertyId');
   const [property, setProperty] = useState<FullPropertyProps | null>(null);
 
-  const [imageError, setImageError] = useState(false);
+  const [imageError, _setImageError] = useState(false);
   const [bookingData, setBookingData] = useState({
-    checkIn: "",
-    checkOut: "",
-    guests: 1
+    checkIn: '',
+    checkOut: '',
+    guests: 1,
   });
 
   const calculateNights = (checkIn: string, checkOut: string): number => {
@@ -81,9 +77,7 @@ export default function PropertyDetailPage() {
                   <div
                     key={`${property.id}-${index}`}
                     className={`relative overflow-hidden rounded-xl ${
-                      index === 0
-                        ? "col-span-2 row-span-2 sm:row-span-2 sm:col-span-2"
-                        : ""
+                      index === 0 ? 'col-span-2 row-span-2 sm:row-span-2 sm:col-span-2' : ''
                     }`}
                   >
                     <Image
@@ -102,8 +96,7 @@ export default function PropertyDetailPage() {
               </div>
             )}
             <div className="absolute bottom-4 right-4 bg-white/90 dark:bg-[#0B1D39]/90 px-3 py-1 rounded-md text-sm font-medium flex items-center">
-              <Star className="w-4 h-4 mr-1 text-yellow-500" />{" "}
-              {property.rating}
+              <Star className="w-4 h-4 mr-1 text-yellow-500" /> {property.rating}
             </div>
           </div>
 
@@ -134,15 +127,15 @@ export default function PropertyDetailPage() {
           <div className="mb-8">
             <h2 className="text-xl font-semibold mb-4">About this property</h2>
             <p className="text-muted-foreground mb-4">
-              This beautiful property offers a perfect blend of comfort and
-              luxury. Located in the heart of {property.location}, it provides
-              easy access to local attractions, restaurants, and transportation.
+              This beautiful property offers a perfect blend of comfort and luxury. Located in the
+              heart of {property.location}, it provides easy access to local attractions,
+              restaurants, and transportation.
             </p>
             <p className="text-muted-foreground">
-              The property features modern amenities, including high-speed WiFi,
-              a fully equipped kitchen, and comfortable sleeping arrangements.
-              Perfect for both short and long-term stays, this rental property
-              accepts cryptocurrency payments for a seamless booking experience.
+              The property features modern amenities, including high-speed WiFi, a fully equipped
+              kitchen, and comfortable sleeping arrangements. Perfect for both short and long-term
+              stays, this rental property accepts cryptocurrency payments for a seamless booking
+              experience.
             </p>
           </div>
 
@@ -183,7 +176,7 @@ export default function PropertyDetailPage() {
                     onChange={(e) =>
                       setBookingData({
                         ...bookingData,
-                        checkIn: e.target.value
+                        checkIn: e.target.value,
                       })
                     }
                   />
@@ -205,7 +198,7 @@ export default function PropertyDetailPage() {
                     onChange={(e) =>
                       setBookingData({
                         ...bookingData,
-                        checkOut: e.target.value
+                        checkOut: e.target.value,
                       })
                     }
                     min={bookingData.checkIn} // Prevent selecting checkout before checkin
@@ -227,13 +220,13 @@ export default function PropertyDetailPage() {
                   onChange={(e) =>
                     setBookingData({
                       ...bookingData,
-                      guests: Number(e.target.value)
+                      guests: Number(e.target.value),
                     })
                   }
                 >
                   {[...Array(property.maxGuests)].map((_, i) => (
                     <option key={`guest-${i + 1}`} value={i + 1}>
-                      {i + 1} {i === 0 ? "guest" : "guests"}
+                      {i + 1} {i === 0 ? 'guest' : 'guests'}
                     </option>
                   ))}
                 </select>
@@ -266,8 +259,8 @@ export default function PropertyDetailPage() {
             </Button>
 
             <p className="text-xs text-center text-muted-foreground mt-4">
-              You won&apos;t be charged yet. Payment will be processed through
-              our secure crypto payment gateway.
+              You won&apos;t be charged yet. Payment will be processed through our secure crypto
+              payment gateway.
             </p>
           </Card>
         </div>

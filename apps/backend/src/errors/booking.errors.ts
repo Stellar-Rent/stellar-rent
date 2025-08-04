@@ -25,4 +25,4 @@ export class BookingPermissionError extends Error {
     super(message);
     this.name = 'BookingPermissionError';
   }
-} 
+}
