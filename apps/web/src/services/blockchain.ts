@@ -24,24 +24,18 @@ export async function verifyPropertyWithBlockchain(
   propertyId: string
 ): Promise<BlockchainVerificationResult> {
   try {
-    const response = await fetch(`${apiUtils.getBaseUrl()}/api/properties/${propertyId}/verify`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    const result = await apiUtils.request<{
+      success: boolean;
+      data: BlockchainVerificationResult;
+      error?: string;
+      message?: string;
+    }>(`/properties/${propertyId}/verify`);
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const result = await response.json();
-    
-    if (result.success) {
+    if (result?.success && result.data) {
       return result.data;
-    } else {
-      throw new Error(result.error || 'Verification failed');
     }
+
+    throw new Error(result?.error || 'Verification failed');
   } catch (error) {
     console.error('Blockchain verification failed:', error);
     return {
@@ -59,7 +53,7 @@ export async function getPropertyBlockchainStatus(
 ): Promise<PropertyBlockchainStatus> {
   try {
     const verificationResult = await verifyPropertyWithBlockchain(propertyId);
-    
+
     return {
       isVerified: verificationResult.isValid,
       blockchainHash: verificationResult.blockchainData?.data_hash,
@@ -108,7 +102,7 @@ export function formatBlockchainStatus(status: PropertyBlockchainStatus): {
 /**
  * Truncate blockchain hash for display
  */
-export function truncateHash(hash: string, length: number = 8): string {
+export function truncateHash(hash: string, length = 8): string {
   if (hash.length <= length * 2) {
     return hash;
   }
@@ -131,9 +125,24 @@ export async function copyHashToClipboard(hash: string): Promise<boolean> {
 /**
  * Generate blockchain explorer URL (placeholder for future implementation)
  */
-export function getBlockchainExplorerUrl(hash: string): string {
-  // This would be replaced with actual Stellar blockchain explorer URL
-  return `https://stellar.expert/explorer/testnet/tx/${hash}`;
+type ExplorerResource = 'tx' | 'contract' | 'account' | 'asset';
+
+export function getBlockchainExplorerUrl(
+  resourceId: string,
+  opts?: { resourceType?: ExplorerResource; network?: 'testnet' | 'public'; baseUrl?: string }
+): string {
+  const base = (
+    opts?.baseUrl ||
+    process.env.NEXT_PUBLIC_STELLAR_EXPLORER_URL ||
+    'https://stellar.expert/explorer'
+  )
+    .toString()
+    .replace(/\/+$/, '');
+  const network = (opts?.network ||
+    (process.env.NEXT_PUBLIC_STELLAR_NETWORK as 'testnet' | 'public') ||
+    'testnet') as 'testnet' | 'public';
+  const type: ExplorerResource = opts?.resourceType || 'tx';
+  return `${base}/${network}/${type}/${resourceId}`;
 }
 
 /**

@@ -1,28 +1,28 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Shield, 
-  Copy, 
-  ExternalLink, 
-  RefreshCw, 
+import {
   AlertTriangle,
   CheckCircle,
-  XCircle 
+  Copy,
+  ExternalLink,
+  RefreshCw,
+  Shield,
+  XCircle,
 } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import {
-  getPropertyBlockchainStatus,
-  formatBlockchainStatus,
-  truncateHash,
-  copyHashToClipboard,
-  getBlockchainExplorerUrl,
-  isBlockchainEnabled,
-  getBlockchainNetwork,
   type PropertyBlockchainStatus,
+  copyHashToClipboard,
+  formatBlockchainStatus,
+  getBlockchainExplorerUrl,
+  getBlockchainNetwork,
+  getPropertyBlockchainStatus,
+  isBlockchainEnabled,
+  truncateHash,
 } from '../../services/blockchain';
 
 interface BlockchainVerificationProps {
@@ -40,7 +40,7 @@ export function BlockchainVerification({ propertyId, className }: BlockchainVeri
     return null;
   }
 
-  const loadStatus = async () => {
+  const loadStatus = useCallback(async () => {
     setIsLoading(true);
     try {
       const blockchainStatus = await getPropertyBlockchainStatus(propertyId);
@@ -54,14 +54,14 @@ export function BlockchainVerification({ propertyId, className }: BlockchainVeri
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [propertyId]);
 
   const handleVerify = async () => {
     setIsVerifying(true);
     try {
       const blockchainStatus = await getPropertyBlockchainStatus(propertyId);
       setStatus(blockchainStatus);
-      
+
       if (blockchainStatus.isVerified) {
         toast.success('Property data verified on blockchain');
       } else {
@@ -87,15 +87,27 @@ export function BlockchainVerification({ propertyId, className }: BlockchainVeri
   };
 
   const handleOpenExplorer = () => {
-    if (status?.blockchainHash) {
-      const url = getBlockchainExplorerUrl(status.blockchainHash);
+    // Prefer opening the contract page when we know the contract ID
+    const contractId = process.env.NEXT_PUBLIC_PROPERTY_LISTING_CONTRACT_ID;
+    if (contractId) {
+      const url = getBlockchainExplorerUrl(contractId, { resourceType: 'contract' });
       window.open(url, '_blank');
+      return;
     }
+
+    // Fallback: if we only have a hash, attempt opening as a transaction
+    if (status?.blockchainHash) {
+      const url = getBlockchainExplorerUrl(status.blockchainHash, { resourceType: 'tx' });
+      window.open(url, '_blank');
+      return;
+    }
+
+    toast.error('No blockchain reference available to open in explorer');
   };
 
   useEffect(() => {
     loadStatus();
-  }, [propertyId]);
+  }, [loadStatus]);
 
   if (isLoading && !status) {
     return (
@@ -138,13 +150,13 @@ export function BlockchainVerification({ propertyId, className }: BlockchainVeri
           ) : (
             <AlertTriangle className="w-4 h-4 text-yellow-600" />
           )}
-          <span 
+          <span
             className={`text-sm font-medium ${
-              status.isVerified 
-                ? 'text-green-700' 
-                : status.error 
-                ? 'text-red-700' 
-                : 'text-yellow-700'
+              status.isVerified
+                ? 'text-green-700'
+                : status.error
+                  ? 'text-red-700'
+                  : 'text-yellow-700'
             }`}
           >
             {statusDisplay.text}
@@ -154,19 +166,14 @@ export function BlockchainVerification({ propertyId, className }: BlockchainVeri
         {/* Hash Display */}
         {status.blockchainHash && (
           <div className="space-y-2">
-            <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+            <span className="text-xs font-medium text-gray-500 uppercase tracking-wide" aria-hidden>
               Blockchain Hash
-            </label>
+            </span>
             <div className="flex items-center space-x-2 p-2 bg-gray-50 rounded border">
               <code className="text-xs font-mono text-gray-700 flex-1">
                 {truncateHash(status.blockchainHash, 12)}
               </code>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleCopyHash}
-                className="h-6 w-6 p-0"
-              >
+              <Button variant="ghost" size="sm" onClick={handleCopyHash} className="h-6 w-6 p-0">
                 <Copy className="w-3 h-3" />
               </Button>
               <Button
