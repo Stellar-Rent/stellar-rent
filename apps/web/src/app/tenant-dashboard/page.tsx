@@ -16,32 +16,32 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
+import BookingHistory from '@/components/dashboard/BookingHistory';
+import NotificationSystem from '@/components/dashboard/NotificationSystem';
 import { useDashboard } from '@/hooks/useDashboard';
 import { transformFromLegacyUser, transformToLegacyBooking, transformToLegacyUser } from '@/types';
 import type {
   LegacyBooking as BookingType,
+  Notification,
   Transaction,
   LegacyUserProfile as UserProfile,
-  Notification,
 } from '@/types';
 import BookingCard from './components/booking-card';
 import { BookingModal, CancelModal } from './components/modal';
 import ProfileManagement from './components/profile-management';
 import WalletTransactions from './components/wallet-transaction';
-import BookingHistory from '@/components/dashboard/BookingHistory';
-import NotificationSystem from '@/components/dashboard/NotificationSystem';
 
 const TenantDashboard: React.FC = () => {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'bookings' | 'profile' | 'wallet'>('bookings');
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
-  const [searchTerm, setSearchTerm] = useState<string>('');
-  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [searchTerm, _setSearchTerm] = useState<string>('');
+  const [filterStatus, _setFilterStatus] = useState<string>('all');
   const [selectedBooking, setSelectedBooking] = useState<BookingType | null>(null);
   const [showBookingModal, setShowBookingModal] = useState<boolean>(false);
   const [showCancelModal, setShowCancelModal] = useState<boolean>(false);
-  const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
+  const [_isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const [toast, setToast] = useState<{
@@ -101,12 +101,12 @@ const TenantDashboard: React.FC = () => {
     };
   }, []);
 
-  const getCurrentFilterLabel = () => {
+  const _getCurrentFilterLabel = () => {
     const currentOption = filterOptions.find((option) => option.value === filterStatus);
     return currentOption ? currentOption.label : 'All Bookings';
   };
 
-  const filteredBookings = bookings.filter((booking) => {
+  const _filteredBookings = bookings.filter((booking) => {
     const matchesSearch =
       booking.propertyTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
       booking.propertyLocation.toLowerCase().includes(searchTerm.toLowerCase());
@@ -170,7 +170,7 @@ const TenantDashboard: React.FC = () => {
         await refetchAll();
         return true;
       }
-      
+
       showToast('Failed to upload avatar', 'error');
       return false;
     } catch (error) {
@@ -187,7 +187,9 @@ const TenantDashboard: React.FC = () => {
         return false;
       }
 
-      const confirmed = confirm('Are you sure you want to delete your account? This action cannot be undone.');
+      const confirmed = confirm(
+        'Are you sure you want to delete your account? This action cannot be undone.'
+      );
       if (!confirmed) {
         return false;
       }
@@ -199,7 +201,7 @@ const TenantDashboard: React.FC = () => {
         router.push('/');
         return true;
       }
-      
+
       showToast('Failed to delete account', 'error');
       return false;
     } catch (error) {
@@ -218,30 +220,30 @@ const TenantDashboard: React.FC = () => {
   };
 
   const handleMarkAsRead = (id: string) => {
-    setNotifications(prev => 
-      prev.map(notification => 
+    setNotifications((prev) =>
+      prev.map((notification) =>
         notification.id === id ? { ...notification, read: true } : notification
       )
     );
-    setUnreadNotifications(prev => Math.max(0, prev - 1));
+    setUnreadNotifications((prev) => Math.max(0, prev - 1));
   };
 
   const handleMarkAllAsRead = () => {
-    setNotifications(prev => prev.map(notification => ({ ...notification, read: true })));
+    setNotifications((prev) => prev.map((notification) => ({ ...notification, read: true })));
     setUnreadNotifications(0);
   };
 
   const handleDeleteNotification = (id: string) => {
-    setNotifications(prev => {
-      const notificationToDelete = prev.find(notification => notification.id === id);
+    setNotifications((prev) => {
+      const notificationToDelete = prev.find((notification) => notification.id === id);
       const isUnread = notificationToDelete?.read === false;
-      
+
       // Only decrement unread count if the deleted notification was unread
       if (isUnread) {
-        setUnreadNotifications(prevCount => Math.max(0, prevCount - 1));
+        setUnreadNotifications((prevCount) => Math.max(0, prevCount - 1));
       }
-      
-      return prev.filter(notification => notification.id !== id);
+
+      return prev.filter((notification) => notification.id !== id);
     });
   };
 
@@ -435,10 +437,10 @@ const TenantDashboard: React.FC = () => {
           ) : isLoadingProfile ? (
             <LoadingDisplay message="Loading your profile..." />
           ) : user ? (
-            <ProfileManagement 
-              user={user} 
+            <ProfileManagement
+              user={user}
               onUpdateProfile={handleUpdateUser}
-              onUploadAvatar={handleUploadAvatar} 
+              onUploadAvatar={handleUploadAvatar}
               onDeleteAccount={handleDeleteAccount}
             />
           ) : (

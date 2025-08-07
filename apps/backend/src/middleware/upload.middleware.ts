@@ -9,7 +9,7 @@ export const upload = multer({
     fileSize: 5 * 1024 * 1024,
     files: 10,
   },
-  fileFilter: (req, file, cb) => {
+  fileFilter: (_req, file, cb) => {
     if (file.mimetype.startsWith('image/')) {
       cb(null, true);
     } else {
@@ -19,7 +19,7 @@ export const upload = multer({
 });
 
 // Image processing middleware
-export const processImageUploads: RequestHandler = (req, res, next) => {
+export const processImageUploads: RequestHandler = (req, _res, next) => {
   if (
     !req.files ||
     (Array.isArray(req.files) && req.files.length === 0) ||

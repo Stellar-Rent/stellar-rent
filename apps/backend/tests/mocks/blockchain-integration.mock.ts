@@ -135,8 +135,8 @@ export class MockBlockchainServices {
   }
 
   async fundEscrow(
-    escrowId: string,
-    amount: string
+    _escrowId: string,
+    _amount: string
   ): Promise<{ success: boolean; txHash?: string }> {
     await this.simulateNetworkDelay();
 
@@ -151,8 +151,8 @@ export class MockBlockchainServices {
   }
 
   async releaseEscrow(
-    escrowId: string,
-    amount: string
+    _escrowId: string,
+    _amount: string
   ): Promise<{ success: boolean; txHash?: string }> {
     await this.simulateNetworkDelay();
 

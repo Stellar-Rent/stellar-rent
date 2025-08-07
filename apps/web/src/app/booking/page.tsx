@@ -21,16 +21,16 @@ type BookingFlowStep = 'form' | 'payment' | 'confirmation';
 
 export default function BookingPage({ params }: BookingPageProps) {
   const { theme } = useTheme();
-  const router = useRouter();
+  const _router = useRouter();
   const { isConnected, connect, publicKey } = useWallet();
 
-  const [selectedDates, setSelectedDates] = useState<DateRange | undefined>({
+  const [_selectedDates, _setSelectedDates] = useState<DateRange | undefined>({
     from: undefined,
     to: undefined,
   });
-  const [guests, setGuests] = useState(1);
+  const [_guests, _setGuests] = useState(1);
   const [showWalletModal, setShowWalletModal] = useState(false);
-  const [isProcessingBooking, setIsProcessingBooking] = useState(false);
+  const [_isProcessingBooking, setIsProcessingBooking] = useState(false);
   const [bookingStep, setBookingStep] = useState<BookingFlowStep>('form');
 
   const [currentBookingData, setCurrentBookingData] = useState<{
@@ -51,7 +51,7 @@ export default function BookingPage({ params }: BookingPageProps) {
     transactionHash?: string;
   } | null>(null);
 
-  const property = {
+  const _property = {
     id: params.propertyId,
     title: 'Luxury Beachfront Villa',
     image: '/images/property-placeholder.jpg',

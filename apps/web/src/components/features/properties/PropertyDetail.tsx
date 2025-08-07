@@ -1,6 +1,29 @@
-"use client";
+/**
+ * MODIFICATION SUMMARY - PropertyListingContract Integration
+ *
+ * Changed: Added BlockchainVerification component to property detail page
+ * Reason: OnlyDust task requirement to display blockchain verification status to users
+ * Impact: Users can now see if property data is verified on blockchain with hash display and verification controls
+ * Dependencies: Added BlockchainVerification component import
+ * Breaking Changes: None - purely additive UI enhancement
+ *
+ * Integration Details:
+ * - BlockchainVerification component shows verification status with visual indicators
+ * - Displays blockchain hash with copy-to-clipboard functionality
+ * - Provides manual verification trigger for users
+ * - Shows last verification timestamp and error states
+ *
+ * Related Files:
+ * - apps/web/src/components/blockchain/BlockchainVerification.tsx (verification component)
+ * - apps/web/src/services/blockchain.ts (blockchain service utilities)
+ * - apps/backend/src/controllers/property.controller.ts (verification API endpoint)
+ * - apps/backend/src/blockchain/propertyListingContract.ts (blockchain client)
+ *
+ * GitHub Issue: https://github.com/Stellar-Rent/stellar-rent/issues/99
+ */
 
-import type React from 'react';
+'use client';
+
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -8,6 +31,7 @@ import { getPropertyById } from '@/lib/data/properties';
 import type { PropertyDetailProps } from '@/lib/types/property';
 import {
   Bath,
+  Calendar,
   Car,
   ChevronDown,
   ChevronUp,
@@ -24,13 +48,14 @@ import {
   Waves,
   Wifi,
   Wind,
-  Calendar,
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import type React from 'react';
 import { useState } from 'react';
 import type { DateRange } from 'react-day-picker';
 import { toast } from 'sonner';
+import { BlockchainVerification } from '../../blockchain/BlockchainVerification';
 import { PropertyCalendar } from './PropertyCalendar';
 import { PropertyImageGallery } from './PropertyImageGallery';
 import { PropertyMap } from './PropertyMap';
@@ -41,7 +66,7 @@ export const PropertyDetail = ({ id }: PropertyDetailProps) => {
   const [guests, setGuests] = useState(1);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
-  const [imageError, setImageError] = useState(false);
+  const [_imageError, _setImageError] = useState(false);
 
   const property = getPropertyById(id);
 
@@ -59,8 +84,8 @@ export const PropertyDetail = ({ id }: PropertyDetailProps) => {
             Property Not Found
           </h2>
           <p className="mb-4">
-            The property you&apos;re looking for could not be found. It may have
-            been removed or the ID is incorrect.
+            The property you&apos;re looking for could not be found. It may have been removed or the
+            ID is incorrect.
           </p>
           <Button asChild className="mt-4">
             <Link href="/">Browse Available Properties</Link>
@@ -202,9 +227,8 @@ export const PropertyDetail = ({ id }: PropertyDetailProps) => {
                     !isDescriptionExpanded ? 'line-clamp-3' : ''
                   }`}
                 >
-                  {property.description || 
-                    `This beautiful property offers a perfect blend of comfort and luxury. Located in the heart of ${property.location}, it provides easy access to local attractions, restaurants, and transportation. The property features modern amenities, including high-speed WiFi, a fully equipped kitchen, and comfortable sleeping arrangements. Perfect for both short and long-term stays, this rental property accepts cryptocurrency payments for a seamless booking experience.`
-                  }
+                  {property.description ||
+                    `This beautiful property offers a perfect blend of comfort and luxury. Located in the heart of ${property.location}, it provides easy access to local attractions, restaurants, and transportation. The property features modern amenities, including high-speed WiFi, a fully equipped kitchen, and comfortable sleeping arrangements. Perfect for both short and long-term stays, this rental property accepts cryptocurrency payments for a seamless booking experience.`}
                 </p>
                 <Button
                   variant="ghost"
@@ -239,6 +263,9 @@ export const PropertyDetail = ({ id }: PropertyDetailProps) => {
               </div>
             </Card>
 
+            {/* Blockchain Verification */}
+            <BlockchainVerification propertyId={id} />
+
             {/* Policies */}
             <Card className="p-6">
               <h2 className="text-xl font-semibold mb-4">House Rules & Policies</h2>
@@ -253,7 +280,8 @@ export const PropertyDetail = ({ id }: PropertyDetailProps) => {
                 <div>
                   <h3 className="font-medium mb-2">Cancellation Policy</h3>
                   <p className="text-muted-foreground">
-                    {property.policies?.cancellation || 'Free cancellation up to 48 hours before check-in'}
+                    {property.policies?.cancellation ||
+                      'Free cancellation up to 48 hours before check-in'}
                   </p>
                 </div>
                 <div>

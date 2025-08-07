@@ -1,10 +1,10 @@
-import { useEffect, useRef, useCallback, useState } from 'react';
-import type { 
-  RealTimeUpdate, 
-  BookingUpdate, 
-  PaymentUpdate, 
-  Notification, 
-  MessageUpdate 
+import { useCallback, useEffect, useRef, useState } from 'react';
+import type {
+  BookingUpdate,
+  MessageUpdate,
+  Notification,
+  PaymentUpdate,
+  RealTimeUpdate,
 } from '../types/shared';
 
 interface UseRealTimeUpdatesProps {
@@ -39,11 +39,11 @@ export const useRealTimeUpdates = ({
     try {
       // In a real implementation, you would connect to your WebSocket server
       // For now, we'll simulate WebSocket behavior
-      const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'wss://localhost:3001/ws';
-      
+      const _wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'wss://localhost:3001/ws';
+
       // Simulate WebSocket connection
       console.log('🔌 Connecting to real-time updates...');
-      
+
       // Simulate connection success
       setTimeout(() => {
         console.log('✅ Connected to real-time updates');
@@ -104,7 +104,6 @@ export const useRealTimeUpdates = ({
       };
 
       simulateMessages();
-
     } catch (error) {
       console.error('❌ Failed to connect to real-time updates:', error);
       onError?.(error as Error);
@@ -137,36 +136,41 @@ export const useRealTimeUpdates = ({
       clearTimeout(reconnectTimeoutRef.current);
     }
 
-    const delay = reconnectDelay * Math.pow(2, reconnectAttemptsRef.current);
+    const delay = reconnectDelay * 2 ** reconnectAttemptsRef.current;
     reconnectAttemptsRef.current++;
 
-    console.log(`🔄 Attempting to reconnect in ${delay}ms (attempt ${reconnectAttemptsRef.current}/${maxReconnectAttempts})`);
+    console.log(
+      `🔄 Attempting to reconnect in ${delay}ms (attempt ${reconnectAttemptsRef.current}/${maxReconnectAttempts})`
+    );
 
     reconnectTimeoutRef.current = setTimeout(() => {
       connect();
     }, delay);
   }, [connect]);
 
-  const handleMessage = useCallback((update: RealTimeUpdate) => {
-    console.log('📨 Received real-time update:', update);
+  const handleMessage = useCallback(
+    (update: RealTimeUpdate) => {
+      console.log('📨 Received real-time update:', update);
 
-    switch (update.type) {
-      case 'booking':
-        onBookingUpdate?.(update.data);
-        break;
-      case 'payment':
-        onPaymentUpdate?.(update.data);
-        break;
-      case 'notification':
-        onNotificationUpdate?.(update.data);
-        break;
-      case 'message':
-        onMessageUpdate?.(update.data);
-        break;
-      default:
-        console.warn('⚠️ Unknown update type:', update.type);
-    }
-  }, [onBookingUpdate, onPaymentUpdate, onNotificationUpdate, onMessageUpdate]);
+      switch (update.type) {
+        case 'booking':
+          onBookingUpdate?.(update.data);
+          break;
+        case 'payment':
+          onPaymentUpdate?.(update.data);
+          break;
+        case 'notification':
+          onNotificationUpdate?.(update.data);
+          break;
+        case 'message':
+          onMessageUpdate?.(update.data);
+          break;
+        default:
+          console.warn('⚠️ Unknown update type:', update.type);
+      }
+    },
+    [onBookingUpdate, onPaymentUpdate, onNotificationUpdate, onMessageUpdate]
+  );
 
   const sendMessage = useCallback((message: RealTimeUpdate) => {
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
@@ -217,8 +221,8 @@ export const useRealTimeNotifications = (userId?: string) => {
       read: false,
     };
 
-    setNotifications(prev => [newNotification, ...prev]);
-    setUnreadCount(prev => prev + 1);
+    setNotifications((prev) => [newNotification, ...prev]);
+    setUnreadCount((prev) => prev + 1);
 
     // Show browser notification if supported
     if ('Notification' in window && Notification.permission === 'granted') {
@@ -230,28 +234,26 @@ export const useRealTimeNotifications = (userId?: string) => {
   }, []);
 
   const markAsRead = useCallback((id: string) => {
-    setNotifications(prev =>
-      prev.map(notification =>
+    setNotifications((prev) =>
+      prev.map((notification) =>
         notification.id === id ? { ...notification, read: true } : notification
       )
     );
-    setUnreadCount(prev => Math.max(0, prev - 1));
+    setUnreadCount((prev) => Math.max(0, prev - 1));
   }, []);
 
   const markAllAsRead = useCallback(() => {
-    setNotifications(prev =>
-      prev.map(notification => ({ ...notification, read: true }))
-    );
+    setNotifications((prev) => prev.map((notification) => ({ ...notification, read: true })));
     setUnreadCount(0);
   }, []);
 
   const deleteNotification = useCallback((id: string) => {
-    setNotifications(prev => {
-      const notification = prev.find(n => n.id === id);
+    setNotifications((prev) => {
+      const notification = prev.find((n) => n.id === id);
       if (notification && !notification.read) {
-        setUnreadCount(count => Math.max(0, count - 1));
+        setUnreadCount((count) => Math.max(0, count - 1));
       }
-      return prev.filter(n => n.id !== id);
+      return prev.filter((n) => n.id !== id);
     });
   }, []);
 
@@ -291,23 +293,22 @@ export const useRealTimeBookings = (userId?: string) => {
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
 
   const updateBooking = useCallback((bookingData: BookingUpdate) => {
-    setBookings(prev => {
-      const existingIndex = prev.findIndex(b => b.id === bookingData.id);
+    setBookings((prev) => {
+      const existingIndex = prev.findIndex((b) => b.id === bookingData.id);
       if (existingIndex >= 0) {
         // Update existing booking
         const updated = [...prev];
         updated[existingIndex] = { ...updated[existingIndex], ...bookingData };
         return updated;
-      } else {
-        // Add new booking
-        return [...prev, bookingData];
       }
+      // Add new booking
+      return [...prev, bookingData];
     });
     setLastUpdate(new Date());
   }, []);
 
   const removeBooking = useCallback((bookingId: string) => {
-    setBookings(prev => prev.filter(b => b.id !== bookingId));
+    setBookings((prev) => prev.filter((b) => b.id !== bookingId));
     setLastUpdate(new Date());
   }, []);
 
@@ -324,4 +325,4 @@ export const useRealTimeBookings = (userId?: string) => {
     updateBooking,
     removeBooking,
   };
-}; 
+};

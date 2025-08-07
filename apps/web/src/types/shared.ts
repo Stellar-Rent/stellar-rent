@@ -258,4 +258,4 @@ export interface AccountDetails {
   bankName?: string;
   swiftCode?: string;
   iban?: string;
-} 
+}

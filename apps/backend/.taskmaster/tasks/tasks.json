@@ -14,7 +14,7 @@
       },
       {
         "id": 2,
-        "title": "Implement Authentication and User Profiles", 
+        "title": "Implement Authentication and User Profiles",
         "description": "Complete authentication system with email/password and wallet integration plus user profiles",
         "details": "✅ COMPLETED: Email/password registration and login working. User profiles fully implemented with CRUD operations. Wallet authentication implemented (PR merged). Profile management includes avatar upload, preferences, and address management.",
         "testStrategy": "All authentication flows tested, profile CRUD operations verified",
@@ -26,10 +26,10 @@
       {
         "id": 3,
         "title": "Implement Property Listing System",
-        "description": "Property listing functionality for hosts to create and manage listings", 
+        "description": "Property listing functionality for hosts to create and manage listings",
         "details": "✅ COMPLETED: Property listing endpoints implemented. Database schema includes properties table with all necessary fields (title, description, price, location, amenities, images, etc.). Image upload via Supabase Storage is configured.",
         "testStrategy": "Property CRUD operations working, image upload functionality verified",
-        "priority": "high", 
+        "priority": "high",
         "dependencies": [2],
         "status": "done",
         "subtasks": []
@@ -42,7 +42,7 @@
         "testStrategy": "Search functionality tested with various filters and location queries",
         "priority": "medium",
         "dependencies": [3],
-        "status": "done", 
+        "status": "done",
         "subtasks": []
       },
       {
@@ -84,7 +84,7 @@
         "description": "Full Soroban smart contract integration for listings and bookings",
         "details": "Smart contracts exist in apps/stellar-contracts with booking and property-listing contracts. Need to integrate these contracts with backend APIs for data synchronization and blockchain verification.",
         "testStrategy": "Smart contract deployment tested, backend integration verified",
-        "priority": "medium", 
+        "priority": "medium",
         "dependencies": [6],
         "status": "pending",
         "subtasks": []
@@ -97,7 +97,7 @@
         "testStrategy": "Security measures tested against common attack vectors",
         "priority": "low",
         "dependencies": [],
-        "status": "pending", 
+        "status": "pending",
         "subtasks": []
       },
       {
@@ -114,7 +114,7 @@
     ],
     "metadata": {
       "created": "2024-07-21T22:07:37.791Z",
-      "updated": "2024-07-21T22:07:37.798Z", 
+      "updated": "2024-07-21T22:07:37.798Z",
       "description": "Backend tasks synchronized with current repository state - July 2024"
     }
   }

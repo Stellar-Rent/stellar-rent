@@ -37,7 +37,7 @@ jest.mock('../../src/routes/booking.routes', () => {
   const express = require('express');
   const router = express.Router();
 
-  router.post('/', (req: express.Request, res: express.Response) => {
+  router.post('/', (_req: express.Request, res: express.Response) => {
     res.status(201).json({
       success: true,
       data: {

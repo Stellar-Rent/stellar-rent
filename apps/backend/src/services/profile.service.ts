@@ -53,7 +53,8 @@ export const uploadUserAvatar = async (userId: string, req: Request) => {
 
   if (!publicUrl) return { error: new Error('Failed to generate public URL') };
 
-  const { error: updateError } = await supabase.from('profiles')
+  const { error: updateError } = await supabase
+    .from('profiles')
     .update({ avatar_url: publicUrl })
     .eq('user_id', userId);
 

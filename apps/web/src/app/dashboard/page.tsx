@@ -1,10 +1,10 @@
 'use client';
 
 import { useAuth } from '@/hooks/auth/use-auth';
+import { ArrowRight, Home, User } from 'lucide-react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { Home, User, ArrowRight } from 'lucide-react';
-import Link from 'next/link';
 
 const DashboardPage = () => {
   const { user, isAuthenticated } = useAuth();
@@ -41,29 +41,30 @@ const DashboardPage = () => {
                 </div>
                 <ArrowRight className="w-6 h-6 text-gray-400 group-hover:text-blue-600 transition-colors" />
               </div>
-              
+
               <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
                 Host Dashboard
               </h3>
-              
+
               <p className="text-gray-600 dark:text-gray-300 mb-6">
-                Manage your properties, view bookings, track earnings, and handle your rental business.
+                Manage your properties, view bookings, track earnings, and handle your rental
+                business.
               </p>
-              
-                             <div className="space-y-2">
-                 <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
-                   <div className="w-2 h-2 bg-blue-500 rounded-full mr-3" />
-                   Property Management
-                 </div>
-                 <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
-                   <div className="w-2 h-2 bg-green-500 rounded-full mr-3" />
-                   Booking History
-                 </div>
-                 <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
-                   <div className="w-2 h-2 bg-purple-500 rounded-full mr-3" />
-                   Earnings Analytics
-                 </div>
-               </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full mr-3" />
+                  Property Management
+                </div>
+                <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
+                  <div className="w-2 h-2 bg-green-500 rounded-full mr-3" />
+                  Booking History
+                </div>
+                <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
+                  <div className="w-2 h-2 bg-purple-500 rounded-full mr-3" />
+                  Earnings Analytics
+                </div>
+              </div>
             </div>
           </Link>
 
@@ -75,15 +76,16 @@ const DashboardPage = () => {
                 </div>
                 <ArrowRight className="w-6 h-6 text-gray-400 group-hover:text-green-600 transition-colors" />
               </div>
-              
+
               <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
                 Tenant Dashboard
               </h3>
-              
+
               <p className="text-gray-600 dark:text-gray-300 mb-6">
-                View your bookings, manage your profile, track payments, and explore travel analytics.
+                View your bookings, manage your profile, track payments, and explore travel
+                analytics.
               </p>
-              
+
               <div className="space-y-2">
                 <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
                   <div className="w-2 h-2 bg-blue-500 rounded-full mr-3" />

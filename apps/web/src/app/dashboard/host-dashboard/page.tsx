@@ -1,5 +1,10 @@
-/* eslint-disable @next/next/no-img-element */
 'use client';
+import NetworkStatus from '@/components/NetworkStatus';
+import BookingHistory from '@/components/dashboard/BookingHistory';
+import NotificationSystem from '@/components/dashboard/NotificationSystem';
+import ProfileManagement from '@/components/dashboard/ProfileManagement';
+import PropertyManagement from '@/components/dashboard/PropertyManagement';
+import { useRealTimeNotifications } from '@/hooks/useRealTimeUpdates';
 import {
   Bath,
   Bed,
@@ -30,12 +35,7 @@ import {
 } from 'lucide-react';
 import type React from 'react';
 import { useEffect, useState } from 'react';
-import PropertyManagement from '@/components/dashboard/PropertyManagement';
-import NotificationSystem from '@/components/dashboard/NotificationSystem';
-import BookingHistory from '@/components/dashboard/BookingHistory';
-import ProfileManagement from '@/components/dashboard/ProfileManagement';
-import NetworkStatus from '@/components/NetworkStatus';
-import { useRealTimeNotifications } from '@/hooks/useRealTimeUpdates';
+import { BlockchainVerification } from '../../../components/blockchain/BlockchainVerification';
 
 interface Property {
   id: number;
@@ -257,8 +257,8 @@ const HostDashboard = () => {
   const [_showPropertyModal, setShowPropertyModal] = useState(false);
   const [showCalendarModal, setShowCalendarModal] = useState(false);
   const [showAddPropertyModal, setShowAddPropertyModal] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
+  const [searchTerm, _setSearchTerm] = useState('');
+  const [filterStatus, _setFilterStatus] = useState('all');
   const [selectedDates, setSelectedDates] = useState<Set<string>>(new Set());
   const [newProperty, setNewProperty] = useState({
     title: '',
@@ -286,7 +286,7 @@ const HostDashboard = () => {
     deleteAllNotifications: handleDeleteAllNotifications,
   } = useRealTimeNotifications(user.id);
 
-  const filteredProperties = properties.filter((property) => {
+  const _filteredProperties = properties.filter((property) => {
     const matchesSearch =
       property.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       property.location.toLowerCase().includes(searchTerm.toLowerCase());
@@ -367,27 +367,28 @@ const HostDashboard = () => {
     }));
   };
 
-
-
   const handleCancelBooking = async (bookingId: string) => {
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      setBookings(prev => 
-        prev.map(booking => 
-          booking.id === bookingId 
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      setBookings((prev) =>
+        prev.map((booking) =>
+          booking.id === bookingId
             ? { ...booking, status: 'cancelled' as const, canCancel: false }
             : booking
         )
       );
-      
+
       addNotification({
+        id: Date.now().toString(),
         type: 'booking',
         title: 'Booking Cancelled',
         message: 'A booking has been cancelled',
         priority: 'medium',
+        isRead: false,
+        createdAt: new Date().toISOString(),
+        userId: user.id,
       });
-      
     } catch (error) {
       console.error('Failed to cancel booking:', error);
     }
@@ -395,17 +396,20 @@ const HostDashboard = () => {
 
   const handleUpdateProfile = async (updatedProfile: Partial<UserProfile>) => {
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      setUser(prev => ({ ...prev, ...updatedProfile }));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      setUser((prev) => ({ ...prev, ...updatedProfile }));
+
       addNotification({
+        id: Date.now().toString(),
         type: 'system',
         title: 'Profile Updated',
         message: 'Your profile has been successfully updated',
         priority: 'low',
+        isRead: false,
+        createdAt: new Date().toISOString(),
+        userId: user.id,
       });
-      
     } catch (error) {
       console.error('Failed to update profile:', error);
     }
@@ -413,18 +417,21 @@ const HostDashboard = () => {
 
   const handleUploadAvatar = async (file: File) => {
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
       const avatarUrl = URL.createObjectURL(file);
-      setUser(prev => ({ ...prev, avatar: avatarUrl }));
-      
+      setUser((prev) => ({ ...prev, avatar: avatarUrl }));
+
       addNotification({
+        id: Date.now().toString(),
         type: 'system',
         title: 'Avatar Updated',
         message: 'Your profile picture has been successfully updated',
         priority: 'low',
+        isRead: false,
+        createdAt: new Date().toISOString(),
+        userId: user.id,
       });
-      
     } catch (error) {
       console.error('Failed to upload avatar:', error);
     }
@@ -465,7 +472,7 @@ const HostDashboard = () => {
     setSelectedDates(newSelectedDates);
   };
 
-  const PropertyCard = ({ property }: PropertyCardProps) => (
+  const _PropertyCard = ({ property }: PropertyCardProps) => (
     <div className="bg-white dark:bg-[#0B1D39] rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
       <div className="relative">
         <img src={property.image} alt={property.title} className="w-full h-48 object-cover" />
@@ -530,6 +537,11 @@ const HostDashboard = () => {
             <p className="text-lg font-bold text-green-600">${property.earnings}</p>
             <p className="text-sm dark:text-white text-gray-600">Earned</p>
           </div>
+        </div>
+
+        {/* Blockchain Verification */}
+        <div className="mb-4">
+          <BlockchainVerification propertyId={property.id.toString()} className="text-xs" />
         </div>
 
         <div className="flex space-x-2">
@@ -1036,7 +1048,15 @@ const HostDashboard = () => {
             <div className="flex items-center space-x-4">
               <NetworkStatus isConnected={true} />
               <NotificationSystem
-                notifications={notifications}
+                notifications={notifications.map((notification) => ({
+                  id: notification.id,
+                  type: notification.type === 'property' ? 'booking' : notification.type,
+                  title: notification.title,
+                  message: notification.message,
+                  timestamp: new Date(notification.createdAt),
+                  read: notification.isRead,
+                  priority: notification.priority,
+                }))}
                 onMarkAsRead={handleMarkAsRead}
                 onMarkAllAsRead={handleMarkAllAsRead}
                 onDeleteNotification={handleDeleteNotification}
@@ -1107,17 +1127,13 @@ const HostDashboard = () => {
               setProperties([...properties, newPropertyWithId]);
             }}
             onUpdateProperty={(id, updates) => {
-              setProperties(properties.map(p => 
-                p.id === id ? { ...p, ...updates } : p
-              ));
+              setProperties(properties.map((p) => (p.id === id ? { ...p, ...updates } : p)));
             }}
             onDeleteProperty={(id) => {
-              setProperties(properties.filter(p => p.id !== id));
+              setProperties(properties.filter((p) => p.id !== id));
             }}
             onToggleStatus={(id, status) => {
-              setProperties(properties.map(p => 
-                p.id === id ? { ...p, status } : p
-              ));
+              setProperties(properties.map((p) => (p.id === id ? { ...p, status } : p)));
             }}
           />
         )}
@@ -1125,8 +1141,12 @@ const HostDashboard = () => {
         {activeTab === 'bookings' && (
           <div>
             <div className="mb-8">
-              <h2 className="text-3xl font-bold dark:text-white text-gray-900">Property Bookings</h2>
-              <p className="text-gray-600 dark:text-white mt-1">Manage bookings for your properties</p>
+              <h2 className="text-3xl font-bold dark:text-white text-gray-900">
+                Property Bookings
+              </h2>
+              <p className="text-gray-600 dark:text-white mt-1">
+                Manage bookings for your properties
+              </p>
             </div>
 
             {/* Statistics Cards */}
@@ -1134,8 +1154,12 @@ const HostDashboard = () => {
               <div className="bg-white dark:bg-[#0B1D39]/90 dark:text-white shadow p-6 rounded-xl">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium dark:text-white text-gray-600">Total Bookings</p>
-                    <p className="text-3xl font-bold dark:text-white text-gray-900">{bookings.length}</p>
+                    <p className="text-sm font-medium dark:text-white text-gray-600">
+                      Total Bookings
+                    </p>
+                    <p className="text-3xl font-bold dark:text-white text-gray-900">
+                      {bookings.length}
+                    </p>
                   </div>
                   <div className="bg-blue-100 p-3 rounded-full">
                     <Calendar className="w-6 h-6 text-blue-600" />
@@ -1147,7 +1171,9 @@ const HostDashboard = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium dark:text-white text-gray-600">Pending</p>
-                    <p className="text-3xl font-bold text-yellow-600">{bookings.filter(b => b.status === 'pending').length}</p>
+                    <p className="text-3xl font-bold text-yellow-600">
+                      {bookings.filter((b) => b.status === 'pending').length}
+                    </p>
                   </div>
                   <div className="bg-yellow-100 p-3 rounded-full">
                     <Clock className="w-6 h-6 text-yellow-600" />
@@ -1159,7 +1185,9 @@ const HostDashboard = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium dark:text-white text-gray-600">Confirmed</p>
-                    <p className="text-3xl font-bold text-blue-600">{bookings.filter(b => b.status === 'confirmed').length}</p>
+                    <p className="text-3xl font-bold text-blue-600">
+                      {bookings.filter((b) => b.status === 'confirmed').length}
+                    </p>
                   </div>
                   <div className="bg-blue-100 p-3 rounded-full">
                     <CheckCircle className="w-6 h-6 text-blue-600" />
@@ -1171,7 +1199,9 @@ const HostDashboard = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium dark:text-white text-gray-600">Completed</p>
-                    <p className="text-3xl font-bold text-green-600">{bookings.filter(b => b.status === 'completed').length}</p>
+                    <p className="text-3xl font-bold text-green-600">
+                      {bookings.filter((b) => b.status === 'completed').length}
+                    </p>
                   </div>
                   <div className="bg-green-100 p-3 rounded-full">
                     <Check className="w-6 h-6 text-green-600" />

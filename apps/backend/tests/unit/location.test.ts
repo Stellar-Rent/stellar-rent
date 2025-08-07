@@ -102,7 +102,8 @@ describe('Location API', () => {
       const result = await locationService.getLocationSuggestions('a', 50);
       const end = performance.now();
 
-      expect(result.success).toBe(true);a
+      expect(result.success).toBe(true);
+      a;
       expect(end - start).toBeLessThan(1000); // Should complete within 1 second
     });
 

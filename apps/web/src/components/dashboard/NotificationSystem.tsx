@@ -1,25 +1,25 @@
 'use client';
 
 import {
+  AlertCircle,
   Bell,
+  Calendar,
   Check,
+  CheckCircle,
   Clock,
+  CreditCard,
   DollarSign,
   Eye,
   Home,
+  Info,
   MessageSquare,
+  Settings,
   Star,
   Trash2,
-  X,
-  AlertCircle,
-  CheckCircle,
-  Info,
-  Settings,
   User,
-  Calendar,
-  CreditCard,
+  X,
 } from 'lucide-react';
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface Notification {
   id: string;
@@ -60,7 +60,9 @@ const NotificationSystem: React.FC<NotificationSystemProps> = ({
   isLoading = false,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [filter, setFilter] = useState<'all' | 'unread' | 'booking' | 'payment' | 'review' | 'system'>('all');
+  const [filter, setFilter] = useState<
+    'all' | 'unread' | 'booking' | 'payment' | 'review' | 'system'
+  >('all');
   const [showSettings, setShowSettings] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -153,18 +155,20 @@ const NotificationSystem: React.FC<NotificationSystemProps> = ({
 
     if (diffInSeconds < 60) {
       return 'Just now';
-    } else if (diffInSeconds < 3600) {
+    }
+    if (diffInSeconds < 3600) {
       const minutes = Math.floor(diffInSeconds / 60);
       return `${minutes}m ago`;
-    } else if (diffInSeconds < 86400) {
+    }
+    if (diffInSeconds < 86400) {
       const hours = Math.floor(diffInSeconds / 3600);
       return `${hours}h ago`;
-    } else if (diffInSeconds < 2592000) {
+    }
+    if (diffInSeconds < 2592000) {
       const days = Math.floor(diffInSeconds / 86400);
       return `${days}d ago`;
-    } else {
-      return date.toLocaleDateString();
     }
+    return date.toLocaleDateString();
   };
 
   const handleNotificationClick = (notification: Notification) => {
@@ -275,8 +279,10 @@ const NotificationSystem: React.FC<NotificationSystemProps> = ({
           <div className="max-h-96 overflow-y-auto">
             {isLoading ? (
               <div className="p-4 text-center">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mx-auto"></div>
-                <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Loading notifications...</p>
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mx-auto" />
+                <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                  Loading notifications...
+                </p>
               </div>
             ) : filteredNotifications.length === 0 ? (
               <div className="p-8 text-center">
@@ -303,7 +309,9 @@ const NotificationSystem: React.FC<NotificationSystemProps> = ({
                             {notification.title}
                           </p>
                           <div className="flex items-center space-x-2">
-                            <span className={`text-xs font-medium ${getPriorityColor(notification.priority)}`}>
+                            <span
+                              className={`text-xs font-medium ${getPriorityColor(notification.priority)}`}
+                            >
                               {notification.priority}
                             </span>
                             <button
@@ -355,7 +363,9 @@ const NotificationSystem: React.FC<NotificationSystemProps> = ({
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-[#0B1D39] rounded-xl max-w-md w-full p-6">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">Notification Settings</h3>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                Notification Settings
+              </h3>
               <button
                 type="button"
                 onClick={() => setShowSettings(false)}
@@ -367,7 +377,9 @@ const NotificationSystem: React.FC<NotificationSystemProps> = ({
 
             <div className="space-y-4">
               <div>
-                <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-3">Notification Types</h4>
+                <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-3">
+                  Notification Types
+                </h4>
                 <div className="space-y-3">
                   {[
                     { key: 'booking', label: 'Booking updates', icon: Home },
@@ -386,7 +398,9 @@ const NotificationSystem: React.FC<NotificationSystemProps> = ({
                           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                         />
                         <Icon className="w-4 h-4 ml-3 text-gray-500" />
-                        <span className="ml-3 text-sm text-gray-700 dark:text-gray-300">{type.label}</span>
+                        <span className="ml-3 text-sm text-gray-700 dark:text-gray-300">
+                          {type.label}
+                        </span>
                       </label>
                     );
                   })}
@@ -394,7 +408,9 @@ const NotificationSystem: React.FC<NotificationSystemProps> = ({
               </div>
 
               <div>
-                <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-3">Notification Channels</h4>
+                <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-3">
+                  Notification Channels
+                </h4>
                 <div className="space-y-3">
                   <label className="flex items-center">
                     <input
@@ -402,7 +418,9 @@ const NotificationSystem: React.FC<NotificationSystemProps> = ({
                       defaultChecked={true}
                       className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
-                    <span className="ml-3 text-sm text-gray-700 dark:text-gray-300">In-app notifications</span>
+                    <span className="ml-3 text-sm text-gray-700 dark:text-gray-300">
+                      In-app notifications
+                    </span>
                   </label>
                   <label className="flex items-center">
                     <input
@@ -410,7 +428,9 @@ const NotificationSystem: React.FC<NotificationSystemProps> = ({
                       defaultChecked={true}
                       className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
-                    <span className="ml-3 text-sm text-gray-700 dark:text-gray-300">Email notifications</span>
+                    <span className="ml-3 text-sm text-gray-700 dark:text-gray-300">
+                      Email notifications
+                    </span>
                   </label>
                   <label className="flex items-center">
                     <input
@@ -418,7 +438,9 @@ const NotificationSystem: React.FC<NotificationSystemProps> = ({
                       defaultChecked={false}
                       className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
-                    <span className="ml-3 text-sm text-gray-700 dark:text-gray-300">Push notifications</span>
+                    <span className="ml-3 text-sm text-gray-700 dark:text-gray-300">
+                      Push notifications
+                    </span>
                   </label>
                 </div>
               </div>
@@ -447,4 +469,4 @@ const NotificationSystem: React.FC<NotificationSystemProps> = ({
   );
 };
 
-export default NotificationSystem; 
+export default NotificationSystem;

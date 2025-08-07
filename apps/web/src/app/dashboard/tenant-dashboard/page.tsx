@@ -1,20 +1,32 @@
 'use client';
 
+import BookingHistory from '@/components/dashboard/BookingHistory';
+import NotificationSystem from '@/components/dashboard/NotificationSystem';
+import ProfileManagement from '@/components/dashboard/ProfileManagement';
 import {
+  Activity,
+  AlertCircle,
+  BarChart3,
   Bath,
   Bed,
   Bell,
   Calendar,
   Check,
+  CheckCircle,
   ChevronDown,
   ChevronRight,
+  Clock,
+  CreditCard,
   DollarSign,
   Download,
   Edit3,
   Eye,
   Filter,
   Home,
+  Info,
   MapPin,
+  MessageSquare,
+  PieChart,
   Plus,
   Search,
   Settings,
@@ -25,22 +37,10 @@ import {
   Users,
   Wallet,
   X,
-  Clock,
-  AlertCircle,
-  CheckCircle,
   XCircle,
-  BarChart3,
-  PieChart,
-  Activity,
-  CreditCard,
-  MessageSquare,
-  Info,
 } from 'lucide-react';
 import type React from 'react';
 import { useEffect, useState } from 'react';
-import BookingHistory from '@/components/dashboard/BookingHistory';
-import NotificationSystem from '@/components/dashboard/NotificationSystem';
-import ProfileManagement from '@/components/dashboard/ProfileManagement';
 
 interface Booking {
   id: string;
@@ -155,7 +155,14 @@ const mockTransactions = [
     type: 'booking',
     status: 'completed',
   },
-  { id: 2, date: '2025-05-26', description: 'Cozy Beach House', amount: -900, type: 'booking', status: 'pending' },
+  {
+    id: 2,
+    date: '2025-05-26',
+    description: 'Cozy Beach House',
+    amount: -900,
+    type: 'booking',
+    status: 'pending',
+  },
   {
     id: 3,
     date: '2025-05-20',
@@ -178,38 +185,40 @@ const TenantDashboard = () => {
   const [activeTab, setActiveTab] = useState('bookings');
   const [bookings, setBookings] = useState(mockBookings);
   const [user, setUser] = useState(mockUser);
-  const [transactions, setTransactions] = useState(mockTransactions);
+  const [transactions, _setTransactions] = useState(mockTransactions);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
-  const [walletBalance, setWalletBalance] = useState(2500);
+  const [walletBalance, _setWalletBalance] = useState(2500);
   const [isLoading, setIsLoading] = useState(false);
 
   const stats = {
     totalBookings: bookings.length,
-    upcomingBookings: bookings.filter(b => b.status === 'confirmed' && new Date(b.checkIn) > new Date()).length,
-    completedBookings: bookings.filter(b => b.status === 'completed').length,
+    upcomingBookings: bookings.filter(
+      (b) => b.status === 'confirmed' && new Date(b.checkIn) > new Date()
+    ).length,
+    completedBookings: bookings.filter((b) => b.status === 'completed').length,
     totalSpent: user.totalSpent,
     averageRating: 4.8,
     memberSince: user.memberSince,
   };
 
   const handleMarkAsRead = (id: string) => {
-    setNotifications(prev => 
-      prev.map(notification => 
+    setNotifications((prev) =>
+      prev.map((notification) =>
         notification.id === id ? { ...notification, read: true } : notification
       )
     );
-    setUnreadNotifications(prev => Math.max(0, prev - 1));
+    setUnreadNotifications((prev) => Math.max(0, prev - 1));
   };
 
   const handleMarkAllAsRead = () => {
-    setNotifications(prev => prev.map(notification => ({ ...notification, read: true })));
+    setNotifications((prev) => prev.map((notification) => ({ ...notification, read: true })));
     setUnreadNotifications(0);
   };
 
   const handleDeleteNotification = (id: string) => {
-    setNotifications(prev => prev.filter(notification => notification.id !== id));
-    setUnreadNotifications(prev => Math.max(0, prev - 1));
+    setNotifications((prev) => prev.filter((notification) => notification.id !== id));
+    setUnreadNotifications((prev) => Math.max(0, prev - 1));
   };
 
   const handleDeleteAllNotifications = () => {
@@ -221,16 +230,16 @@ const TenantDashboard = () => {
     setIsLoading(true);
     try {
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      setBookings(prev => 
-        prev.map(booking => 
-          booking.id === bookingId 
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      setBookings((prev) =>
+        prev.map((booking) =>
+          booking.id === bookingId
             ? { ...booking, status: 'cancelled' as const, canCancel: false }
             : booking
         )
       );
-      
+
       const newNotification = {
         id: Date.now().toString(),
         type: 'booking',
@@ -240,10 +249,9 @@ const TenantDashboard = () => {
         read: false,
         priority: 'medium' as const,
       };
-      
-      setNotifications(prev => [newNotification, ...prev]);
-      setUnreadNotifications(prev => prev + 1);
-      
+
+      setNotifications((prev) => [newNotification, ...prev]);
+      setUnreadNotifications((prev) => prev + 1);
     } catch (error) {
       console.error('Failed to cancel booking:', error);
     } finally {
@@ -254,10 +262,10 @@ const TenantDashboard = () => {
   const handleUpdateProfile = async (updatedProfile: Partial<UserProfile>) => {
     setIsLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      setUser(prev => ({ ...prev, ...updatedProfile }));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      setUser((prev) => ({ ...prev, ...updatedProfile }));
+
       const newNotification = {
         id: Date.now().toString(),
         type: 'system',
@@ -267,10 +275,9 @@ const TenantDashboard = () => {
         read: false,
         priority: 'low' as const,
       };
-      
-      setNotifications(prev => [newNotification, ...prev]);
-      setUnreadNotifications(prev => prev + 1);
-      
+
+      setNotifications((prev) => [newNotification, ...prev]);
+      setUnreadNotifications((prev) => prev + 1);
     } catch (error) {
       console.error('Failed to update profile:', error);
     } finally {
@@ -281,11 +288,11 @@ const TenantDashboard = () => {
   const handleUploadAvatar = async (file: File) => {
     setIsLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
       const avatarUrl = URL.createObjectURL(file);
-      setUser(prev => ({ ...prev, avatar: avatarUrl }));
-      
+      setUser((prev) => ({ ...prev, avatar: avatarUrl }));
+
       const newNotification = {
         id: Date.now().toString(),
         type: 'system',
@@ -295,10 +302,9 @@ const TenantDashboard = () => {
         read: false,
         priority: 'low' as const,
       };
-      
-      setNotifications(prev => [newNotification, ...prev]);
-      setUnreadNotifications(prev => prev + 1);
-      
+
+      setNotifications((prev) => [newNotification, ...prev]);
+      setUnreadNotifications((prev) => prev + 1);
     } catch (error) {
       console.error('Failed to upload avatar:', error);
     } finally {
@@ -372,15 +378,21 @@ const TenantDashboard = () => {
           <div>
             <div className="mb-8">
               <h2 className="text-3xl font-bold dark:text-white text-gray-900">My Bookings</h2>
-              <p className="text-gray-600 dark:text-white mt-1">Manage your upcoming and past bookings</p>
+              <p className="text-gray-600 dark:text-white mt-1">
+                Manage your upcoming and past bookings
+              </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
               <div className="bg-white dark:bg-[#0B1D39]/90 dark:text-white shadow p-6 rounded-xl">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium dark:text-white text-gray-600">Total Bookings</p>
-                    <p className="text-3xl font-bold dark:text-white text-gray-900">{stats.totalBookings}</p>
+                    <p className="text-sm font-medium dark:text-white text-gray-600">
+                      Total Bookings
+                    </p>
+                    <p className="text-3xl font-bold dark:text-white text-gray-900">
+                      {stats.totalBookings}
+                    </p>
                   </div>
                   <div className="bg-blue-100 p-3 rounded-full">
                     <Calendar className="w-6 h-6 text-blue-600" />
@@ -436,13 +448,19 @@ const TenantDashboard = () => {
         {activeTab === 'wallet' && (
           <div>
             <div className="mb-8">
-              <h2 className="text-3xl font-bold dark:text-white text-gray-900">Wallet & Transactions</h2>
-              <p className="text-gray-600 dark:text-white mt-1">Manage your payments and view transaction history</p>
+              <h2 className="text-3xl font-bold dark:text-white text-gray-900">
+                Wallet & Transactions
+              </h2>
+              <p className="text-gray-600 dark:text-white mt-1">
+                Manage your payments and view transaction history
+              </p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <div className="bg-white dark:bg-[#0B1D39]/90 dark:text-white rounded-xl shadow-lg p-6">
-                <h3 className="text-xl font-bold dark:text-white text-gray-900 mb-4">Wallet Balance</h3>
+                <h3 className="text-xl font-bold dark:text-white text-gray-900 mb-4">
+                  Wallet Balance
+                </h3>
                 <div className="text-center p-6 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg text-white">
                   <p className="text-4xl font-bold">${walletBalance}</p>
                   <p className="text-blue-100 mt-2">Available balance</p>
@@ -465,7 +483,9 @@ const TenantDashboard = () => {
 
               <div className="bg-white dark:bg-[#0B1D39]/90 dark:text-white rounded-xl shadow-lg p-6">
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-xl font-bold dark:text-white text-gray-900">Payment Methods</h3>
+                  <h3 className="text-xl font-bold dark:text-white text-gray-900">
+                    Payment Methods
+                  </h3>
                   <button
                     type="button"
                     className="text-blue-600 dark:text-white hover:text-blue-700 text-sm font-medium"
@@ -515,7 +535,9 @@ const TenantDashboard = () => {
             <div className="mt-8 bg-white dark:bg-[#0B1D39]/90 dark:text-white rounded-xl shadow-lg overflow-hidden">
               <div className="p-6 border-b border-gray-200">
                 <div className="flex justify-between items-center">
-                  <h3 className="text-xl font-bold dark:text-white text-gray-900">Transaction History</h3>
+                  <h3 className="text-xl font-bold dark:text-white text-gray-900">
+                    Transaction History
+                  </h3>
                   <button
                     type="button"
                     className="text-blue-600 hover:text-blue-700 flex items-center"
@@ -553,7 +575,9 @@ const TenantDashboard = () => {
                           {transaction.description}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap dark:text-white text-sm font-medium text-gray-900">
-                          <span className={transaction.amount > 0 ? 'text-green-600' : 'text-red-600'}>
+                          <span
+                            className={transaction.amount > 0 ? 'text-green-600' : 'text-red-600'}
+                          >
                             {transaction.amount > 0 ? '+' : ''}${Math.abs(transaction.amount)}
                           </span>
                         </td>
@@ -590,15 +614,21 @@ const TenantDashboard = () => {
           <div>
             <div className="mb-8">
               <h2 className="text-3xl font-bold dark:text-white text-gray-900">Travel Analytics</h2>
-              <p className="text-gray-600 dark:text-white mt-1">Insights about your travel patterns and preferences</p>
+              <p className="text-gray-600 dark:text-white mt-1">
+                Insights about your travel patterns and preferences
+              </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               <div className="bg-white dark:bg-[#0B1D39]/90 dark:text-white shadow p-6 rounded-xl">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium dark:text-white text-gray-600">Average Rating</p>
-                    <p className="text-3xl font-bold dark:text-white text-gray-900">{stats.averageRating}</p>
+                    <p className="text-sm font-medium dark:text-white text-gray-600">
+                      Average Rating
+                    </p>
+                    <p className="text-3xl font-bold dark:text-white text-gray-900">
+                      {stats.averageRating}
+                    </p>
                   </div>
                   <div className="bg-yellow-100 p-3 rounded-full">
                     <Star className="w-6 h-6 text-yellow-600" />
@@ -609,7 +639,9 @@ const TenantDashboard = () => {
               <div className="bg-white dark:bg-[#0B1D39]/90 dark:text-white p-6 rounded-xl shadow">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium dark:text-white text-gray-600">Member Since</p>
+                    <p className="text-sm font-medium dark:text-white text-gray-600">
+                      Member Since
+                    </p>
                     <p className="text-3xl font-bold text-blue-600">{stats.memberSince}</p>
                   </div>
                   <div className="bg-blue-100 p-3 rounded-full">
@@ -633,7 +665,9 @@ const TenantDashboard = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <div className="bg-white dark:bg-[#0B1D39]/90 dark:text-white rounded-xl shadow-lg p-6">
-                <h3 className="text-xl font-bold dark:text-white text-gray-900 mb-4">Booking Trends</h3>
+                <h3 className="text-xl font-bold dark:text-white text-gray-900 mb-4">
+                  Booking Trends
+                </h3>
                 <div className="h-64 flex items-center justify-center text-gray-500 dark:text-gray-400">
                   <div className="text-center">
                     <BarChart3 className="w-16 h-16 mx-auto mb-4" />
@@ -643,7 +677,9 @@ const TenantDashboard = () => {
               </div>
 
               <div className="bg-white dark:bg-[#0B1D39]/90 dark:text-white rounded-xl shadow-lg p-6">
-                <h3 className="text-xl font-bold dark:text-white text-gray-900 mb-4">Spending Analysis</h3>
+                <h3 className="text-xl font-bold dark:text-white text-gray-900 mb-4">
+                  Spending Analysis
+                </h3>
                 <div className="h-64 flex items-center justify-center text-gray-500 dark:text-gray-400">
                   <div className="text-center">
                     <PieChart className="w-16 h-16 mx-auto mb-4" />
@@ -659,4 +695,4 @@ const TenantDashboard = () => {
   );
 };
 
-export default TenantDashboard; 
+export default TenantDashboard;
