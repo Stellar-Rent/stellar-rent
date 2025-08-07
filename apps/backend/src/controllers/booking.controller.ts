@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
 import { ZodError } from 'zod';
+import { verifyStellarTransaction } from '../blockchain/soroban';
 import { confirmBookingPayment, getBookingById } from '../services/booking.service';
 import { bookingService } from '../services/booking.service';
 import type { AuthRequest } from '../types/auth.types';
@@ -147,34 +148,56 @@ export const getBooking = async (req: AuthRequest, res: Response) => {
 
 export const confirmPayment = async (req: AuthRequest, res: Response) => {
   try {
-    const escrowAddress = req.body.escrowAddress;
+    const { bookingId, transactionHash, sourcePublicKey } = req.body;
     const userId = req.user?.id;
-    const transactionHash = req.body.transactionHash;
 
     if (!userId) {
-      return res.status(401).json({
-        error: 'User authentication required',
-      });
+      return res.status(401).json({ error: 'User authentication required' });
     }
-
+    if (!bookingId) {
+      return res.status(400).json({ error: 'bookingId is required' });
+    }
     if (!transactionHash) {
       return res.status(400).json({ error: 'transactionHash is required' });
+    }
+    if (!sourcePublicKey) {
+      return res.status(400).json({ error: 'sourcePublicKey is required' });
     }
 
     if (process.env.NODE_ENV !== 'production') {
       console.log('Payment confirmation attempt:', {
         userId,
+        bookingId,
         transactionHash: `${transactionHash.substring(0, 8)}...`,
+        sourcePublicKey: `${sourcePublicKey.substring(0, 8)}...`,
       });
     } else {
-      console.log(`Payment confirmation attempt for booking ${transactionHash}`);
+      console.log(
+        `Payment confirmation attempt for booking ${bookingId} with transaction ${transactionHash}`
+      );
     }
 
-    if (!escrowAddress) {
-      return res.status(400).json({ error: 'escrowAddress is required' });
+    const bookingDetails = await getBookingById(bookingId);
+    if (!bookingDetails) {
+      return res.status(404).json({ error: 'Booking not found' });
     }
 
-    const result = await confirmBookingPayment(escrowAddress);
+    const expectedAmount = bookingDetails.total.toString();
+    const expectedDestination = bookingDetails.escrow_address;
+
+    if (!expectedDestination) {
+      return res.status(500).json({ error: 'Booking missing escrow address' });
+    }
+
+    await verifyStellarTransaction(
+      transactionHash,
+      sourcePublicKey,
+      expectedDestination,
+      expectedAmount,
+      'USDC'
+    );
+
+    const result = await confirmBookingPayment(bookingId, transactionHash);
 
     res.status(200).json({
       success: true,
