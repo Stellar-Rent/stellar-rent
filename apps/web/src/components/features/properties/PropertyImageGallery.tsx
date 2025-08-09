@@ -51,7 +51,7 @@ export function PropertyImageGallery({ images, title, className = '' }: Property
 
   const getImageSrc = (image: string, index: number) => {
     if (imageErrors.has(index)) {
-      return '/images/house1.jpg?height=400&width=600';
+      return '/images/house1.webp?height=400&width=600';
     }
     return image;
   };
@@ -77,7 +77,7 @@ export function PropertyImageGallery({ images, title, className = '' }: Property
         {/* Main Image */}
         <div className="relative h-[400px] lg:h-[500px] rounded-lg overflow-hidden group cursor-pointer">
           <Image
-            src={getImageSrc(images[currentIndex], currentIndex) || '/images/house1.jpg'}
+            src={getImageSrc(images[currentIndex], currentIndex) || '/images/house1.webp'}
             alt={`${title} - Image ${currentIndex + 1}`}
             fill
             className="object-cover transition-transform duration-300 group-hover:scale-105"
@@ -160,7 +160,7 @@ export function PropertyImageGallery({ images, title, className = '' }: Property
                   aria-label={`View image ${index + 1}`}
                 >
                   <Image
-                    src={getImageSrc(image, index) || '/images/house1.jpg'}
+                    src={getImageSrc(image, index) || '/images/house1.webp'}
                     alt={`${title} thumbnail ${index + 1}`}
                     fill
                     className="object-cover"
@@ -185,7 +185,7 @@ export function PropertyImageGallery({ images, title, className = '' }: Property
 
           <div className="relative w-full h-[90vh]">
             <Image
-              src={getImageSrc(images[currentIndex], currentIndex) || '/images/house1.jpg'}
+              src={getImageSrc(images[currentIndex], currentIndex) || '/images/house1.webp'}
               alt={`${title} - Full size image ${currentIndex + 1}`}
               fill
               className="object-contain"
