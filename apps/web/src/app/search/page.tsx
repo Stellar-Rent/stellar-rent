@@ -90,7 +90,7 @@ export default function SearchPage() {
   }, []);
 
   return (
-    <main className="px-4 py-6 mt-10 bg-[#CFF0FF] dark:bg-[#0B1D39] text-[#182A47] dark:text-[#C2F2FF] space-y-6">
+    <main className="px-4 py-6 mt-10 space-y-6">
       <div className="flex flex-col lg:flex-row gap-3 md:gap-6">
         <div className="w-full lg:w-72">
           <FilterSidebar
