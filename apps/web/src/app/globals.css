@@ -40,8 +40,8 @@
   }
 
   .dark {
-    /* Dark mode - Background #0B1D39 (11, 29, 57), Text #C2F2FF (194, 242, 255) */
-    --background: 217 68% 13%;
+    /* Dark mode - Background and text aligned with homepage */
+    --background: 217 68% 13%; /* homepage bg */
     --foreground: 194 100% 88%;
 
     --muted: 217 68% 18%;
@@ -50,7 +50,7 @@
     --popover: 217 68% 13%;
     --popover-foreground: 194 100% 88%;
 
-    --card: 217 68% 15%;
+    --card: 217 68% 15%; /* homepage cards */
     --card-foreground: 194 100% 88%;
 
     --border: 217 50% 25%;

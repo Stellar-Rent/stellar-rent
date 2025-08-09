@@ -39,6 +39,7 @@ import {
   X,
   XCircle,
 } from 'lucide-react';
+import Image from 'next/image';
 import type React from 'react';
 import { useEffect, useState } from 'react';
 
@@ -83,7 +84,8 @@ const mockBookings: Booking[] = [
   {
     id: '1',
     propertyTitle: 'Luxury Downtown Apartment',
-    propertyImage: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400',
+    propertyImage:
+      'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&auto=format&fit=crop',
     location: 'New York, NY',
     checkIn: '2025-06-15',
     checkOut: '2025-06-20',
@@ -99,7 +101,8 @@ const mockBookings: Booking[] = [
   {
     id: '2',
     propertyTitle: 'Cozy Beach House',
-    propertyImage: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400',
+    propertyImage:
+      'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&auto=format&fit=crop',
     location: 'Miami, FL',
     checkIn: '2025-07-10',
     checkOut: '2025-07-15',
@@ -114,7 +117,8 @@ const mockBookings: Booking[] = [
   {
     id: '3',
     propertyTitle: 'Mountain Cabin Retreat',
-    propertyImage: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=400',
+    propertyImage:
+      'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=800&auto=format&fit=crop',
     location: 'Aspen, CO',
     checkIn: '2025-05-20',
     checkOut: '2025-05-25',
@@ -186,7 +190,15 @@ const TenantDashboard = () => {
   const [bookings, setBookings] = useState(mockBookings);
   const [user, setUser] = useState(mockUser);
   const [transactions, _setTransactions] = useState(mockTransactions);
-  const [notifications, setNotifications] = useState<any[]>([]);
+  type NotificationItem = {
+    id: string;
+    title: string;
+    message: string;
+    read: boolean;
+    createdAt: string;
+  };
+
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [walletBalance, _setWalletBalance] = useState(2500);
   const [isLoading, setIsLoading] = useState(false);
@@ -314,7 +326,7 @@ const TenantDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 bg-gradient-to-b from-white to-blue-50 dark:from-[#0B1D39] dark:to-[#071429] dark:text-white">
-      <header className="bg-white dark:bg-[#0B1D39]/90 dark:text-white shadow-sm border-b">
+      <header className="bg-white dark:bg-card/90 dark:text-foreground shadow-sm border-b">
         <div className="w-full px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
@@ -333,7 +345,13 @@ const TenantDashboard = () => {
                 <Settings className="w-6 h-6" />
               </button>
               <div className="flex items-center space-x-3">
-                <img src={user.avatar} alt={user.name} className="w-8 h-8 rounded-full" />
+                <Image
+                  src={user.avatar}
+                  alt={user.name}
+                  width={32}
+                  height={32}
+                  className="rounded-full"
+                />
                 <span className="text-sm font-medium text-gray-700 dark:text-white">
                   {user.name}
                 </span>
@@ -384,7 +402,7 @@ const TenantDashboard = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-              <div className="bg-white dark:bg-[#0B1D39]/90 dark:text-white shadow p-6 rounded-xl">
+              <div className="bg-white dark:bg-card/90 dark:text-foreground shadow p-6 rounded-xl">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium dark:text-white text-gray-600">
@@ -400,7 +418,7 @@ const TenantDashboard = () => {
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-[#0B1D39]/90 dark:text-white p-6 rounded-xl shadow">
+              <div className="bg-white dark:bg-card/90 dark:text-foreground p-6 rounded-xl shadow">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium dark:text-white text-gray-600">Upcoming</p>
@@ -412,7 +430,7 @@ const TenantDashboard = () => {
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-[#0B1D39]/90 dark:text-white p-6 rounded-xl shadow">
+              <div className="bg-white dark:bg-card/90 dark:text-foreground p-6 rounded-xl shadow">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium dark:text-white text-gray-600">Completed</p>
@@ -424,7 +442,7 @@ const TenantDashboard = () => {
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-[#0B1D39]/90 dark:text-white p-6 rounded-xl shadow">
+              <div className="bg-white dark:bg-card/90 dark:text-foreground p-6 rounded-xl shadow">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium dark:text-white text-gray-600">Total Spent</p>
@@ -457,7 +475,7 @@ const TenantDashboard = () => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <div className="bg-white dark:bg-[#0B1D39]/90 dark:text-white rounded-xl shadow-lg p-6">
+              <div className="bg-white dark:bg-card/90 dark:text-foreground rounded-xl shadow-lg p-6">
                 <h3 className="text-xl font-bold dark:text-white text-gray-900 mb-4">
                   Wallet Balance
                 </h3>
@@ -481,7 +499,7 @@ const TenantDashboard = () => {
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-[#0B1D39]/90 dark:text-white rounded-xl shadow-lg p-6">
+              <div className="bg-white dark:bg-card/90 dark:text-foreground rounded-xl shadow-lg p-6">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-xl font-bold dark:text-white text-gray-900">
                     Payment Methods
@@ -532,7 +550,7 @@ const TenantDashboard = () => {
               </div>
             </div>
 
-            <div className="mt-8 bg-white dark:bg-[#0B1D39]/90 dark:text-white rounded-xl shadow-lg overflow-hidden">
+            <div className="mt-8 bg-white dark:bg-card/90 dark:text-foreground rounded-xl shadow-lg overflow-hidden">
               <div className="p-6 border-b border-gray-200">
                 <div className="flex justify-between items-center">
                   <h3 className="text-xl font-bold dark:text-white text-gray-900">
@@ -549,7 +567,7 @@ const TenantDashboard = () => {
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-gray-50 dark:bg-[#0B1D39]/90 dark:text-white">
+                  <thead className="bg-gray-50 dark:bg-card/90 dark:text-foreground">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider">
                         Date
@@ -565,7 +583,7 @@ const TenantDashboard = () => {
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white dark:bg-[#0B1D39]/90 dark:text-white divide-y divide-gray-200">
+                  <tbody className="bg-white dark:bg-card/90 dark:text-foreground divide-y divide-gray-200">
                     {transactions.map((transaction) => (
                       <tr key={transaction.id} className="">
                         <td className="px-6 py-4 whitespace-nowrap text-sm dark:text-white text-gray-900">
@@ -620,7 +638,7 @@ const TenantDashboard = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-              <div className="bg-white dark:bg-[#0B1D39]/90 dark:text-white shadow p-6 rounded-xl">
+              <div className="bg-white dark:bg-card/90 dark:text-foreground shadow p-6 rounded-xl">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium dark:text-white text-gray-600">
@@ -636,7 +654,7 @@ const TenantDashboard = () => {
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-[#0B1D39]/90 dark:text-white p-6 rounded-xl shadow">
+              <div className="bg-white dark:bg-card/90 dark:text-foreground p-6 rounded-xl shadow">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium dark:text-white text-gray-600">
@@ -650,7 +668,7 @@ const TenantDashboard = () => {
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-[#0B1D39]/90 dark:text-white p-6 rounded-xl shadow">
+              <div className="bg-white dark:bg-card/90 dark:text-foreground p-6 rounded-xl shadow">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium dark:text-white text-gray-600">Total Spent</p>
@@ -664,7 +682,7 @@ const TenantDashboard = () => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <div className="bg-white dark:bg-[#0B1D39]/90 dark:text-white rounded-xl shadow-lg p-6">
+              <div className="bg-white dark:bg-card/90 dark:text-foreground rounded-xl shadow-lg p-6">
                 <h3 className="text-xl font-bold dark:text-white text-gray-900 mb-4">
                   Booking Trends
                 </h3>
@@ -676,7 +694,7 @@ const TenantDashboard = () => {
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-[#0B1D39]/90 dark:text-white rounded-xl shadow-lg p-6">
+              <div className="bg-white dark:bg-card/90 dark:text-foreground rounded-xl shadow-lg p-6">
                 <h3 className="text-xl font-bold dark:text-white text-gray-900 mb-4">
                   Spending Analysis
                 </h3>
