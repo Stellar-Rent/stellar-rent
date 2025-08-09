@@ -91,7 +91,7 @@ export const SearchBar = () => {
               <IconContainer
                 icon={
                   <Image
-                    src="/icons/location.png"
+                    src="/icons/location.webp"
                     alt="Location"
                     width={40}
                     height={40}
@@ -114,7 +114,7 @@ export const SearchBar = () => {
               <IconContainer
                 icon={
                   <Image
-                    src="/icons/calendar.png"
+                    src="/icons/calendar.webp"
                     alt="Calendar"
                     width={40}
                     height={40}
@@ -137,7 +137,7 @@ export const SearchBar = () => {
               <IconContainer
                 icon={
                   <Image
-                    src="/icons/agenda.png"
+                    src="/icons/agenda.webp"
                     alt="Agenda"
                     width={40}
                     height={40}

@@ -10,35 +10,35 @@ export const RightSidebar = () => {
       {/* Navigation Icons */}
       <div className="flex flex-col items-center space-y-6">
         <button type="button" className="text-primary transition-colors duration-200 p-2">
-          <Image src="/icons/menu.png" alt="Menu" width={40} height={40} className="p-2" />
+          <Image src="/icons/menu.webp" alt="Menu" width={40} height={40} className="p-2" />
         </button>
 
         <button type="button" className="text-primary transition-colors duration-200 p-2">
           <IconContainer
             icon={
-              <Image src="/icons/search.png" alt="Search" width={40} height={40} className="p-2" />
+              <Image src="/icons/search.webp" alt="Search" width={40} height={40} className="p-2" />
             }
           />
         </button>
 
         <button type="button" className="text-primary transition-colors duration-200 p-2">
-          <Image src="/icons/heart.png" alt="Heart" width={40} height={40} className="p-2" />
+          <Image src="/icons/heart.webp" alt="Heart" width={40} height={40} className="p-2" />
         </button>
 
         <button type="button" className="text-primary transition-colors duration-200 p-2">
-          <Image src="/icons/send.png" alt="Send" width={40} height={40} className="p-2" />
+          <Image src="/icons/send.webp" alt="Send" width={40} height={40} className="p-2" />
         </button>
 
         <button type="button" className="text-primary transition-colors duration-200 p-2">
-          <Image src="/icons/settings.png" alt="Settings" width={40} height={40} className="p-2" />
+          <Image src="/icons/settings.webp" alt="Settings" width={40} height={40} className="p-2" />
         </button>
 
         <button type="button" className="text-primary transition-colors duration-200 p-2">
-          <Image src="/icons/lock.png" alt="Lock" width={40} height={40} className="p-2" />
+          <Image src="/icons/lock.webp" alt="Lock" width={40} height={40} className="p-2" />
         </button>
 
         <button type="button" className="text-primary transition-colors duration-200 p-2">
-          <Image src="/icons/message.png" alt="Message" width={40} height={40} className="p-2" />
+          <Image src="/icons/message.webp" alt="Message" width={40} height={40} className="p-2" />
         </button>
       </div>
 
