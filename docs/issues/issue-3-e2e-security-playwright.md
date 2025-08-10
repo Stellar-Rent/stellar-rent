@@ -48,3 +48,7 @@ Goal: Playwright test suite (TypeScript) that validates critical flows, security
 - Keep selectors resilient; prefer testids and role-based queries.
 - Seed data deterministically; reset between tests.
 
+### Related PRs
+
+- Test scaffolding (Playwright + integration test skeleton): PR test-scaffolding
+
