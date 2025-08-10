@@ -45,3 +45,7 @@ Goal: Comprehensive integration tests for booking creation, payment confirmation
 - Start with mocks (contract tests) before wiring real network calls.
 - Consider chaos tests (timeouts/retries) and rate limiting tests for payment endpoints.
 
+### Related PRs
+
+- Test scaffolding (Playwright + integration test skeleton): PR test-scaffolding
+
