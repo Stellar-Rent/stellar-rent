@@ -83,71 +83,71 @@ export const SearchBar = () => {
 
   return (
     <div className="w-full" ref={searchBarRef}>
-      <div className="bg-secondary rounded-3xl p-2">
-        <form onSubmit={handleSubmit} className="flex flex-col lg:flex-row justify-start gap-5">
+      <div className="bg-secondary rounded-3xl p-1.5">
+        <form onSubmit={handleSubmit} className="flex flex-col lg:flex-row justify-start gap-4">
           {/* Location Field */}
           <div className="flex relative group">
-            <div className="flex items-center rounded-2xl p-5 gap-4">
+            <div className="flex items-center rounded-2xl p-4 gap-3">
               <IconContainer
                 icon={
                   <Image
-                    src="/icons/location.png"
+                    src="/icons/location.webp"
                     alt="Location"
-                    width={40}
-                    height={40}
-                    className="p-2"
+                    width={28}
+                    height={28}
+                    className="p-1"
                   />
                 }
               />
               <div className="flex flex-col">
-                <p className="text-white font-semibold text-lg block">Location</p>
-                <p className="text-sm text-gray-400 mt-1">Search by country or city</p>
+                <p className="text-white font-semibold text-base block">Location</p>
+                <p className="text-xs text-gray-400 mt-1">Search by country or city</p>
               </div>
             </div>
           </div>
 
-          <div className="w-1 h-20 bg-gray-600/30 self-center" />
+          <div className="w-px h-16 bg-gray-600/30 self-center" />
 
           {/* Date Field */}
           <div className="flex relative group">
-            <div className="flex items-center rounded-2xl p-5 gap-4">
+            <div className="flex items-center rounded-2xl p-4 gap-3">
               <IconContainer
                 icon={
                   <Image
-                    src="/icons/calendar.png"
+                    src="/icons/calendar.webp"
                     alt="Calendar"
-                    width={40}
-                    height={40}
-                    className="p-2"
+                    width={28}
+                    height={28}
+                    className="p-1"
                   />
                 }
               />
               <div className="flex flex-col">
-                <p className="text-white font-semibold text-lg block">Date</p>
-                <p className="text-sm text-gray-400 mt-1">Select a date</p>
+                <p className="text-white font-semibold text-base block">Date</p>
+                <p className="text-xs text-gray-400 mt-1">Select a date</p>
               </div>
             </div>
           </div>
 
-          <div className="w-1 h-20 bg-gray-600/30 self-center" />
+          <div className="w-px h-16 bg-gray-600/30 self-center" />
 
           {/* Guests Field */}
           <div className="flex relative group">
-            <div className="flex items-center rounded-2xl p-5 gap-4">
+            <div className="flex items-center rounded-2xl p-4 gap-3">
               <IconContainer
                 icon={
                   <Image
-                    src="/icons/agenda.png"
+                    src="/icons/agenda.webp"
                     alt="Agenda"
-                    width={40}
-                    height={40}
-                    className="p-2"
+                    width={28}
+                    height={28}
+                    className="p-1"
                   />
                 }
               />
               <div className="flex flex-col">
-                <p className="text-white font-semibold text-lg block">Guests</p>
-                <p className="text-sm text-gray-400 mt-1">2 Guests (1 Adult - 1 Kid)</p>
+                <p className="text-white font-semibold text-base block">Guests</p>
+                <p className="text-xs text-gray-400 mt-1">2 Guests (1 Adult - 1 Kid)</p>
               </div>
             </div>
           </div>

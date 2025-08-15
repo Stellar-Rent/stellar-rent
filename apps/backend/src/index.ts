@@ -44,7 +44,7 @@ const PORT = process.env.PORT || 3001;
 app.use(express.json());
 app.use(
   cors({
-    origin: ['http://localhost:3000', 'http://localhost:3002'],
+    origin: ['http://localhost:3000', 'http://localhost:3001'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
@@ -72,7 +72,9 @@ app.use(errorMiddleware);
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`Servidor corriendo en el puerto ${PORT}`);
   initializeServices();
   console.log('✅ All services initialized successfully');
+  initializeCronJob();
+  console.log('Cron job initialized for expired challenges cleanup');
+  console.log(`Running on port http://localhost:${PORT}`);
 });

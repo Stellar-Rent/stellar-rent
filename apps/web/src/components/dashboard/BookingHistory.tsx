@@ -1,28 +1,28 @@
 'use client';
 
 import {
-  Calendar,
-  MapPin,
-  Users,
-  DollarSign,
-  Clock,
-  CheckCircle,
-  XCircle,
   AlertCircle,
-  Eye,
-  MessageSquare,
-  Star,
-  Filter,
-  Search,
+  Calendar,
+  CheckCircle,
+  Clock,
+  DollarSign,
   Download,
-  MoreHorizontal,
   Edit,
-  Trash2,
-  RefreshCw,
   ExternalLink,
+  Eye,
+  Filter,
+  MapPin,
+  MessageSquare,
+  MoreHorizontal,
+  RefreshCw,
+  Search,
+  Star,
+  Trash2,
+  Users,
+  XCircle,
 } from 'lucide-react';
-import { useState, useMemo } from 'react';
 import Image from 'next/image';
+import { useMemo, useState } from 'react';
 import type { Booking, FilterState } from '../../types/shared';
 
 interface BookingHistoryProps {
@@ -85,7 +85,7 @@ const BookingHistory: React.FC<BookingHistoryProps> = ({
 
   // Filter and sort bookings
   const filteredAndSortedBookings = useMemo(() => {
-    let filtered = bookings.filter((booking) => {
+    const filtered = bookings.filter((booking) => {
       const searchMatch =
         booking.propertyTitle.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
         booking.location.toLowerCase().includes(filters.searchTerm.toLowerCase());
@@ -104,16 +104,18 @@ const BookingHistory: React.FC<BookingHistoryProps> = ({
         case 'past':
           dateMatch = checkOutDate < now;
           break;
-        case 'this-month':
+        case 'this-month': {
           const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
           const thisMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
           dateMatch = checkInDate >= thisMonthStart && checkInDate <= thisMonthEnd;
           break;
-        case 'last-month':
+        }
+        case 'last-month': {
           const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
           const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
           dateMatch = checkInDate >= lastMonthStart && checkInDate <= lastMonthEnd;
           break;
+        }
       }
 
       return searchMatch && statusMatch && dateMatch;
@@ -194,7 +196,7 @@ const BookingHistory: React.FC<BookingHistoryProps> = ({
 
   const handleCancelBooking = async () => {
     if (!selectedBooking) return;
-    
+
     try {
       await onCancelBooking(selectedBooking.id);
       setShowCancelModal(false);
@@ -220,8 +222,17 @@ const BookingHistory: React.FC<BookingHistoryProps> = ({
 
   const exportBookings = () => {
     const csvContent = [
-      ['Property', 'Location', 'Check-in', 'Check-out', 'Guests', 'Amount', 'Status', 'Booking Date'],
-      ...filteredAndSortedBookings.map(booking => [
+      [
+        'Property',
+        'Location',
+        'Check-in',
+        'Check-out',
+        'Guests',
+        'Amount',
+        'Status',
+        'Booking Date',
+      ],
+      ...filteredAndSortedBookings.map((booking) => [
         booking.propertyTitle,
         booking.location,
         booking.checkIn,
@@ -230,8 +241,10 @@ const BookingHistory: React.FC<BookingHistoryProps> = ({
         `$${booking.totalAmount}`,
         booking.status,
         booking.bookingDate,
-      ])
-    ].map(row => row.join(',')).join('\n');
+      ]),
+    ]
+      .map((row) => row.join(','))
+      .join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -349,7 +362,7 @@ const BookingHistory: React.FC<BookingHistoryProps> = ({
         {/* Bookings Display */}
         {isLoading ? (
           <div className="p-12 text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto" />
             <p className="mt-4 text-gray-600 dark:text-gray-400">Loading bookings...</p>
           </div>
         ) : filteredAndSortedBookings.length === 0 ? (
@@ -518,7 +531,10 @@ const BookingHistory: React.FC<BookingHistoryProps> = ({
                       </div>
                       <div className="flex justify-between">
                         <span>Duration:</span>
-                        <span>{calculateNights(selectedBooking.checkIn, selectedBooking.checkOut)} nights</span>
+                        <span>
+                          {calculateNights(selectedBooking.checkIn, selectedBooking.checkOut)}{' '}
+                          nights
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span>Guests:</span>
@@ -528,7 +544,9 @@ const BookingHistory: React.FC<BookingHistoryProps> = ({
                   </div>
 
                   <div>
-                    <h5 className="font-medium text-gray-900 dark:text-white mb-2">Payment Details</h5>
+                    <h5 className="font-medium text-gray-900 dark:text-white mb-2">
+                      Payment Details
+                    </h5>
                     <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
                       <div className="flex justify-between">
                         <span>Total Amount:</span>
@@ -543,7 +561,9 @@ const BookingHistory: React.FC<BookingHistoryProps> = ({
                       {selectedBooking.escrowAddress && (
                         <div className="flex justify-between">
                           <span>Escrow Address:</span>
-                          <span className="font-mono text-xs">{selectedBooking.escrowAddress.slice(0, 8)}...</span>
+                          <span className="font-mono text-xs">
+                            {selectedBooking.escrowAddress.slice(0, 8)}...
+                          </span>
                         </div>
                       )}
                     </div>
@@ -839,4 +859,4 @@ const BookingListItem: React.FC<{
   </div>
 );
 
-export default BookingHistory; 
+export default BookingHistory;

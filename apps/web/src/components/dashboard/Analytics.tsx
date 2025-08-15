@@ -1,24 +1,24 @@
 'use client';
 
 import {
-  TrendingUp,
-  TrendingDown,
-  DollarSign,
-  Calendar,
-  Star,
-  Users,
-  Home,
-  BarChart3,
-  PieChart,
   Activity,
-  ArrowUpRight,
   ArrowDownRight,
-  Eye,
+  ArrowUpRight,
+  BarChart3,
+  Calendar,
+  DollarSign,
   Download,
+  Eye,
   Filter,
+  Home,
+  PieChart,
   RefreshCw,
+  Star,
+  TrendingDown,
+  TrendingUp,
+  Users,
 } from 'lucide-react';
-import { useState, useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 interface AnalyticsData {
   overview: {
@@ -75,7 +75,9 @@ const Analytics: React.FC<AnalyticsProps> = ({
   onExport,
 }) => {
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d' | '1y'>('30d');
-  const [selectedMetric, setSelectedMetric] = useState<'bookings' | 'revenue' | 'rating' | 'occupancy'>('bookings');
+  const [selectedMetric, setSelectedMetric] = useState<
+    'bookings' | 'revenue' | 'rating' | 'occupancy'
+  >('bookings');
 
   const metricOptions = [
     { value: 'bookings', label: 'Bookings', icon: Calendar },
@@ -92,7 +94,7 @@ const Analytics: React.FC<AnalyticsProps> = ({
   ];
 
   // Calculate percentage changes
-  const getPercentageChange = (current: number, previous: number) => {
+  const _getPercentageChange = (current: number, previous: number) => {
     if (previous === 0) return current > 0 ? 100 : 0;
     return ((current - previous) / previous) * 100;
   };
@@ -101,7 +103,7 @@ const Analytics: React.FC<AnalyticsProps> = ({
   const trendData = useMemo(() => {
     const days = timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : timeRange === '90d' ? 90 : 365;
     const data = [];
-    
+
     for (let i = days - 1; i >= 0; i--) {
       const date = new Date();
       date.setDate(date.getDate() - i);
@@ -113,11 +115,17 @@ const Analytics: React.FC<AnalyticsProps> = ({
         occupancy: Math.random() * 0.4 + 0.6,
       });
     }
-    
+
     return data;
   }, [timeRange]);
 
-  const StatCard = ({ title, value, change, icon: Icon, color = 'blue' }: {
+  const StatCard = ({
+    title,
+    value,
+    change,
+    icon: Icon,
+    color = 'blue',
+  }: {
     title: string;
     value: string | number;
     change?: number;
@@ -136,7 +144,9 @@ const Analytics: React.FC<AnalyticsProps> = ({
               ) : (
                 <ArrowDownRight className="w-4 h-4 text-red-500" />
               )}
-              <span className={`text-sm font-medium ml-1 ${change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              <span
+                className={`text-sm font-medium ml-1 ${change >= 0 ? 'text-green-600' : 'text-red-600'}`}
+              >
                 {Math.abs(change).toFixed(1)}%
               </span>
               <span className="text-sm text-gray-500 dark:text-gray-400 ml-1">vs last period</span>
@@ -157,22 +167,23 @@ const Analytics: React.FC<AnalyticsProps> = ({
     </div>
   );
 
-  const SimpleBarChart = ({ data, height = 200 }: { data: Array<{ label: string; value: number }>; height?: number }) => (
+  const SimpleBarChart = ({
+    data,
+    height = 200,
+  }: { data: Array<{ label: string; value: number }>; height?: number }) => (
     <div className="relative" style={{ height }}>
       <div className="flex items-end justify-between h-full space-x-2">
         {data.map((item, index) => {
-          const maxValue = Math.max(...data.map(d => d.value));
+          const maxValue = Math.max(...data.map((d) => d.value));
           const percentage = (item.value / maxValue) * 100;
-          
+
           return (
             <div key={index} className="flex-1 flex flex-col items-center">
               <div
                 className="w-full bg-blue-500 rounded-t transition-all duration-300 hover:bg-blue-600"
                 style={{ height: `${percentage}%` }}
               />
-              <span className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                {item.label}
-              </span>
+              <span className="text-xs text-gray-500 dark:text-gray-400 mt-2">{item.label}</span>
             </div>
           );
         })}
@@ -180,20 +191,28 @@ const Analytics: React.FC<AnalyticsProps> = ({
     </div>
   );
 
-  const SimpleLineChart = ({ data, height = 200 }: { data: Array<{ label: string; value: number }>; height?: number }) => (
+  const SimpleLineChart = ({
+    data,
+    height = 200,
+  }: { data: Array<{ label: string; value: number }>; height?: number }) => (
     <div className="relative" style={{ height }}>
       <svg className="w-full h-full" viewBox={`0 0 ${data.length * 40} ${height}`}>
         <polyline
           fill="none"
           stroke="#3B82F6"
           strokeWidth="2"
-          points={data.map((item, index) => `${index * 40 + 20},${height - (item.value / Math.max(...data.map(d => d.value))) * height}`).join(' ')}
+          points={data
+            .map(
+              (item, index) =>
+                `${index * 40 + 20},${height - (item.value / Math.max(...data.map((d) => d.value))) * height}`
+            )
+            .join(' ')}
         />
         {data.map((item, index) => (
           <circle
             key={index}
             cx={index * 40 + 20}
-            cy={height - (item.value / Math.max(...data.map(d => d.value))) * height}
+            cy={height - (item.value / Math.max(...data.map((d) => d.value))) * height}
             r="3"
             fill="#3B82F6"
           />
@@ -220,7 +239,9 @@ const Analytics: React.FC<AnalyticsProps> = ({
         <div>
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Analytics Dashboard</h2>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
-            {userType === 'host' ? 'Track your property performance and earnings' : 'Monitor your booking activity and spending'}
+            {userType === 'host'
+              ? 'Track your property performance and earnings'
+              : 'Monitor your booking activity and spending'}
           </p>
         </div>
         <div className="flex items-center space-x-3">
@@ -298,7 +319,9 @@ const Analytics: React.FC<AnalyticsProps> = ({
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Main Chart */}
-        <ChartCard title={`${selectedMetric.charAt(0).toUpperCase() + selectedMetric.slice(1)} Trends`}>
+        <ChartCard
+          title={`${selectedMetric.charAt(0).toUpperCase() + selectedMetric.slice(1)} Trends`}
+        >
           <div className="mb-4">
             <div className="flex space-x-2">
               {metricOptions.map((option) => {
@@ -322,12 +345,16 @@ const Analytics: React.FC<AnalyticsProps> = ({
             </div>
           </div>
           <SimpleLineChart
-            data={trendData.map((item, index) => ({
+            data={trendData.map((item, _index) => ({
               label: item.date,
-              value: selectedMetric === 'bookings' ? item.bookings :
-                     selectedMetric === 'revenue' ? item.revenue :
-                     selectedMetric === 'rating' ? item.rating * 10 :
-                     item.occupancy * 100,
+              value:
+                selectedMetric === 'bookings'
+                  ? item.bookings
+                  : selectedMetric === 'revenue'
+                    ? item.revenue
+                    : selectedMetric === 'rating'
+                      ? item.rating * 10
+                      : item.occupancy * 100,
             }))}
             height={300}
           />
@@ -376,13 +403,18 @@ const Analytics: React.FC<AnalyticsProps> = ({
         <ChartCard title={userType === 'host' ? 'Top Performing Properties' : 'Recent Activity'}>
           <div className="space-y-3">
             {(userType === 'host' ? data.topProperties : []).slice(0, 5).map((property, index) => (
-              <div key={property.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <div
+                key={property.id}
+                className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
+              >
                 <div className="flex items-center">
                   <span className="text-sm font-medium text-gray-900 dark:text-white mr-2">
                     #{index + 1}
                   </span>
                   <div>
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">{property.title}</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">
+                      {property.title}
+                    </p>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
                       {property.bookings} bookings • ${property.revenue}
                     </p>
@@ -426,7 +458,8 @@ const Analytics: React.FC<AnalyticsProps> = ({
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600 dark:text-gray-400">Success Rate</span>
               <span className="text-sm font-medium text-green-600">
-                {((data.overview.completedBookings / data.overview.totalBookings) * 100).toFixed(1)}%
+                {((data.overview.completedBookings / data.overview.totalBookings) * 100).toFixed(1)}
+                %
               </span>
             </div>
           </div>
@@ -436,4 +469,4 @@ const Analytics: React.FC<AnalyticsProps> = ({
   );
 };
 
-export default Analytics; 
+export default Analytics;

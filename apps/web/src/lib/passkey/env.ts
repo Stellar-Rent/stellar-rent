@@ -18,9 +18,7 @@ const envSchema = z.object({
       try {
         return JSON.parse(val) as string[];
       } catch {
-        throw new Error(
-          'Invalid RP_NAME format. Expected a JSON array string.'
-        );
+        throw new Error('Invalid RP_NAME format. Expected a JSON array string.');
       }
     })
     .default('["App"]'),
@@ -30,24 +28,18 @@ const envSchema = z.object({
       try {
         return JSON.parse(val) as string[];
       } catch {
-        throw new Error(
-          'Invalid EXPECTED_ORIGIN format. Expected a JSON array string.'
-        );
+        throw new Error('Invalid EXPECTED_ORIGIN format. Expected a JSON array string.');
       }
     })
     .default('["http://localhost:3000"]'),
   CHALLENGE_TTL_SECONDS: z.coerce.number().default(60),
-  NETWORK_PASSPHRASE: z
-    .string()
-    .default('Test SDF Future Network ; October 2022'),
+  NETWORK_PASSPHRASE: z.string().default('Test SDF Future Network ; October 2022'),
   FACTORY_CONTRACT_ID: z
     .string()
     .default('CCZWIOWKT4WGJQHWZFF7ARCQJFVWRXPOKG4WGY6DOZ72OHZEMKXAEGRO'),
   ACCOUNT_SECP256R1_CONTRACT_WASM: z
     .string()
-    .default(
-      '23d8e1fbdb0bb903815feb7d07b675db98b5376feedab056aab61910d41e80c1'
-    ),
+    .default('23d8e1fbdb0bb903815feb7d07b675db98b5376feedab056aab61910d41e80c1'),
   RPC_URL: z.string().default('https://rpc-futurenet.stellar.org'),
   HORIZON_URL: z.string().default('https://horizon-futurenet.stellar.org'),
 });

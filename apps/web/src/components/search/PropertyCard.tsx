@@ -1,6 +1,7 @@
 'use client';
 
-import { ArrowRight, MapPin, Square, Star, Users } from 'lucide-react';
+import { MapPin, Square, Star, Users } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
 
 interface Property {
@@ -28,14 +29,17 @@ export const PropertyCard = ({ property }: PropertyCardProps) => {
     <div className="bg-secondary rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
       {/* Image Container */}
       <div className="relative h-56 overflow-hidden">
-        <img
+        <Image
           src={property.image}
           alt={property.title}
-          className="w-full h-full object-cover rounded-2xl"
+          fill
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          className="object-cover rounded-2xl"
+          priority={false}
         />
         {property.verified && (
-          <div className="absolute top-3 right-3 bg-green-500/50 text-white px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 shadow-lg">
-            <Star className="w-3.5 h-3.5" />
+          <div className="absolute top-3 right-3 bg-green-500/60 text-white px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 shadow-lg">
+            <Star className="w-3.5 h-3.5 text-[#1cf0a8]" />
             Verificado
           </div>
         )}
@@ -58,7 +62,7 @@ export const PropertyCard = ({ property }: PropertyCardProps) => {
             <span>{property.distance} km</span>
           </div>
           <div className="flex items-center text-gray-400 text-sm">
-            <Star className="w-4 h-4 mr-2 text-yellow-400" />
+            <Star className="w-4 h-4 mr-2 text-[#1cf0a8]" />
             <span>
               {property.rating} ({property.reviews})
             </span>
@@ -75,8 +79,12 @@ export const PropertyCard = ({ property }: PropertyCardProps) => {
             ${property.price.toLocaleString()} {property.currency} {property.period}
           </div>
           <Link href={`/property/${property.id}`}>
-            <button type="button" className="bg-primary rounded-full p-2 border text-black">
-              <ArrowRight className="w-5 h-5" />
+            <button
+              type="button"
+              aria-label="Open property"
+              className="bg-primary/90 rounded-full p-2 border text-black flex items-center justify-center"
+            >
+              <Image src="/icons/homepage-arrow.webp" alt="open" width={16} height={16} />
             </button>
           </Link>
         </div>

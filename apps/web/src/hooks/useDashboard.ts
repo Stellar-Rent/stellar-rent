@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { dashboardAPI, bookingAPI, profileAPI, walletAPI, handleAPIError } from '../services/api';
+import { useCallback, useEffect, useState } from 'react';
+import { bookingAPI, dashboardAPI, handleAPIError, profileAPI, walletAPI } from '../services/api';
 import type { DashboardBooking, Transaction, UserProfile } from '../types';
 
 interface UseDashboardProps {
@@ -21,14 +21,14 @@ interface UseDashboardReturn {
   profile: UserProfile | null;
   transactions: Transaction[];
   stats: DashboardStats | null;
-  
+
   isLoadingBookings: boolean;
   isLoadingProfile: boolean;
   isLoadingTransactions: boolean;
   isLoadingStats: boolean;
-  
+
   error: string | null;
-  
+
   refreshBookings: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   refreshTransactions: () => Promise<void>;
@@ -41,20 +41,20 @@ export const useDashboard = ({ userId, userType }: UseDashboardProps): UseDashbo
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [stats, setStats] = useState<DashboardStats | null>(null);
-  
+
   const [isLoadingBookings, setIsLoadingBookings] = useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
   const [isLoadingTransactions, setIsLoadingTransactions] = useState(false);
   const [isLoadingStats, setIsLoadingStats] = useState(false);
-  
+
   const [error, setError] = useState<string | null>(null);
 
   const fetchBookings = useCallback(async () => {
     if (!userId) return;
-    
+
     setIsLoadingBookings(true);
     setError(null);
-    
+
     try {
       const response = await bookingAPI.getBookings(userId, { userType });
       setBookings(response.data || []);
@@ -69,10 +69,10 @@ export const useDashboard = ({ userId, userType }: UseDashboardProps): UseDashbo
 
   const fetchProfile = useCallback(async () => {
     if (!userId) return;
-    
+
     setIsLoadingProfile(true);
     setError(null);
-    
+
     try {
       const response = await profileAPI.getUserProfile(userId);
       setProfile(response.data);
@@ -87,10 +87,10 @@ export const useDashboard = ({ userId, userType }: UseDashboardProps): UseDashbo
 
   const fetchTransactions = useCallback(async () => {
     if (!userId) return;
-    
+
     setIsLoadingTransactions(true);
     setError(null);
-    
+
     try {
       const response = await walletAPI.getTransactionHistory(userId);
       setTransactions(response.data || []);
@@ -105,10 +105,10 @@ export const useDashboard = ({ userId, userType }: UseDashboardProps): UseDashbo
 
   const fetchStats = useCallback(async () => {
     if (!userId) return;
-    
+
     setIsLoadingStats(true);
     setError(null);
-    
+
     try {
       const response = await dashboardAPI.getDashboardStats(userId, userType);
       setStats(response.data);
@@ -127,12 +127,7 @@ export const useDashboard = ({ userId, userType }: UseDashboardProps): UseDashbo
   const refreshStats = useCallback(() => fetchStats(), [fetchStats]);
 
   const refreshAll = useCallback(async () => {
-    await Promise.all([
-      fetchBookings(),
-      fetchProfile(),
-      fetchTransactions(),
-      fetchStats(),
-    ]);
+    await Promise.all([fetchBookings(), fetchProfile(), fetchTransactions(), fetchStats()]);
   }, [fetchBookings, fetchProfile, fetchTransactions, fetchStats]);
 
   useEffect(() => {

@@ -1,28 +1,28 @@
 'use client';
 
 import {
-  User,
-  Mail,
-  Phone,
-  MapPin,
+  AlertCircle,
+  Bell,
   Camera,
-  Save,
+  CheckCircle,
+  CreditCard,
   Edit,
-  X,
-  Upload,
   Eye,
   EyeOff,
-  Bell,
-  Shield,
   Globe,
-  CreditCard,
+  Mail,
+  MapPin,
+  Phone,
+  Save,
   Settings,
+  Shield,
   Trash2,
-  AlertCircle,
-  CheckCircle,
+  Upload,
+  User,
+  X,
 } from 'lucide-react';
-import { useState, useRef, useCallback } from 'react';
 import Image from 'next/image';
+import { useCallback, useRef, useState } from 'react';
 
 interface UserProfile {
   id: string;
@@ -59,8 +59,8 @@ const ProfileManagement: React.FC<ProfileManagementProps> = ({
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [showAvatarUpload, setShowAvatarUpload] = useState(false);
-  const [showPreferences, setShowPreferences] = useState(false);
-  const [showSecurity, setShowSecurity] = useState(false);
+  const [_showPreferences, setShowPreferences] = useState(false);
+  const [_showSecurity, setShowSecurity] = useState(false);
   const [activeTab, setActiveTab] = useState('profile');
   const [uploadProgress, setUploadProgress] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
@@ -88,15 +88,15 @@ const ProfileManagement: React.FC<ProfileManagementProps> = ({
   const [preferences, setPreferences] = useState(user.preferences);
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handlePasswordChange = (field: string, value: string) => {
-    setPasswordData(prev => ({ ...prev, [field]: value }));
+    setPasswordData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handlePreferenceChange = (field: keyof UserProfile['preferences'], value: boolean) => {
-    setPreferences(prev => ({ ...prev, [field]: value }));
+    setPreferences((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSaveProfile = async () => {
@@ -122,7 +122,7 @@ const ProfileManagement: React.FC<ProfileManagementProps> = ({
       alert('New passwords do not match');
       return;
     }
-    
+
     if (passwordData.newPassword.length < 8) {
       alert('Password must be at least 8 characters long');
       return;
@@ -142,67 +142,70 @@ const ProfileManagement: React.FC<ProfileManagementProps> = ({
     }
   };
 
-  const handleAvatarUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+  const handleAvatarUpload = useCallback(
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
 
-    // Clear any previous errors
-    setUploadError(null);
+      // Clear any previous errors
+      setUploadError(null);
 
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      setUploadError('Please select a valid image file (JPEG, PNG, GIF, etc.)');
-      return;
-    }
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        setUploadError('Please select a valid image file (JPEG, PNG, GIF, etc.)');
+        return;
+      }
 
-    // Validate file size (5MB limit)
-    if (file.size > 5 * 1024 * 1024) {
-      setUploadError('File size must be less than 5MB');
-      return;
-    }
+      // Validate file size (5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        setUploadError('File size must be less than 5MB');
+        return;
+      }
 
-    let objectUrl: string | null = null;
-    
-    try {
-      setUploadProgress(0);
-      setShowAvatarUpload(true);
+      let objectUrl: string | null = null;
 
-      // Create object URL for preview
-      objectUrl = URL.createObjectURL(file);
+      try {
+        setUploadProgress(0);
+        setShowAvatarUpload(true);
 
-      // Simulate upload progress
-      const interval = setInterval(() => {
-        setUploadProgress(prev => {
-          if (prev >= 90) {
-            clearInterval(interval);
-            return 90;
-          }
-          return prev + 10;
-        });
-      }, 100);
+        // Create object URL for preview
+        objectUrl = URL.createObjectURL(file);
 
-      await onUploadAvatar(file);
-      
-      clearInterval(interval);
-      setUploadProgress(100);
-      
-      setTimeout(() => {
+        // Simulate upload progress
+        const interval = setInterval(() => {
+          setUploadProgress((prev) => {
+            if (prev >= 90) {
+              clearInterval(interval);
+              return 90;
+            }
+            return prev + 10;
+          });
+        }, 100);
+
+        await onUploadAvatar(file);
+
+        clearInterval(interval);
+        setUploadProgress(100);
+
+        setTimeout(() => {
+          setShowAvatarUpload(false);
+          setUploadProgress(0);
+          setUploadError(null); // Clear error on success
+        }, 1000);
+      } catch (error) {
+        console.error('Failed to upload avatar:', error);
         setShowAvatarUpload(false);
         setUploadProgress(0);
-        setUploadError(null); // Clear error on success
-      }, 1000);
-    } catch (error) {
-      console.error('Failed to upload avatar:', error);
-      setShowAvatarUpload(false);
-      setUploadProgress(0);
-      setUploadError('Failed to upload avatar. Please try again.');
-    } finally {
-      // Clean up object URL to prevent memory leaks
-      if (objectUrl) {
-        URL.revokeObjectURL(objectUrl);
+        setUploadError('Failed to upload avatar. Please try again.');
+      } finally {
+        // Clean up object URL to prevent memory leaks
+        if (objectUrl) {
+          URL.revokeObjectURL(objectUrl);
+        }
       }
-    }
-  }, [onUploadAvatar]);
+    },
+    [onUploadAvatar]
+  );
 
   const triggerFileUpload = () => {
     fileInputRef.current?.click();
@@ -229,7 +232,9 @@ const ProfileManagement: React.FC<ProfileManagementProps> = ({
     <div className="max-w-4xl mx-auto">
       <div className="mb-8">
         <h2 className="text-3xl font-bold dark:text-white text-gray-900">Profile Settings</h2>
-        <p className="text-gray-600 dark:text-white mt-1">Manage your account information and preferences</p>
+        <p className="text-gray-600 dark:text-white mt-1">
+          Manage your account information and preferences
+        </p>
       </div>
 
       {/* Navigation Tabs */}
@@ -280,7 +285,7 @@ const ProfileManagement: React.FC<ProfileManagementProps> = ({
                   <Camera className="w-4 h-4" />
                 </button>
               </div>
-              
+
               {/* Upload Error Message */}
               {uploadError && (
                 <div className="mt-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
@@ -473,15 +478,21 @@ const ProfileManagement: React.FC<ProfileManagementProps> = ({
       {activeTab === 'preferences' && (
         <div className="bg-white dark:bg-[#0B1D39] rounded-xl shadow-lg overflow-hidden">
           <div className="p-6">
-            <h3 className="text-xl font-bold dark:text-white text-gray-900 mb-6">Notification Preferences</h3>
+            <h3 className="text-xl font-bold dark:text-white text-gray-900 mb-6">
+              Notification Preferences
+            </h3>
 
             <div className="space-y-6">
               <div className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
                 <div className="flex items-center space-x-3">
                   <Bell className="w-5 h-5 text-blue-600" />
                   <div>
-                    <h4 className="font-medium dark:text-white text-gray-900">In-app Notifications</h4>
-                    <p className="text-sm dark:text-gray-400 text-gray-600">Receive notifications within the app</p>
+                    <h4 className="font-medium dark:text-white text-gray-900">
+                      In-app Notifications
+                    </h4>
+                    <p className="text-sm dark:text-gray-400 text-gray-600">
+                      Receive notifications within the app
+                    </p>
                   </div>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
@@ -491,7 +502,7 @@ const ProfileManagement: React.FC<ProfileManagementProps> = ({
                     onChange={(e) => handlePreferenceChange('notifications', e.target.checked)}
                     className="sr-only peer"
                   />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600" />
                 </label>
               </div>
 
@@ -500,7 +511,9 @@ const ProfileManagement: React.FC<ProfileManagementProps> = ({
                   <Mail className="w-5 h-5 text-green-600" />
                   <div>
                     <h4 className="font-medium dark:text-white text-gray-900">Email Updates</h4>
-                    <p className="text-sm dark:text-gray-400 text-gray-600">Receive updates via email</p>
+                    <p className="text-sm dark:text-gray-400 text-gray-600">
+                      Receive updates via email
+                    </p>
                   </div>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
@@ -510,7 +523,7 @@ const ProfileManagement: React.FC<ProfileManagementProps> = ({
                     onChange={(e) => handlePreferenceChange('emailUpdates', e.target.checked)}
                     className="sr-only peer"
                   />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600" />
                 </label>
               </div>
 
@@ -518,8 +531,12 @@ const ProfileManagement: React.FC<ProfileManagementProps> = ({
                 <div className="flex items-center space-x-3">
                   <Globe className="w-5 h-5 text-purple-600" />
                   <div>
-                    <h4 className="font-medium dark:text-white text-gray-900">Push Notifications</h4>
-                    <p className="text-sm dark:text-gray-400 text-gray-600">Receive push notifications on your device</p>
+                    <h4 className="font-medium dark:text-white text-gray-900">
+                      Push Notifications
+                    </h4>
+                    <p className="text-sm dark:text-gray-400 text-gray-600">
+                      Receive push notifications on your device
+                    </p>
                   </div>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
@@ -529,7 +546,7 @@ const ProfileManagement: React.FC<ProfileManagementProps> = ({
                     onChange={(e) => handlePreferenceChange('pushNotifications', e.target.checked)}
                     className="sr-only peer"
                   />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600" />
                 </label>
               </div>
             </div>
@@ -557,13 +574,15 @@ const ProfileManagement: React.FC<ProfileManagementProps> = ({
       {activeTab === 'security' && (
         <div className="bg-white dark:bg-[#0B1D39] rounded-xl shadow-lg overflow-hidden">
           <div className="p-6">
-            <h3 className="text-xl font-bold dark:text-white text-gray-900 mb-6">Security Settings</h3>
+            <h3 className="text-xl font-bold dark:text-white text-gray-900 mb-6">
+              Security Settings
+            </h3>
 
             <div className="space-y-6">
               {/* Change Password */}
               <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-6">
                 <h4 className="font-medium dark:text-white text-gray-900 mb-4">Change Password</h4>
-                
+
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium dark:text-white text-gray-700 mb-2">
@@ -581,7 +600,11 @@ const ProfileManagement: React.FC<ProfileManagementProps> = ({
                         onClick={() => setShowPassword(!showPassword)}
                         className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                       >
-                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        {showPassword ? (
+                          <EyeOff className="w-4 h-4" />
+                        ) : (
+                          <Eye className="w-4 h-4" />
+                        )}
                       </button>
                     </div>
                   </div>
@@ -616,7 +639,11 @@ const ProfileManagement: React.FC<ProfileManagementProps> = ({
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                         className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                       >
-                        {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        {showConfirmPassword ? (
+                          <EyeOff className="w-4 h-4" />
+                        ) : (
+                          <Eye className="w-4 h-4" />
+                        )}
                       </button>
                     </div>
                   </div>
@@ -641,7 +668,9 @@ const ProfileManagement: React.FC<ProfileManagementProps> = ({
               <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h4 className="font-medium dark:text-white text-gray-900">Two-Factor Authentication</h4>
+                    <h4 className="font-medium dark:text-white text-gray-900">
+                      Two-Factor Authentication
+                    </h4>
                     <p className="text-sm dark:text-gray-400 text-gray-600 mt-1">
                       Add an extra layer of security to your account
                     </p>
@@ -681,4 +710,4 @@ const ProfileManagement: React.FC<ProfileManagementProps> = ({
   );
 };
 
-export default ProfileManagement; 
+export default ProfileManagement;

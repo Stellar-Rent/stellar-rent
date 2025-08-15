@@ -1,21 +1,21 @@
 'use client';
 
 import {
+  Calendar as CalendarIcon,
+  Check,
   ChevronLeft,
   ChevronRight,
-  Calendar as CalendarIcon,
   Clock,
-  Check,
-  X,
-  Plus,
-  Edit,
-  Trash2,
-  Eye,
-  Settings,
   Download,
+  Edit,
+  Eye,
   Filter,
+  Plus,
+  Settings,
+  Trash2,
+  X,
 } from 'lucide-react';
-import { useState, useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 interface Booking {
   id: string;
@@ -55,11 +55,13 @@ const PropertyCalendar: React.FC<PropertyCalendarProps> = ({
 }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDates, setSelectedDates] = useState<Date[]>([]);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
-  const [viewMode, setViewMode] = useState<'month' | 'week' | 'day'>('month');
-  const [filterStatus, setFilterStatus] = useState<'all' | 'confirmed' | 'pending' | 'cancelled'>('all');
+  const [_showAddModal, setShowAddModal] = useState(false);
+  const [_showEditModal, setShowEditModal] = useState(false);
+  const [_selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [_viewMode, _setViewMode] = useState<'month' | 'week' | 'day'>('month');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'confirmed' | 'pending' | 'cancelled'>(
+    'all'
+  );
 
   const statusOptions = [
     { value: 'all', label: 'All Bookings' },
@@ -81,23 +83,23 @@ const PropertyCalendar: React.FC<PropertyCalendarProps> = ({
   // Generate calendar days
   const calendarDays = useMemo(() => {
     const days = [];
-    
+
     // Add empty cells for days before first day of month
     for (let i = 0; i < firstDayWeekday; i++) {
       days.push(null);
     }
-    
+
     // Add days of the month
     for (let day = 1; day <= daysInMonth; day++) {
       days.push(new Date(currentYear, currentMonth, day));
     }
-    
+
     return days;
   }, [currentYear, currentMonth, firstDayWeekday, daysInMonth]);
 
   // Get bookings for a specific date
   const getBookingsForDate = (date: Date) => {
-    return bookings.filter(booking => {
+    return bookings.filter((booking) => {
       const checkIn = new Date(booking.checkIn);
       const checkOut = new Date(booking.checkOut);
       return date >= checkIn && date < checkOut;
@@ -106,15 +108,15 @@ const PropertyCalendar: React.FC<PropertyCalendarProps> = ({
 
   // Check if date is selected
   const isDateSelected = (date: Date) => {
-    return selectedDates.some(selectedDate => 
-      selectedDate.toDateString() === date.toDateString()
+    return selectedDates.some(
+      (selectedDate) => selectedDate.toDateString() === date.toDateString()
     );
   };
 
   // Handle date click
   const handleDateClick = (date: Date) => {
     if (isDateSelected(date)) {
-      setSelectedDates(selectedDates.filter(d => d.toDateString() !== date.toDateString()));
+      setSelectedDates(selectedDates.filter((d) => d.toDateString() !== date.toDateString()));
     } else {
       setSelectedDates([...selectedDates, date]);
     }
@@ -170,14 +172,14 @@ const PropertyCalendar: React.FC<PropertyCalendarProps> = ({
   // Filter bookings based on status
   const filteredBookings = useMemo(() => {
     if (filterStatus === 'all') return bookings;
-    return bookings.filter(booking => booking.status === filterStatus);
+    return bookings.filter((booking) => booking.status === filterStatus);
   }, [bookings, filterStatus]);
 
   // Export calendar data
   const exportCalendar = () => {
     const csvContent = [
       ['Date', 'Guest Name', 'Check-in', 'Check-out', 'Status', 'Guests', 'Amount'],
-      ...filteredBookings.map(booking => [
+      ...filteredBookings.map((booking) => [
         new Date(booking.checkIn).toLocaleDateString(),
         booking.guestName,
         new Date(booking.checkIn).toLocaleDateString(),
@@ -187,7 +189,7 @@ const PropertyCalendar: React.FC<PropertyCalendarProps> = ({
         `$${booking.totalAmount}`,
       ]),
     ]
-      .map(row => row.map(cell => `"${cell}"`).join(','))
+      .map((row) => row.map((cell) => `"${cell}"`).join(','))
       .join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv' });
@@ -286,7 +288,10 @@ const PropertyCalendar: React.FC<PropertyCalendarProps> = ({
         <div className="grid grid-cols-7 gap-1">
           {/* Day headers */}
           {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-            <div key={day} className="p-2 text-center text-sm font-medium text-gray-500 dark:text-gray-400">
+            <div
+              key={day}
+              className="p-2 text-center text-sm font-medium text-gray-500 dark:text-gray-400"
+            >
               {day}
             </div>
           ))}
@@ -310,10 +315,10 @@ const PropertyCalendar: React.FC<PropertyCalendarProps> = ({
                   isToday
                     ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-600'
                     : isSelected
-                    ? 'bg-blue-100 dark:bg-blue-900/40 border-blue-400 dark:border-blue-500'
-                    : isPast
-                    ? 'bg-gray-50 dark:bg-gray-800'
-                    : 'bg-white dark:bg-[#0B1D39] hover:bg-gray-50 dark:hover:bg-gray-800'
+                      ? 'bg-blue-100 dark:bg-blue-900/40 border-blue-400 dark:border-blue-500'
+                      : isPast
+                        ? 'bg-gray-50 dark:bg-gray-800'
+                        : 'bg-white dark:bg-[#0B1D39] hover:bg-gray-50 dark:hover:bg-gray-800'
                 }`}
               >
                 <div className="text-sm font-medium text-gray-900 dark:text-white mb-1">
@@ -377,10 +382,12 @@ const PropertyCalendar: React.FC<PropertyCalendarProps> = ({
 
       {/* Upcoming Bookings */}
       <div className="bg-white dark:bg-[#0B1D39] rounded-lg p-6 shadow-sm">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Upcoming Bookings</h3>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          Upcoming Bookings
+        </h3>
         {isLoading ? (
           <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto" />
             <p className="mt-2 text-gray-600 dark:text-gray-400">Loading bookings...</p>
           </div>
         ) : filteredBookings.length === 0 ? (
@@ -391,7 +398,7 @@ const PropertyCalendar: React.FC<PropertyCalendarProps> = ({
         ) : (
           <div className="space-y-3">
             {filteredBookings
-              .filter(booking => new Date(booking.checkIn) >= new Date())
+              .filter((booking) => new Date(booking.checkIn) >= new Date())
               .sort((a, b) => new Date(a.checkIn).getTime() - new Date(b.checkIn).getTime())
               .slice(0, 10)
               .map((booking) => (
@@ -404,9 +411,12 @@ const PropertyCalendar: React.FC<PropertyCalendarProps> = ({
                       {getStatusIcon(booking.status)}
                     </div>
                     <div>
-                      <p className="font-medium text-gray-900 dark:text-white">{booking.guestName}</p>
+                      <p className="font-medium text-gray-900 dark:text-white">
+                        {booking.guestName}
+                      </p>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
-                        {new Date(booking.checkIn).toLocaleDateString()} - {new Date(booking.checkOut).toLocaleDateString()}
+                        {new Date(booking.checkIn).toLocaleDateString()} -{' '}
+                        {new Date(booking.checkOut).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
@@ -446,4 +456,4 @@ const PropertyCalendar: React.FC<PropertyCalendarProps> = ({
   );
 };
 
-export default PropertyCalendar; 
+export default PropertyCalendar;

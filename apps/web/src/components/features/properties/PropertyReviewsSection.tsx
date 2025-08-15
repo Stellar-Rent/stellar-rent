@@ -1,22 +1,22 @@
-"use client";
+'use client';
 
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { getReviewsByPropertyId } from "@/lib/data/properties";
-import type { PropertyReviewsSectionProps } from "@/lib/types/property";
-import { MessageCircle, Shield, Star, ThumbsUp } from "lucide-react";
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { getReviewsByPropertyId } from '@/lib/data/properties';
+import type { PropertyReviewsSectionProps } from '@/lib/types/property';
+import { MessageCircle, Shield, Star, ThumbsUp } from 'lucide-react';
 
 export function PropertyReviewsSection({
   propertyId,
   averageRating = 0,
   totalReviews = 0,
-  className = "",
+  className = '',
 }: PropertyReviewsSectionProps) {
   const reviews = getReviewsByPropertyId(propertyId);
 
-  const renderStars = (rating: number, size: "sm" | "md" = "sm") => {
-    const sizeClass = size === "sm" ? "w-4 h-4" : "w-5 h-5";
+  const renderStars = (rating: number, size: 'sm' | 'md' = 'sm') => {
+    const sizeClass = size === 'sm' ? 'w-4 h-4' : 'w-5 h-5';
 
     return (
       <div className="flex items-center">
@@ -25,8 +25,8 @@ export function PropertyReviewsSection({
             key={star}
             className={`${sizeClass} ${
               star <= rating
-                ? "text-yellow-400 fill-yellow-400"
-                : "text-gray-300 dark:text-gray-600"
+                ? 'text-yellow-400 fill-yellow-400'
+                : 'text-gray-300 dark:text-gray-600'
             }`}
           />
         ))}
@@ -41,13 +41,9 @@ export function PropertyReviewsSection({
         <div>
           <h2 className="text-2xl font-bold">Reviews</h2>
           <div className="flex items-center gap-2 mt-1">
-            {renderStars(averageRating, "md")}
-            <span className="text-lg font-semibold">
-              {averageRating.toFixed(1)}
-            </span>
-            <span className="text-muted-foreground">
-              ({totalReviews} reviews)
-            </span>
+            {renderStars(averageRating, 'md')}
+            <span className="text-lg font-semibold">{averageRating.toFixed(1)}</span>
+            <span className="text-muted-foreground">({totalReviews} reviews)</span>
           </div>
         </div>
 
@@ -63,17 +59,12 @@ export function PropertyReviewsSection({
         <h3 className="font-semibold mb-4">Rating Breakdown</h3>
         <div className="space-y-3 overflow-hidden">
           {[5, 4, 3, 2, 1].map((rating) => {
-            const count = reviews.filter(
-              (review) => review.rating === rating
-            ).length;
-            const percentage =
-              totalReviews > 0 ? (count / totalReviews) * 100 : 0;
+            const count = reviews.filter((review) => review.rating === rating).length;
+            const percentage = totalReviews > 0 ? (count / totalReviews) * 100 : 0;
 
             return (
               <div key={rating} className="flex items-center gap-2 w-full">
-                <span className="text-sm w-3 flex-shrink-0 text-center">
-                  {rating}
-                </span>
+                <span className="text-sm w-3 flex-shrink-0 text-center">{rating}</span>
                 <Star className="w-4 h-4 text-yellow-400 fill-yellow-400 flex-shrink-0" />
                 <div className="flex-1 bg-muted rounded-full h-2 overflow-hidden">
                   <div
@@ -98,9 +89,7 @@ export function PropertyReviewsSection({
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    <span className="font-semibold text-primary">
-                      {review.author.charAt(0)}
-                    </span>
+                    <span className="font-semibold text-primary">{review.author.charAt(0)}</span>
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
@@ -125,19 +114,11 @@ export function PropertyReviewsSection({
               <p className="text-muted-foreground mb-3">{review.comment}</p>
 
               <div className="flex items-center gap-4">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-muted-foreground"
-                >
+                <Button variant="ghost" size="sm" className="text-muted-foreground">
                   <ThumbsUp className="w-4 h-4 mr-1" />
                   Helpful ({review.helpful})
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-muted-foreground"
-                >
+                <Button variant="ghost" size="sm" className="text-muted-foreground">
                   <MessageCircle className="w-4 h-4 mr-1" />
                   Reply
                 </Button>
@@ -154,13 +135,10 @@ export function PropertyReviewsSection({
               <div>
                 <h3 className="font-semibold mb-2">No reviews yet</h3>
                 <p className="text-muted-foreground mb-4">
-                  Be the first to leave a review for this property. All reviews
-                  are verified on the blockchain for transparency and trust.
+                  Be the first to leave a review for this property. All reviews are verified on the
+                  blockchain for transparency and trust.
                 </p>
-                <Badge
-                  variant="outline"
-                  className="flex items-center gap-2 w-fit mx-auto"
-                >
+                <Badge variant="outline" className="flex items-center gap-2 w-fit mx-auto">
                   <Shield className="w-4 h-4" />
                   Blockchain-verified reviews coming soon
                 </Badge>
@@ -186,9 +164,9 @@ export function PropertyReviewsSection({
               Blockchain-Verified Reviews
             </h4>
             <p className="text-blue-800 dark:text-blue-200 text-sm">
-              All reviews on StellarRent will be stored on the Stellar
-              blockchain, ensuring they cannot be manipulated or deleted. This
-              provides complete transparency and trust in the review system.
+              All reviews on StellarRent will be stored on the Stellar blockchain, ensuring they
+              cannot be manipulated or deleted. This provides complete transparency and trust in the
+              review system.
             </p>
           </div>
         </div>

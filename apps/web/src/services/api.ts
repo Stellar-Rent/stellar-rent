@@ -1,46 +1,178 @@
-import type { 
-  BookingFilters,
-  PropertyFilters,
-  NotificationFilters,
+import type {
   APIResponse,
-  PaginatedResponse,
-  BookingFormData,
-  PropertyFormData,
-  ProfileFormData,
-  UserProfile,
+  AccountDetails,
   Booking,
-  Property,
-  Transaction,
-  Notification,
-  PropertyUpdateData,
-  PropertyAvailabilityData,
+  BookingFilters,
+  BookingFormData,
   DateRangeFilter,
-  AccountDetails
+  Notification,
+  NotificationFilters,
+  PaginatedResponse,
+  ProfileFormData,
+  Property,
+  PropertyAvailabilityData,
+  PropertyFilters,
+  PropertyFormData,
+  PropertyUpdateData,
+  Transaction,
+  UserProfile,
 } from '../types/shared';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
 // Utility function to safely convert filters to URL parameters
-const createURLParams = (baseParams: Record<string, string>, filters?: Record<string, any>): URLSearchParams => {
+const createURLParams = (
+  baseParams: Record<string, string>,
+  filters?: BookingFilters | PropertyFilters | Record<string, unknown>
+): URLSearchParams => {
   const params = new URLSearchParams(baseParams);
-  
+
   if (filters) {
-    Object.entries(filters).forEach(([key, value]) => {
+    for (const [key, value] of Object.entries(filters)) {
       if (value !== undefined && value !== null) {
         // Convert all values to strings for URLSearchParams
         params.append(key, String(value));
       }
-    });
+    }
   }
-  
+
   return params;
 };
+
+// Define the expected shape of the backend response
+interface BackendBooking {
+  id: string;
+  user_id?: string;
+  property_id?: string;
+  property_title?: string;
+  propertyTitle?: string;
+  property_location?: string;
+  propertyLocation?: string;
+  property_image?: string;
+  propertyImage?: string;
+  check_in?: string;
+  checkIn?: string;
+  check_out?: string;
+  checkOut?: string;
+  total_amount?: number;
+  totalAmount?: number;
+  created_at?: string;
+  bookingDate?: string;
+  status?: string;
+  host_name?: string;
+  hostName?: string;
+  guests?: number;
+  rating?: number;
+  transaction_hash?: string;
+  escrow_address?: string;
+  updated_at?: string;
+}
+
+interface BackendProfile {
+  user_id?: string;
+  id?: string;
+  full_name?: string;
+  name?: string;
+  email?: string;
+  phone?: string;
+  avatar_url?: string;
+  avatar?: string;
+  created_at?: string;
+  location?: string;
+  bio?: string;
+}
+
+interface ChallengeResponse {
+  challenge: string;
+  expiresAt: string;
+}
+
+interface ConfirmPaymentResponse {
+  success: boolean;
+  message: string;
+  transactionHash: string;
+}
+
+interface DashboardBooking {
+  id: string;
+  propertyTitle: string;
+  propertyImage: string;
+  location: string;
+  checkIn: string;
+  checkOut: string;
+  guests: number;
+  totalAmount: number;
+  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
+  bookingDate: string;
+  propertyId: string;
+  escrowAddress?: string;
+  transactionHash?: string;
+  canCancel: boolean;
+  canReview: boolean;
+  guestName: string;
+  guestEmail: string;
+}
+
+// Generic API call function
+const _apiCall = async <T>(endpoint: string, options: RequestInit = {}): Promise<T> => {
+  const url = `${API_BASE_URL}${endpoint}`;
+  const token = localStorage.getItem('authToken');
+
+  const config: RequestInit = {
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token && { Authorization: `Bearer ${token}` }),
+      ...options.headers,
+    },
+    ...options,
+  };
+
+  try {
+    const response = await fetch(url, config);
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('API request failed:', error);
+    throw error;
+  }
+};
+
+// Transform wallet user function
+const _transformWalletUser = (user: Record<string, unknown>): UserProfile => {
+  return {
+    id: String(user.id || user.user_id || ''),
+    name: String(user.name || user.full_name || ''),
+    email: String(user.email || ''),
+    avatar: String(user.avatar || user.avatar_url || ''),
+    phone: user.phone ? String(user.phone) : undefined,
+    location: user.location ? String(user.location) : undefined,
+    bio: user.bio ? String(user.bio) : undefined,
+    memberSince: String(user.created_at || new Date().toISOString()),
+    totalBookings: Number(user.total_bookings || 0),
+    totalSpent: Number(user.total_spent || 0),
+    preferences: {
+      notifications: true,
+      emailUpdates: true,
+      pushNotifications: false,
+    },
+  };
+};
+
+interface WalletAuthResponse {
+  token: string;
+  user: Record<string, unknown>;
+}
 
 export const apiUtils = {
   async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
     const token = localStorage.getItem('authToken');
-    
+
     const config: RequestInit = {
       headers: {
         'Content-Type': 'application/json',
@@ -52,12 +184,12 @@ export const apiUtils = {
 
     try {
       const response = await fetch(url, config);
-      
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
       }
-      
+
       return await response.json();
     } catch (error) {
       console.error('API request failed:', error);
@@ -76,7 +208,10 @@ export const profileAPI = {
     return apiUtils.request(`/profile/${userId}`);
   },
 
-  async updateUserProfile(userId: string, updates: Partial<ProfileFormData>): Promise<APIResponse<UserProfile>> {
+  async updateUserProfile(
+    userId: string,
+    updates: Partial<ProfileFormData>
+  ): Promise<APIResponse<UserProfile>> {
     return apiUtils.request(`/profile/${userId}`, {
       method: 'PUT',
       body: JSON.stringify(updates),
@@ -89,7 +224,7 @@ export const profileAPI = {
 
     return apiUtils.request(`/profile/${userId}/avatar`, {
       method: 'POST',
-      headers: {}, 
+      headers: {},
       body: formData,
     });
   },
@@ -130,7 +265,10 @@ export const bookingAPI = {
     });
   },
 
-  async getBookingHistory(userId: string, filters?: BookingFilters): Promise<APIResponse<Booking[]>> {
+  async getBookingHistory(
+    userId: string,
+    filters?: BookingFilters
+  ): Promise<APIResponse<Booking[]>> {
     const params = createURLParams({ userId }, filters);
     return apiUtils.request(`/bookings/history?${params}`);
   },
@@ -153,7 +291,10 @@ export const propertyAPI = {
     });
   },
 
-  async updateProperty(propertyId: string, updates: PropertyUpdateData): Promise<APIResponse<Property>> {
+  async updateProperty(
+    propertyId: string,
+    updates: PropertyUpdateData
+  ): Promise<APIResponse<Property>> {
     return apiUtils.request(`/properties/${propertyId}`, {
       method: 'PUT',
       body: JSON.stringify(updates),
@@ -173,12 +314,18 @@ export const propertyAPI = {
     });
   },
 
-  async getPropertyAnalytics(propertyId: string, dateRange?: DateRangeFilter): Promise<APIResponse<any>> {
+  async getPropertyAnalytics(
+    propertyId: string,
+    dateRange?: DateRangeFilter
+  ): Promise<APIResponse<Record<string, unknown>>> {
     const params = new URLSearchParams({ propertyId, ...dateRange });
     return apiUtils.request(`/properties/${propertyId}/analytics?${params}`);
   },
 
-  async updatePropertyAvailability(propertyId: string, availability: PropertyAvailabilityData): Promise<APIResponse<Property>> {
+  async updatePropertyAvailability(
+    propertyId: string,
+    availability: PropertyAvailabilityData
+  ): Promise<APIResponse<Property>> {
     return apiUtils.request(`/properties/${propertyId}/availability`, {
       method: 'PUT',
       body: JSON.stringify(availability),
@@ -191,7 +338,7 @@ export const walletAPI = {
     return apiUtils.request(`/wallet/${userId}/balance`);
   },
 
-  async getTransactionHistory(userId: string, filters?: any) {
+  async getTransactionHistory(userId: string, filters?: Record<string, unknown>) {
     const params = new URLSearchParams({ userId, ...filters });
     return apiUtils.request(`/wallet/${userId}/transactions?${params}`);
   },
@@ -203,7 +350,7 @@ export const walletAPI = {
     });
   },
 
-  async withdrawFunds(userId: string, amount: number, accountDetails: any) {
+  async withdrawFunds(userId: string, amount: number, accountDetails: Record<string, unknown>) {
     return apiUtils.request(`/wallet/${userId}/withdraw`, {
       method: 'POST',
       body: JSON.stringify({ amount, accountDetails }),
@@ -212,7 +359,7 @@ export const walletAPI = {
 };
 
 export const notificationAPI = {
-  async getNotifications(userId: string, filters?: any) {
+  async getNotifications(userId: string, filters?: Record<string, unknown>) {
     const params = new URLSearchParams({ userId, ...filters });
     return apiUtils.request(`/notifications?${params}`);
   },
@@ -251,51 +398,41 @@ export const dashboardAPI = {
     return apiUtils.request(`/dashboard/${userType}/${userId}/activity`);
   },
 
-  async getEarningsAnalytics(userId: string, dateRange?: any) {
+  async getEarningsAnalytics(userId: string, dateRange?: Record<string, unknown>) {
     const params = new URLSearchParams({ userId, ...dateRange });
     return apiUtils.request(`/dashboard/host/${userId}/earnings?${params}`);
   },
 
-  async getBookingAnalytics(userId: string, userType: 'host' | 'tenant', dateRange?: any) {
+  async getBookingAnalytics(
+    userId: string,
+    userType: 'host' | 'tenant',
+    dateRange?: Record<string, unknown>
+  ) {
     const params = new URLSearchParams({ userId, ...dateRange });
     return apiUtils.request(`/dashboard/${userType}/${userId}/bookings/analytics?${params}`);
   },
 };
 
-export const handleAPIError = (error: any) => {
-  if (error.message?.includes('401')) {
+export const handleAPIError = (error: unknown) => {
+  const errorMessage = error instanceof Error ? error.message : String(error);
+
+  if (errorMessage.includes('401')) {
     apiUtils.clearAuth();
     window.location.href = '/login';
     return 'Session expired. Please login again.';
   }
-  
-  if (error.message?.includes('403')) {
+
+  if (errorMessage.includes('403')) {
     return 'You do not have permission to perform this action.';
   }
-  
-  if (error.message?.includes('404')) {
+
+  if (errorMessage.includes('404')) {
     return 'The requested resource was not found.';
   }
-  
-  if (error.message?.includes('500')) {
+
+  if (errorMessage.includes('500')) {
     return 'Server error. Please try again later.';
   }
-  
-  return error.message || 'An unexpected error occurred.';
+
+  return errorMessage || 'An unexpected error occurred.';
 };
-
-export interface APIResponse<T> {
-  data: T;
-  message?: string;
-  error?: string;
-}
-
-export interface PaginatedResponse<T> {
-  data: T[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
-}

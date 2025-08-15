@@ -103,6 +103,7 @@ describe('Location API', () => {
       const end = performance.now();
 
       expect(result.success).toBe(true);
+      a;
       expect(end - start).toBeLessThan(1000); // Should complete within 1 second
     });
 

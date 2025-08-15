@@ -1,37 +1,37 @@
 'use client';
 
 import {
+  Activity,
+  AlertCircle,
+  BarChart3,
   Bath,
   Bed,
   Calendar,
   Check,
+  CheckCircle,
   ChevronDown,
   ChevronRight,
+  Clock,
   DollarSign,
   Edit3,
   Eye,
   Filter,
   Home,
   MapPin,
+  PieChart,
   Plus,
   Search,
   Settings,
   Star,
   Trash2,
   TrendingUp,
+  Upload,
   Users,
   X,
-  Upload,
-  Clock,
-  AlertCircle,
-  CheckCircle,
   XCircle,
-  BarChart3,
-  PieChart,
-  Activity,
 } from 'lucide-react';
 import Image from 'next/image';
-import { useState, useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 interface Property {
   id: number;
@@ -125,13 +125,14 @@ const PropertyManagement: React.FC<PropertyManagementProps> = ({
 
   // Filter and sort properties
   const filteredAndSortedProperties = useMemo(() => {
-    let filtered = properties.filter((property) => {
+    const filtered = properties.filter((property) => {
       const searchMatch =
         property.title.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
         property.location.toLowerCase().includes(filters.searchTerm.toLowerCase());
 
       const statusMatch = filters.status === 'all' || property.status === filters.status;
-      const typeMatch = filters.propertyType === 'all' || property.propertyType === filters.propertyType;
+      const typeMatch =
+        filters.propertyType === 'all' || property.propertyType === filters.propertyType;
 
       let priceMatch = true;
       if (filters.priceRange !== 'all') {
@@ -294,7 +295,9 @@ const PropertyManagement: React.FC<PropertyManagementProps> = ({
           <div className="flex items-center">
             <Star className="w-4 h-4 text-yellow-400 fill-current" />
             <span className="ml-1 text-sm font-medium">{property.rating}</span>
-            <span className="ml-1 text-sm text-gray-500 dark:text-gray-400">({property.reviews})</span>
+            <span className="ml-1 text-sm text-gray-500 dark:text-gray-400">
+              ({property.reviews})
+            </span>
           </div>
         </div>
 
@@ -334,7 +337,9 @@ const PropertyManagement: React.FC<PropertyManagementProps> = ({
           </button>
           <button
             type="button"
-            onClick={() => onToggleStatus(property.id, property.status === 'active' ? 'inactive' : 'active')}
+            onClick={() =>
+              onToggleStatus(property.id, property.status === 'active' ? 'inactive' : 'active')
+            }
             className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors"
           >
             <Eye className="w-4 h-4" />
@@ -398,9 +403,7 @@ const PropertyManagement: React.FC<PropertyManagementProps> = ({
               </span>
             </div>
             <div className="flex items-center space-x-2 text-sm">
-              <span className="text-gray-600 dark:text-gray-400">
-                {property.bookings} bookings
-              </span>
+              <span className="text-gray-600 dark:text-gray-400">{property.bookings} bookings</span>
               <span className="text-green-600 font-medium">${property.earnings}</span>
             </div>
           </div>
@@ -430,7 +433,9 @@ const PropertyManagement: React.FC<PropertyManagementProps> = ({
           </button>
           <button
             type="button"
-            onClick={() => onToggleStatus(property.id, property.status === 'active' ? 'inactive' : 'active')}
+            onClick={() =>
+              onToggleStatus(property.id, property.status === 'active' ? 'inactive' : 'active')
+            }
             className="p-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400"
           >
             <Eye className="w-4 h-4" />
@@ -513,7 +518,9 @@ const PropertyManagement: React.FC<PropertyManagementProps> = ({
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400">Total Earnings</p>
-              <p className="text-2xl font-bold text-green-600">${stats.totalEarnings.toLocaleString()}</p>
+              <p className="text-2xl font-bold text-green-600">
+                ${stats.totalEarnings.toLocaleString()}
+              </p>
             </div>
             <DollarSign className="w-8 h-8 text-green-500" />
           </div>
@@ -606,7 +613,10 @@ const PropertyManagement: React.FC<PropertyManagementProps> = ({
             <select
               value={`${sortBy}-${sortOrder}`}
               onChange={(e) => {
-                const [newSortBy, newSortOrder] = e.target.value.split('-') as [string, 'asc' | 'desc'];
+                const [newSortBy, newSortOrder] = e.target.value.split('-') as [
+                  string,
+                  'asc' | 'desc',
+                ];
                 setSortBy(newSortBy);
                 setSortOrder(newSortOrder);
               }}
@@ -636,7 +646,7 @@ const PropertyManagement: React.FC<PropertyManagementProps> = ({
         {/* Properties Display */}
         {isLoading ? (
           <div className="p-12 text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto" />
             <p className="mt-4 text-gray-600 dark:text-gray-400">Loading properties...</p>
           </div>
         ) : filteredAndSortedProperties.length === 0 ? (
@@ -685,7 +695,9 @@ const PropertyManagement: React.FC<PropertyManagementProps> = ({
           <div className="bg-white dark:bg-[#0B1D39] rounded-xl shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200 dark:border-gray-700">
               <div className="flex justify-between items-center">
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Add New Property</h3>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  Add New Property
+                </h3>
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
@@ -695,7 +707,7 @@ const PropertyManagement: React.FC<PropertyManagementProps> = ({
                 </button>
               </div>
             </div>
-            
+
             <div className="p-6">
               <form className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -709,7 +721,7 @@ const PropertyManagement: React.FC<PropertyManagementProps> = ({
                       placeholder="Enter property title"
                     />
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Location
@@ -720,7 +732,7 @@ const PropertyManagement: React.FC<PropertyManagementProps> = ({
                       placeholder="Enter location"
                     />
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Price per Night
@@ -731,7 +743,7 @@ const PropertyManagement: React.FC<PropertyManagementProps> = ({
                       placeholder="0"
                     />
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Property Type
@@ -744,7 +756,7 @@ const PropertyManagement: React.FC<PropertyManagementProps> = ({
                       <option value="cabin">Cabin</option>
                     </select>
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Bedrooms
@@ -755,7 +767,7 @@ const PropertyManagement: React.FC<PropertyManagementProps> = ({
                       placeholder="0"
                     />
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Bathrooms
@@ -766,7 +778,7 @@ const PropertyManagement: React.FC<PropertyManagementProps> = ({
                       placeholder="0"
                     />
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Max Guests
@@ -777,7 +789,7 @@ const PropertyManagement: React.FC<PropertyManagementProps> = ({
                       placeholder="0"
                     />
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Status
@@ -789,7 +801,7 @@ const PropertyManagement: React.FC<PropertyManagementProps> = ({
                     </select>
                   </div>
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Description
@@ -800,20 +812,22 @@ const PropertyManagement: React.FC<PropertyManagementProps> = ({
                     placeholder="Describe your property..."
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Property Image
                   </label>
                   <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center">
                     <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                    <p className="text-gray-600 dark:text-gray-400">Click to upload or drag and drop</p>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      Click to upload or drag and drop
+                    </p>
                     <input type="file" className="hidden" accept="image/*" />
                   </div>
                 </div>
               </form>
             </div>
-            
+
             <div className="p-6 border-t border-gray-200 dark:border-gray-700 flex justify-end space-x-3">
               <button
                 type="button"
@@ -849,7 +863,7 @@ const PropertyManagement: React.FC<PropertyManagementProps> = ({
                 </button>
               </div>
             </div>
-            
+
             <div className="p-6">
               <form className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -863,7 +877,7 @@ const PropertyManagement: React.FC<PropertyManagementProps> = ({
                       className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
                     />
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Location
@@ -874,7 +888,7 @@ const PropertyManagement: React.FC<PropertyManagementProps> = ({
                       className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
                     />
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Price per Night
@@ -885,12 +899,12 @@ const PropertyManagement: React.FC<PropertyManagementProps> = ({
                       className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
                     />
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Status
                     </label>
-                    <select 
+                    <select
                       defaultValue={selectedProperty.status}
                       className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
                     >
@@ -900,7 +914,7 @@ const PropertyManagement: React.FC<PropertyManagementProps> = ({
                     </select>
                   </div>
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Description
@@ -913,7 +927,7 @@ const PropertyManagement: React.FC<PropertyManagementProps> = ({
                 </div>
               </form>
             </div>
-            
+
             <div className="p-6 border-t border-gray-200 dark:border-gray-700 flex justify-end space-x-3">
               <button
                 type="button"
@@ -951,23 +965,29 @@ const PropertyManagement: React.FC<PropertyManagementProps> = ({
                 </button>
               </div>
             </div>
-            
+
             <div className="p-6">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Calendar View */}
                 <div>
-                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Calendar</h4>
+                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                    Calendar
+                  </h4>
                   <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 h-80 flex items-center justify-center">
                     <div className="text-center">
                       <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-600 dark:text-gray-400">Calendar component will be implemented here</p>
+                      <p className="text-gray-600 dark:text-gray-400">
+                        Calendar component will be implemented here
+                      </p>
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Availability Settings */}
                 <div>
-                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Availability Settings</h4>
+                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                    Availability Settings
+                  </h4>
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -979,7 +999,7 @@ const PropertyManagement: React.FC<PropertyManagementProps> = ({
                         placeholder="1"
                       />
                     </div>
-                    
+
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Advance Booking (days)
@@ -990,7 +1010,7 @@ const PropertyManagement: React.FC<PropertyManagementProps> = ({
                         placeholder="30"
                       />
                     </div>
-                    
+
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Instant Booking
@@ -1009,7 +1029,7 @@ const PropertyManagement: React.FC<PropertyManagementProps> = ({
                 </div>
               </div>
             </div>
-            
+
             <div className="p-6 border-t border-gray-200 dark:border-gray-700 flex justify-end space-x-3">
               <button
                 type="button"
@@ -1047,14 +1067,16 @@ const PropertyManagement: React.FC<PropertyManagementProps> = ({
                 </button>
               </div>
             </div>
-            
+
             <div className="p-6">
               {/* Key Metrics */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                 <div className="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Total Earnings</p>
+                      <p className="text-sm font-medium text-blue-600 dark:text-blue-400">
+                        Total Earnings
+                      </p>
                       <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
                         ${selectedProperty.earnings}
                       </p>
@@ -1062,11 +1084,13 @@ const PropertyManagement: React.FC<PropertyManagementProps> = ({
                     <DollarSign className="w-8 h-8 text-blue-600 dark:text-blue-400" />
                   </div>
                 </div>
-                
+
                 <div className="bg-green-50 dark:bg-green-900/30 rounded-lg p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-green-600 dark:text-green-400">Total Bookings</p>
+                      <p className="text-sm font-medium text-green-600 dark:text-green-400">
+                        Total Bookings
+                      </p>
                       <p className="text-2xl font-bold text-green-900 dark:text-green-100">
                         {selectedProperty.bookings}
                       </p>
@@ -1074,11 +1098,13 @@ const PropertyManagement: React.FC<PropertyManagementProps> = ({
                     <Calendar className="w-8 h-8 text-green-600 dark:text-green-400" />
                   </div>
                 </div>
-                
+
                 <div className="bg-purple-50 dark:bg-purple-900/30 rounded-lg p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-purple-600 dark:text-purple-400">Average Rating</p>
+                      <p className="text-sm font-medium text-purple-600 dark:text-purple-400">
+                        Average Rating
+                      </p>
                       <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">
                         {selectedProperty.rating}
                       </p>
@@ -1086,11 +1112,13 @@ const PropertyManagement: React.FC<PropertyManagementProps> = ({
                     <Star className="w-8 h-8 text-purple-600 dark:text-purple-400" />
                   </div>
                 </div>
-                
+
                 <div className="bg-orange-50 dark:bg-orange-900/30 rounded-lg p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-orange-600 dark:text-orange-400">Occupancy Rate</p>
+                      <p className="text-sm font-medium text-orange-600 dark:text-orange-400">
+                        Occupancy Rate
+                      </p>
                       <p className="text-2xl font-bold text-orange-900 dark:text-orange-100">
                         {selectedProperty.occupancyRate || 75}%
                       </p>
@@ -1099,31 +1127,39 @@ const PropertyManagement: React.FC<PropertyManagementProps> = ({
                   </div>
                 </div>
               </div>
-              
+
               {/* Charts */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
-                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Earnings Trend</h4>
+                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                    Earnings Trend
+                  </h4>
                   <div className="h-64 flex items-center justify-center">
                     <div className="text-center">
                       <BarChart3 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-600 dark:text-gray-400">Earnings chart will be displayed here</p>
+                      <p className="text-gray-600 dark:text-gray-400">
+                        Earnings chart will be displayed here
+                      </p>
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
-                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Booking Distribution</h4>
+                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                    Booking Distribution
+                  </h4>
                   <div className="h-64 flex items-center justify-center">
                     <div className="text-center">
                       <PieChart className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-600 dark:text-gray-400">Booking distribution chart will be displayed here</p>
+                      <p className="text-gray-600 dark:text-gray-400">
+                        Booking distribution chart will be displayed here
+                      </p>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-            
+
             <div className="p-6 border-t border-gray-200 dark:border-gray-700 flex justify-end">
               <button
                 type="button"
@@ -1140,4 +1176,4 @@ const PropertyManagement: React.FC<PropertyManagementProps> = ({
   );
 };
 
-export default PropertyManagement; 
+export default PropertyManagement;
