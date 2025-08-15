@@ -71,10 +71,14 @@ app.get('/', (_req, res) => {
 app.use(errorMiddleware);
 
 // Start server
-app.listen(PORT, () => {
-  initializeServices();
-  console.log('✅ All services initialized successfully');
-  initializeCronJob();
-  console.log('Cron job initialized for expired challenges cleanup');
+app.listen(PORT, async () => {
   console.log(`Running on port http://localhost:${PORT}`);
+
+  try {
+    await initializeServices();
+    console.log('✅ All services initialized successfully');
+  } catch (error) {
+    console.error('❌ Failed to initialize services:', error);
+    console.error('⚠️  Server is running but some services may not be fully functional');
+  }
 });

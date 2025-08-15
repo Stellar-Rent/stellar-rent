@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { supabase } from '../config/supabase';
 import { syncService } from '../services/sync.service';
+import { SyncService } from '../services/sync.service';
 
 // Mock Supabase
 jest.mock('../config/supabase', () => ({
@@ -52,14 +53,79 @@ describe('SyncService', () => {
     });
 
     it('should throw error with missing environment variables', () => {
+      // Save original environment variables
       const originalRpcUrl = process.env.SOROBAN_RPC_URL;
       const originalContractId = process.env.SOROBAN_CONTRACT_ID;
-      process.env.SOROBAN_RPC_URL = undefined;
-      process.env.SOROBAN_CONTRACT_ID = undefined;
+      const originalNetworkPassphrase = process.env.SOROBAN_NETWORK_PASSPHRASE;
+      const originalPollingInterval = process.env.SYNC_POLL_INTERVAL;
 
-      expect(() => {
-        new (require('../services/sync.service').SyncService)();
-      }).toThrow('Missing required environment variables for sync service');
+      try {
+        // Temporarily modify environment variables for this test
+        process.env.SOROBAN_RPC_URL = undefined;
+        process.env.SOROBAN_CONTRACT_ID = undefined;
+        process.env.SOROBAN_NETWORK_PASSPHRASE = undefined;
+        process.env.SYNC_POLL_INTERVAL = undefined;
+
+        expect(() => {
+          new SyncService();
+        }).toThrow('Missing required environment variables for sync service');
+      } finally {
+        // Restore original environment variables
+        process.env.SOROBAN_RPC_URL = originalRpcUrl;
+        process.env.SOROBAN_CONTRACT_ID = originalContractId;
+        process.env.SOROBAN_NETWORK_PASSPHRASE = originalNetworkPassphrase;
+        process.env.SYNC_POLL_INTERVAL = originalPollingInterval;
+      }
+    });
+
+    it('should use custom polling interval from environment variable', () => {
+      // Save original environment variables
+      const originalPollingInterval = process.env.SYNC_POLL_INTERVAL;
+      const originalRpcUrl = process.env.SOROBAN_RPC_URL;
+      const originalContractId = process.env.SOROBAN_CONTRACT_ID;
+      const originalNetworkPassphrase = process.env.SOROBAN_NETWORK_PASSPHRASE;
+
+      try {
+        // Set custom polling interval
+        process.env.SYNC_POLL_INTERVAL = '10000';
+        process.env.SOROBAN_RPC_URL = 'https://test-rpc.stellar.org';
+        process.env.SOROBAN_CONTRACT_ID = 'test-contract-id';
+        process.env.SOROBAN_NETWORK_PASSPHRASE = 'Test SDF Network ; September 2015';
+
+        const customSyncService = new SyncService();
+        expect(customSyncService.getPollingIntervalMs()).toBe(10000);
+      } finally {
+        // Restore original environment variables
+        process.env.SYNC_POLL_INTERVAL = originalPollingInterval;
+        process.env.SOROBAN_RPC_URL = originalRpcUrl;
+        process.env.SOROBAN_CONTRACT_ID = originalContractId;
+        process.env.SOROBAN_NETWORK_PASSPHRASE = originalNetworkPassphrase;
+      }
+    });
+
+    it('should fallback to default polling interval for invalid environment value', () => {
+      // Save original environment variables
+      const originalPollingInterval = process.env.SYNC_POLL_INTERVAL;
+      const originalRpcUrl = process.env.SOROBAN_RPC_URL;
+      const originalContractId = process.env.SOROBAN_CONTRACT_ID;
+      const originalNetworkPassphrase = process.env.SOROBAN_NETWORK_PASSPHRASE;
+
+      try {
+        // Set invalid polling interval
+        process.env.SYNC_POLL_INTERVAL = 'invalid';
+        process.env.SOROBAN_RPC_URL = 'https://test-rpc.stellar.org';
+        process.env.SOROBAN_CONTRACT_ID = 'test-contract-id';
+        process.env.SOROBAN_NETWORK_PASSPHRASE = 'Test SDF Network ; September 2015';
+
+        const fallbackSyncService = new SyncService();
+        expect(fallbackSyncService.getPollingIntervalMs()).toBe(5000); // Default fallback
+      } finally {
+        // Restore original environment variables
+        process.env.SYNC_POLL_INTERVAL = originalPollingInterval;
+        process.env.SOROBAN_RPC_URL = originalRpcUrl;
+        process.env.SOROBAN_CONTRACT_ID = originalContractId;
+        process.env.SOROBAN_NETWORK_PASSPHRASE = originalNetworkPassphrase;
+      }
     });
   });
 
@@ -228,26 +294,140 @@ describe('SyncService', () => {
     it('should trigger manual sync', async () => {
       const mockSupabase = supabase as jest.Mocked<typeof supabase>;
 
+      // Mock database operations for sync state and events
       mockSupabase.from.mockReturnValue({
         select: jest.fn(() => ({
           single: jest.fn(() => Promise.resolve({ data: null, error: null })),
         })),
+        insert: jest.fn(() => Promise.resolve({ data: null, error: null })),
         upsert: jest.fn(() => Promise.resolve({ data: null, error: null })),
       } as unknown as ReturnType<typeof supabase.from>);
 
+      // Mock blockchain responses
+      const mockFetch = jest
+        .spyOn(global, 'fetch')
+        .mockResolvedValueOnce({
+          json: () => Promise.resolve({ sequence: 1000 }),
+        } as Response) // getLatestLedger response
+        .mockResolvedValueOnce({
+          json: () => Promise.resolve({ events: [] }),
+        } as Response); // getContractEvents response (empty for this test)
+
       await syncService.start();
 
-      // Mock successful polling
-      const pollForEventsMethod = (
-        syncService as unknown as { pollForEvents: () => Promise<void> }
-      ).pollForEvents.bind(syncService);
-      jest
-        .spyOn(syncService as unknown as { pollForEvents: () => Promise<void> }, 'pollForEvents')
-        .mockResolvedValue(undefined);
+      // Capture initial state
+      const initialStatus = syncService.getStatus();
+      const initialLastProcessedBlock = initialStatus.lastProcessedBlock;
 
+      // Trigger manual sync (this will call the real pollForEvents method)
       await syncService.triggerManualSync();
 
+      // Verify the service is still running
       expect(syncService.getStatus().isRunning).toBe(true);
+
+      // Verify that blockchain operations were called
+      expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining('/getLatestLedger'));
+
+      // Verify that database operations were called for sync state update
+      expect(mockSupabase.from).toHaveBeenCalledWith('sync_state');
+
+      // Verify that the sync state was updated
+      const finalStatus = syncService.getStatus();
+      expect(finalStatus.lastProcessedBlock).toBe(1000); // Should be updated to current block height
+      expect(finalStatus.lastSyncTime).toBeInstanceOf(Date);
+    });
+
+    it('should process blockchain events during manual sync', async () => {
+      const mockSupabase = supabase as jest.Mocked<typeof supabase>;
+
+      // Mock database operations
+      mockSupabase.from.mockReturnValue({
+        select: jest.fn(() => ({
+          single: jest.fn(() => Promise.resolve({ data: null, error: null })),
+        })),
+        insert: jest.fn(() => Promise.resolve({ data: null, error: null })),
+        upsert: jest.fn(() => Promise.resolve({ data: null, error: null })),
+      } as unknown as ReturnType<typeof supabase.from>);
+
+      // Mock blockchain responses with actual events
+      const mockFetch = jest
+        .spyOn(global, 'fetch')
+        .mockResolvedValueOnce({
+          json: () => Promise.resolve({ sequence: 1001 }),
+        } as Response) // getLatestLedger response
+        .mockResolvedValueOnce({
+          json: () =>
+            Promise.resolve({
+              events: [
+                {
+                  id: 'event-1',
+                  type: 'booking_created',
+                  bookingId: 'booking-123',
+                  propertyId: 'property-456',
+                  userId: 'user-789',
+                  timestamp: new Date().toISOString(),
+                  data: { amount: 1000, status: 'Pending' },
+                },
+              ],
+            }),
+        } as Response); // getContractEvents response with mock events
+
+      await syncService.start();
+
+      // Capture initial state
+      const initialStatus = syncService.getStatus();
+      const initialTotalEvents = initialStatus.totalEventsProcessed;
+
+      // Trigger manual sync
+      await syncService.triggerManualSync();
+
+      // Verify blockchain operations were called
+      expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining('/getLatestLedger'));
+
+      // Verify database operations for events and sync state
+      expect(mockSupabase.from).toHaveBeenCalledWith('sync_events');
+      expect(mockSupabase.from).toHaveBeenCalledWith('sync_state');
+
+      // Verify sync state was updated
+      const finalStatus = syncService.getStatus();
+      expect(finalStatus.lastProcessedBlock).toBe(1001);
+      expect(finalStatus.lastSyncTime).toBeInstanceOf(Date);
+      expect(finalStatus.totalEventsProcessed).toBeGreaterThan(initialTotalEvents);
+    });
+
+    it('should handle blockchain errors during manual sync', async () => {
+      const mockSupabase = supabase as jest.Mocked<typeof supabase>;
+
+      // Mock database operations
+      mockSupabase.from.mockReturnValue({
+        select: jest.fn(() => ({
+          single: jest.fn(() => Promise.resolve({ data: null, error: null })),
+        })),
+        insert: jest.fn(() => Promise.resolve({ data: null, error: null })),
+        upsert: jest.fn(() => Promise.resolve({ data: null, error: null })),
+      } as unknown as ReturnType<typeof supabase.from>);
+
+      // Mock blockchain error
+      const mockFetch = jest
+        .spyOn(global, 'fetch')
+        .mockRejectedValueOnce(new Error('Blockchain connection failed'));
+
+      await syncService.start();
+
+      // Capture initial state
+      const initialStatus = syncService.getStatus();
+      const initialFailedEvents = initialStatus.failedEvents;
+
+      // Trigger manual sync (should handle error gracefully)
+      await syncService.triggerManualSync();
+
+      // Verify blockchain operation was attempted
+      expect(mockFetch).toHaveBeenCalled();
+
+      // Verify error was handled gracefully
+      const finalStatus = syncService.getStatus();
+      expect(finalStatus.isRunning).toBe(true); // Service should still be running
+      expect(finalStatus.failedEvents).toBeGreaterThan(initialFailedEvents); // Should increment failed events
     });
 
     it('should get sync statistics', async () => {
@@ -323,5 +503,55 @@ describe('SyncService', () => {
       // Should not crash the service
       expect(syncService.getStatus().isRunning).toBe(true);
     });
+  });
+
+  it('should use custom polling interval from environment variable', () => {
+    // Save original environment variables
+    const originalPollingInterval = process.env.SYNC_POLL_INTERVAL;
+    const originalRpcUrl = process.env.SOROBAN_RPC_URL;
+    const originalContractId = process.env.SOROBAN_CONTRACT_ID;
+    const originalNetworkPassphrase = process.env.SOROBAN_NETWORK_PASSPHRASE;
+
+    try {
+      // Set custom polling interval
+      process.env.SYNC_POLL_INTERVAL = '10000';
+      process.env.SOROBAN_RPC_URL = 'https://test-rpc.stellar.org';
+      process.env.SOROBAN_CONTRACT_ID = 'test-contract-id';
+      process.env.SOROBAN_NETWORK_PASSPHRASE = 'Test SDF Network ; September 2015';
+
+      const customSyncService = new SyncService();
+      expect(customSyncService.getPollingIntervalMs()).toBe(10000);
+    } finally {
+      // Restore original environment variables
+      process.env.SYNC_POLL_INTERVAL = originalPollingInterval;
+      process.env.SOROBAN_RPC_URL = originalRpcUrl;
+      process.env.SOROBAN_CONTRACT_ID = originalContractId;
+      process.env.SOROBAN_NETWORK_PASSPHRASE = originalNetworkPassphrase;
+    }
+  });
+
+  it('should fallback to default polling interval for invalid environment value', () => {
+    // Save original environment variables
+    const originalPollingInterval = process.env.SYNC_POLL_INTERVAL;
+    const originalRpcUrl = process.env.SOROBAN_RPC_URL;
+    const originalContractId = process.env.SOROBAN_CONTRACT_ID;
+    const originalNetworkPassphrase = process.env.SOROBAN_NETWORK_PASSPHRASE;
+
+    try {
+      // Set invalid polling interval
+      process.env.SYNC_POLL_INTERVAL = 'invalid';
+      process.env.SOROBAN_RPC_URL = 'https://test-rpc.stellar.org';
+      process.env.SOROBAN_CONTRACT_ID = 'test-contract-id';
+      process.env.SOROBAN_NETWORK_PASSPHRASE = 'Test SDF Network ; September 2015';
+
+      const fallbackSyncService = new SyncService();
+      expect(fallbackSyncService.getPollingIntervalMs()).toBe(5000); // Default fallback
+    } finally {
+      // Restore original environment variables
+      process.env.SYNC_POLL_INTERVAL = originalPollingInterval;
+      process.env.SOROBAN_RPC_URL = originalRpcUrl;
+      process.env.SOROBAN_CONTRACT_ID = originalContractId;
+      process.env.SOROBAN_NETWORK_PASSPHRASE = originalNetworkPassphrase;
+    }
   });
 });

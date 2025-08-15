@@ -128,9 +128,8 @@ export class BlockchainEventListener {
    */
   private async getCurrentLedger(): Promise<number> {
     try {
-      const response = await fetch(`${this.config.rpcUrl}/getLatestLedger`);
-      const data = await response.json();
-      return data.sequence || 0;
+      const ledgerInfo = await this.server.getLatestLedger();
+      return ledgerInfo.sequence || 0;
     } catch (error) {
       console.error('Failed to get current ledger:', error);
       return this.lastProcessedLedger;
@@ -188,28 +187,31 @@ export class BlockchainEventListener {
    */
   private async getEventsFromLedger(ledger: number): Promise<BlockchainEvent[]> {
     try {
-      // Get transactions for the ledger
-      const response = await fetch(`${this.config.rpcUrl}/getLedgerEntries`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ledger: ledger,
-          contractId: this.config.contractId,
-        }),
+      // Get events from the ledger using Soroban RPC client
+      const eventsResponse = await this.server.getEvents({
+        startLedger: ledger,
+        endLedger: ledger,
+        filters: [
+          {
+            type: 'contract',
+            contractIds: [this.config.contractId],
+          },
+        ],
       });
 
-      const data = await response.json();
-
-      if (!data.entries) {
+      if (!eventsResponse.events || eventsResponse.events.length === 0) {
         return [];
       }
 
       const events: BlockchainEvent[] = [];
 
-      for (const entry of data.entries) {
-        const event = await this.parseTransactionEvent(entry, ledger);
-        if (event) {
-          events.push(event);
+      for (const event of eventsResponse.events) {
+        const parsedEvent = this.parseSorobanEvent(
+          event as unknown as Record<string, unknown>,
+          ledger
+        );
+        if (parsedEvent) {
+          events.push(parsedEvent);
         }
       }
 
@@ -221,106 +223,57 @@ export class BlockchainEventListener {
   }
 
   /**
-   * Parse transaction event from ledger entry
+   * Parse Soroban RPC event
    */
-  private async parseTransactionEvent(
-    entry: Record<string, unknown>,
-    ledger: number
-  ): Promise<BlockchainEvent | null> {
-    try {
-      const entryData = entry;
-      const txResultObj = entryData.txResult as Record<string, unknown> | undefined;
-      if (!txResultObj || typeof txResultObj !== 'object' || !('result' in txResultObj))
-        return null;
-      const txResult = txResultObj.result as Record<string, unknown>;
-      if (!this.isContractTransaction(txResult)) return null;
-      const txHash = (entryData.txHash as string) ?? '';
-      const events = this.parseContractEvents(txResult, txHash, ledger);
-      return events.length > 0 ? events[0] : null;
-    } catch (error) {
-      console.error('Error parsing transaction event:', error);
-      return null;
-    }
-  }
-
-  /**
-   * Check if transaction involves our contract
-   */
-  private isContractTransaction(txResult: Record<string, unknown>): boolean {
-    try {
-      const ops = txResult.operations;
-      if (Array.isArray(ops)) {
-        for (const op of ops) {
-          if (
-            typeof op === 'object' &&
-            op !== null &&
-            'contractId' in op &&
-            (op as Record<string, unknown>).contractId === this.config.contractId
-          ) {
-            return true;
-          }
-        }
-      }
-      return false;
-    } catch (error) {
-      console.error('Error checking contract transaction:', error);
-      return false;
-    }
-  }
-
-  /**
-   * Parse contract events from transaction result
-   */
-  private parseContractEvents(
-    txResult: Record<string, unknown>,
-    txHash: string,
-    ledger: number
-  ): BlockchainEvent[] {
-    const events: BlockchainEvent[] = [];
-    try {
-      const eventArr = txResult.events;
-      if (Array.isArray(eventArr)) {
-        for (const event of eventArr) {
-          if (typeof event === 'object' && event !== null) {
-            const parsedEvent = this.parseEvent(event as Record<string, unknown>, txHash, ledger);
-            if (parsedEvent) events.push(parsedEvent);
-          }
-        }
-      }
-      return events;
-    } catch (error) {
-      console.error('Error parsing contract events:', error);
-      return [];
-    }
-  }
-
-  /**
-   * Parse individual event
-   */
-  private parseEvent(
+  private parseSorobanEvent(
     event: Record<string, unknown>,
-    txHash: string,
     ledger: number
   ): BlockchainEvent | null {
     try {
+      // Extract event data from Soroban RPC event format
       const eventType = this.determineEventType(event);
       if (!eventType) return null;
-      // Type assertion for event.data
-      const eventData = (event.data ?? {}) as Record<string, unknown>;
+
+      // Parse event data from the Soroban event format
+      const eventData = this.parseSorobanEventData(event);
+
       return {
-        id: `${txHash}-${(event as { index?: number }).index ?? 0}`,
+        id: `${String(event.txHash || 'unknown')}-${event.index || 0}`,
         type: eventType as BlockchainEvent['type'],
-        bookingId: eventData.booking_id ? String(eventData.booking_id) : '',
-        propertyId: eventData.property_id ? String(eventData.property_id) : '',
-        userId: eventData.user_id ? String(eventData.user_id) : '',
+        bookingId: String(eventData.booking_id || ''),
+        propertyId: String(eventData.property_id || ''),
+        userId: String(eventData.user_id || ''),
         timestamp: new Date(),
         blockHeight: ledger,
-        transactionHash: txHash,
+        transactionHash: String(event.txHash || 'unknown'),
         data: eventData,
       };
     } catch (error) {
-      console.error('Error parsing event:', error);
+      console.error('Error parsing Soroban event:', error);
       return null;
+    }
+  }
+
+  /**
+   * Parse Soroban event data from the event payload
+   */
+  private parseSorobanEventData(event: Record<string, unknown>): Record<string, unknown> {
+    try {
+      // Soroban events typically have a 'value' field containing the event data
+      if (event.value && typeof event.value === 'object') {
+        return event.value as Record<string, unknown>;
+      }
+
+      // Fallback to parsing from event.data if available
+      if (event.data && typeof event.data === 'object') {
+        return event.data as Record<string, unknown>;
+      }
+
+      // Return empty object if no data found
+      return {};
+    } catch (error) {
+      console.error('Error parsing Soroban event data:', error);
+      return {};
     }
   }
 

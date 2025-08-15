@@ -1,3 +1,23 @@
+/**
+ * Sync Service
+ *
+ * Provides blockchain synchronization capabilities for StellarRent.
+ * Polls the Stellar network for new events and processes them accordingly.
+ *
+ * Environment Variables:
+ * - SOROBAN_RPC_URL: Soroban RPC endpoint URL
+ * - SOROBAN_CONTRACT_ID: Contract ID to monitor
+ * - SOROBAN_NETWORK_PASSPHRASE: Network passphrase for validation
+ * - SYNC_POLL_INTERVAL: Polling interval in milliseconds (default: 5000ms)
+ *
+ * Features:
+ * - Configurable polling intervals
+ * - Network passphrase validation
+ * - Comprehensive error handling and logging
+ * - Manual sync triggers
+ * - Status monitoring and statistics
+ */
+
 import { Contract, Networks, nativeToScVal, scValToNative } from '@stellar/stellar-sdk';
 import { Server as SorobanRpcServer } from '@stellar/stellar-sdk/rpc';
 import { supabase } from '../config/supabase';
@@ -39,6 +59,8 @@ export interface SyncStatus {
 export class SyncService {
   private server: SorobanRpcServer;
   private contract: Contract;
+  private networkPassphrase: string;
+  private pollingInterval: number;
   private isRunning = false;
   private syncInterval: NodeJS.Timeout | null = null;
   private lastProcessedBlock = 0;
@@ -51,12 +73,121 @@ export class SyncService {
     const contractId = process.env.SOROBAN_CONTRACT_ID;
     const networkPassphrase = process.env.SOROBAN_NETWORK_PASSPHRASE || Networks.TESTNET;
 
+    // Validate required environment variables
     if (!rpcUrl || !contractId) {
       throw new Error('Missing required environment variables for sync service');
     }
 
+    // Validate network passphrase
+    if (!this.isValidNetworkPassphrase(networkPassphrase)) {
+      throw new Error(
+        `Invalid network passphrase: ${networkPassphrase}. Must be a valid Stellar network passphrase.`
+      );
+    }
+
+    // Read and validate polling interval from environment
+    this.pollingInterval = this.getPollingInterval();
+
+    // Store network passphrase for future use
+    this.networkPassphrase = networkPassphrase;
+
+    // Initialize Soroban RPC server and contract
     this.server = new SorobanRpcServer(rpcUrl);
     this.contract = new Contract(contractId);
+
+    // Log network configuration for verification
+    console.log(
+      `🌐 Sync service initialized for network: ${this.getNetworkName(networkPassphrase)}`
+    );
+    console.log(`🔗 RPC URL: ${rpcUrl}`);
+    console.log(`📋 Contract ID: ${contractId}`);
+    console.log(`⏱️  Polling interval: ${this.pollingInterval}ms`);
+  }
+
+  /**
+   * Validate that the network passphrase is a valid Stellar network passphrase
+   */
+  private isValidNetworkPassphrase(passphrase: string): boolean {
+    // Check if it's one of the known network passphrases
+    if (
+      passphrase === Networks.PUBLIC ||
+      passphrase === Networks.TESTNET ||
+      passphrase === Networks.FUTURENET
+    ) {
+      return true;
+    }
+
+    // For custom networks, validate the format
+    // Stellar network passphrases typically end with a semicolon and date
+    if (passphrase.includes(';') && passphrase.length > 20) {
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Get a human-readable network name from the passphrase
+   */
+  private getNetworkName(passphrase: string): string {
+    switch (passphrase) {
+      case Networks.PUBLIC: {
+        return 'Mainnet';
+      }
+      case Networks.TESTNET: {
+        return 'Testnet';
+      }
+      case Networks.FUTURENET: {
+        return 'Futurenet';
+      }
+      default: {
+        // Extract network name from custom passphrase
+        const parts = passphrase.split(';');
+        if (parts.length >= 2) {
+          return parts[0].trim();
+        }
+        return 'Custom Network';
+      }
+    }
+  }
+
+  /**
+   * Get and validate the polling interval from environment variables
+   */
+  private getPollingInterval(): number {
+    const envInterval = process.env.SYNC_POLL_INTERVAL;
+
+    if (!envInterval) {
+      console.log('ℹ️  No SYNC_POLL_INTERVAL set, using default: 5000ms');
+      return 5000;
+    }
+
+    const parsedInterval = Number(envInterval);
+
+    // Validate the parsed value
+    if (Number.isNaN(parsedInterval) || parsedInterval < 1000 || parsedInterval > 300000) {
+      console.warn(
+        `⚠️  Invalid SYNC_POLL_INTERVAL value: ${envInterval}. Must be between 1000ms and 300000ms (5 minutes). Using default: 5000ms`
+      );
+      return 5000;
+    }
+
+    // Ensure the interval is reasonable for production use
+    if (parsedInterval < 1000) {
+      console.warn(
+        `⚠️  SYNC_POLL_INTERVAL too low: ${parsedInterval}ms. Minimum recommended: 1000ms. Using default: 5000ms`
+      );
+      return 5000;
+    }
+
+    if (parsedInterval > 60000) {
+      console.warn(
+        `⚠️  SYNC_POLL_INTERVAL very high: ${parsedInterval}ms. This may cause delays in event processing.`
+      );
+    }
+
+    console.log(`✅ Using configured polling interval: ${parsedInterval}ms`);
+    return parsedInterval;
   }
 
   /**
@@ -78,9 +209,11 @@ export class SyncService {
       this.isRunning = true;
       this.syncInterval = setInterval(async () => {
         await this.pollForEvents();
-      }, 5000); // Poll every 5 seconds
+      }, this.pollingInterval); // Use configurable polling interval
 
-      console.log('Blockchain synchronization service started successfully');
+      console.log(
+        `Blockchain synchronization service started successfully (polling every ${this.pollingInterval}ms)`
+      );
     } catch (error) {
       console.error('Failed to start sync service:', error);
       throw error;
@@ -124,6 +257,13 @@ export class SyncService {
       currentBlockHeight: 0, // Will be updated when we implement block height tracking
       lastProcessedBlock: this.lastProcessedBlock,
     };
+  }
+
+  /**
+   * Get the current polling interval in milliseconds
+   */
+  getPollingIntervalMs(): number {
+    return this.pollingInterval;
   }
 
   /**

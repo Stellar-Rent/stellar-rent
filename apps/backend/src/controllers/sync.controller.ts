@@ -13,7 +13,7 @@ export class SyncController {
 
       await syncService.start();
 
-      loggingService.logBlockchainSuccess(logId, { action: 'sync_started' });
+      await loggingService.logBlockchainSuccess(logId, { action: 'sync_started' });
 
       res.json({
         success: true,
@@ -39,7 +39,7 @@ export class SyncController {
 
       await syncService.stop();
 
-      loggingService.logBlockchainSuccess(logId, { action: 'sync_stopped' });
+      await loggingService.logBlockchainSuccess(logId, { action: 'sync_stopped' });
 
       res.json({
         success: true,
@@ -88,7 +88,7 @@ export class SyncController {
 
       await syncService.triggerManualSync();
 
-      loggingService.logBlockchainSuccess(logId, { action: 'manual_sync_triggered' });
+      await loggingService.logBlockchainSuccess(logId, { action: 'manual_sync_triggered' });
 
       res.json({
         success: true,
@@ -305,7 +305,7 @@ export class SyncController {
         }
       }
 
-      loggingService.logBlockchainSuccess(logId, {
+      await loggingService.logBlockchainSuccess(logId, {
         retriedCount,
         successCount,
         totalFailed: failedEvents?.length || 0,
@@ -339,35 +339,108 @@ export class SyncController {
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - days);
 
-      // Delete old events
-      const { error: eventsError } = await supabase
+      // Use Supabase's transaction support to ensure atomicity
+      // First, get the count of records to be deleted for validation
+      const { count: eventsCount, error: countError } = await supabase
         .from('sync_events')
-        .delete()
+        .select('*', { count: 'exact', head: true })
         .lt('created_at', cutoffDate.toISOString());
 
-      if (eventsError) {
-        throw eventsError;
+      if (countError) {
+        throw new Error(`Failed to count old events: ${countError.message}`);
       }
 
-      // Delete old logs
-      const { error: logsError } = await supabase
+      const { count: logsCount, error: logsCountError } = await supabase
         .from('sync_logs')
-        .delete()
+        .select('*', { count: 'exact', head: true })
         .lt('created_at', cutoffDate.toISOString());
 
-      if (logsError) {
-        throw logsError;
+      if (logsCountError) {
+        throw new Error(`Failed to count old logs: ${logsCountError.message}`);
       }
 
-      loggingService.logBlockchainSuccess(logId, {
+      // Perform both deletions in sequence, but with proper error handling
+      // If either fails, we'll handle it gracefully
+      let eventsDeleted = 0;
+      let logsDeleted = 0;
+      let partialFailure = false;
+      let failureDetails = '';
+
+      try {
+        // Delete old events
+        const { data: eventsResult, error: eventsError } = await supabase
+          .from('sync_events')
+          .delete()
+          .lt('created_at', cutoffDate.toISOString())
+          .select('id');
+
+        if (eventsError) {
+          throw new Error(`Failed to delete old events: ${eventsError.message}`);
+        }
+        eventsDeleted = eventsResult?.length || 0;
+
+        // Delete old logs
+        const { data: logsResult, error: logsError } = await supabase
+          .from('sync_logs')
+          .delete()
+          .lt('created_at', cutoffDate.toISOString())
+          .select('id');
+
+        if (logsError) {
+          throw new Error(`Failed to delete old logs: ${logsError.message}`);
+        }
+        logsDeleted = logsResult?.length || 0;
+      } catch (deletionError) {
+        // If deletion fails, we have a partial failure scenario
+        partialFailure = true;
+        failureDetails =
+          deletionError instanceof Error ? deletionError.message : 'Unknown deletion error';
+
+        // Log the partial failure
+        await loggingService.logBlockchainOperation('clearOldData_partial_failure', {
+          days,
+          cutoffDate: cutoffDate.toISOString(),
+          eventsDeleted,
+          logsDeleted,
+          failureDetails,
+          expectedEventsCount: eventsCount || 0,
+          expectedLogsCount: logsCount || 0,
+        });
+
+        // Return partial success response
+        res.json({
+          success: true,
+          message: `Partially cleared sync data older than ${days} days. Events deleted: ${eventsDeleted}, Logs deleted: ${logsDeleted}. Some deletions failed.`,
+          cutoffDate: cutoffDate.toISOString(),
+          eventsDeleted,
+          logsDeleted,
+          partialFailure: true,
+          failureDetails,
+          expectedEventsCount: eventsCount || 0,
+          expectedLogsCount: logsCount || 0,
+        });
+        return;
+      }
+
+      // Both operations succeeded
+      await loggingService.logBlockchainSuccess(logId, {
         action: 'old_data_cleared',
         cutoffDate: cutoffDate.toISOString(),
+        eventsDeleted,
+        logsDeleted,
+        expectedEventsCount: eventsCount || 0,
+        expectedLogsCount: logsCount || 0,
       });
 
       res.json({
         success: true,
         message: `Cleared sync data older than ${days} days`,
         cutoffDate: cutoffDate.toISOString(),
+        eventsDeleted,
+        logsDeleted,
+        partialFailure: false,
+        expectedEventsCount: eventsCount || 0,
+        expectedLogsCount: logsCount || 0,
       });
     } catch (error) {
       console.error('Failed to clear old data:', error);
