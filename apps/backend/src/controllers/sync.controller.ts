@@ -110,15 +110,17 @@ export class SyncController {
    */
   async getSyncEvents(req: Request, res: Response): Promise<void> {
     try {
-      const page = Number.parseInt(req.query.page as string, 10) || 1;
-      const limit = Number.parseInt(req.query.limit as string, 10) || 50;
+      const pageParam = Number.parseInt(req.query.page as string, 10);
+      const limitParam = Number.parseInt(req.query.limit as string, 10);
+      const page = Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1;
+      const limit = Number.isFinite(limitParam) && limitParam > 0 ? Math.min(limitParam, 200) : 50;
       const offset = (page - 1) * limit;
       const eventType = req.query.eventType as string;
       const processed = req.query.processed as string;
 
       let query = supabase
         .from('sync_events')
-        .select('*')
+        .select('*', { count: 'exact' })
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1);
 
@@ -161,15 +163,17 @@ export class SyncController {
    */
   async getSyncLogs(req: Request, res: Response): Promise<void> {
     try {
-      const page = Number.parseInt(req.query.page as string, 10) || 1;
-      const limit = Number.parseInt(req.query.limit as string, 10) || 50;
+      const pageParam = Number.parseInt(req.query.page as string, 10);
+      const limitParam = Number.parseInt(req.query.limit as string, 10);
+      const page = Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1;
+      const limit = Number.isFinite(limitParam) && limitParam > 0 ? Math.min(limitParam, 200) : 50;
       const offset = (page - 1) * limit;
       const status = req.query.status as string;
       const operation = req.query.operation as string;
 
       let query = supabase
         .from('sync_logs')
-        .select('*')
+        .select('*', { count: 'exact' })
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1);
 
