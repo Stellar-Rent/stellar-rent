@@ -10,14 +10,25 @@ import authRoutes from './routes/auth';
 import bookingRoutes from './routes/booking.routes';
 import walletAuthRoutes from './routes/wallet-auth.routes';
 
+import syncRoutes from './routes/sync.routes';
 import { runInitialCleanup, startCleanupScheduler } from './services/cleanup-schedular';
+import { syncService } from './services/sync.service';
 
 // Environment variables configuration
 dotenv.config();
 
-async function initializeCronJob() {
+async function initializeServices() {
+  // Initialize cleanup scheduler
   await runInitialCleanup();
   startCleanupScheduler();
+
+  // Initialize blockchain sync service
+  try {
+    await syncService.start();
+    console.log('✅ Blockchain synchronization service started');
+  } catch (error) {
+    console.error('❌ Failed to start blockchain sync service:', error);
+  }
 }
 
 console.log('Loaded environment variables:', {
@@ -49,6 +60,7 @@ app.use('/api/bookings', bookingRoutes);
 app.use('/api/locations', locationRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/properties', propertyRoutes);
+app.use('/api/sync', syncRoutes);
 
 // Test route
 app.get('/', (_req, res) => {
@@ -59,9 +71,14 @@ app.get('/', (_req, res) => {
 app.use(errorMiddleware);
 
 // Start server
-app.listen(PORT, () => {
-  console.log(`Servidor corriendo en el puerto ${PORT}`);
-  initializeCronJob();
-  console.log('Cron job initialized for expired challenges cleanup');
+app.listen(PORT, async () => {
   console.log(`Running on port http://localhost:${PORT}`);
+
+  try {
+    await initializeServices();
+    console.log('✅ All services initialized successfully');
+  } catch (error) {
+    console.error('❌ Failed to initialize services:', error);
+    console.error('⚠️  Server is running but some services may not be fully functional');
+  }
 });
