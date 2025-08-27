@@ -11,7 +11,6 @@
 
 import {
   type InitializeMultiReleaseEscrowPayload,
-  type InitializeSingleReleaseEscrowPayload,
   useInitializeEscrow,
   useSendTransaction,
 } from '@trustless-work/escrow';

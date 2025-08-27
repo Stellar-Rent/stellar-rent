@@ -1,9 +1,9 @@
 'use client';
 
-import { Card, CardHeader } from '@/components/ui/card';
-import type { BookingData } from '@/types/booking';
 import { format } from 'date-fns';
 import { Calendar, DollarSign, MapPin, Users } from 'lucide-react';
+import { Card, CardHeader } from '@/components/ui/card';
+import type { BookingData } from '@/types/booking';
 
 interface BookingDetailsCardProps {
   bookingData: BookingData;

@@ -1,5 +1,4 @@
 import { Download } from 'lucide-react';
-import type React from 'react';
 
 interface Transaction {
   id: number;

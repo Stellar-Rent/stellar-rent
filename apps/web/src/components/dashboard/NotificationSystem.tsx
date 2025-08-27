@@ -1,22 +1,15 @@
 'use client';
 
 import {
-  AlertCircle,
   Bell,
-  Calendar,
-  Check,
-  CheckCircle,
   Clock,
-  CreditCard,
   DollarSign,
-  Eye,
   Home,
   Info,
   MessageSquare,
   Settings,
   Star,
   Trash2,
-  User,
   X,
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';

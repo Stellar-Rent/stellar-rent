@@ -1,10 +1,10 @@
 'use client';
 
-import { useAuth } from '@/hooks/auth/use-auth';
 import { ArrowRight, Home, User } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { useAuth } from '@/hooks/auth/use-auth';
 
 const DashboardPage = () => {
   const { user, isAuthenticated } = useAuth();

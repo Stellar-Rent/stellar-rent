@@ -1,5 +1,5 @@
-import PropertyDetail from '@/components/features/properties/PropertyDetail';
 import type { Metadata } from 'next';
+import PropertyDetail from '@/components/features/properties/PropertyDetail';
 
 // This would typically come from an API
 const getPropertyById = async (id: string) => {

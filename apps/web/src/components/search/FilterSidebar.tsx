@@ -1,5 +1,6 @@
 'use client';
 
+import type { LatLngExpression } from 'leaflet';
 import {
   MapIcon,
   ParkingCircleIcon,
@@ -9,8 +10,8 @@ import {
   WavesIcon,
   WifiIcon,
 } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react';
-
 import {
   Dialog,
   DialogContent,
@@ -18,8 +19,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import type { LatLngExpression } from 'leaflet';
-import dynamic from 'next/dynamic';
 import 'leaflet/dist/leaflet.css';
 
 interface Filters {
@@ -64,7 +63,7 @@ export default function FilterSidebar({
 
   useEffect(() => {
     onFiltersChange({ price, amenities, rating });
-  }, [price, amenities, rating]);
+  }, [price, amenities, rating, onFiltersChange]);
 
   return (
     <aside

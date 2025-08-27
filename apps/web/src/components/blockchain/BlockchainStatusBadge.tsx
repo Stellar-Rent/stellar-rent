@@ -1,12 +1,12 @@
 'use client';
 
-import { Badge } from '@/components/ui/badge';
 import { AlertTriangle, CheckCircle, RefreshCw, Shield, XCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { Badge } from '@/components/ui/badge';
 import {
-  type PropertyBlockchainStatus,
   getPropertyBlockchainStatus,
   isBlockchainEnabled,
+  type PropertyBlockchainStatus,
 } from '../../services/blockchain';
 
 interface BlockchainStatusBadgeProps {
@@ -50,7 +50,7 @@ export function BlockchainStatusBadge({
     if (propertyId) {
       loadStatus();
     }
-  }, [propertyId]);
+  }, [propertyId, loadStatus]);
 
   if (isLoading) {
     return (

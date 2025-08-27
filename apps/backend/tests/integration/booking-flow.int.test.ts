@@ -1,5 +1,3 @@
-import request from 'supertest';
-
 describe('Booking + Payment integration (scaffold)', () => {
   it('creates a booking (pending)', async () => {
     // TODO: implement with app server and mocks

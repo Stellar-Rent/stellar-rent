@@ -7,7 +7,7 @@ export class SyncController {
   /**
    * Start the synchronization service
    */
-  async startSync(req: Request, res: Response): Promise<void> {
+  async startSync(_req: Request, res: Response): Promise<void> {
     try {
       const logId = await loggingService.logBlockchainOperation('startSync', {});
 
@@ -33,7 +33,7 @@ export class SyncController {
   /**
    * Stop the synchronization service
    */
-  async stopSync(req: Request, res: Response): Promise<void> {
+  async stopSync(_req: Request, res: Response): Promise<void> {
     try {
       const logId = await loggingService.logBlockchainOperation('stopSync', {});
 
@@ -59,7 +59,7 @@ export class SyncController {
   /**
    * Get synchronization status
    */
-  async getStatus(req: Request, res: Response): Promise<void> {
+  async getStatus(_req: Request, res: Response): Promise<void> {
     try {
       const status = syncService.getStatus();
       const stats = await syncService.getSyncStats();
@@ -82,7 +82,7 @@ export class SyncController {
   /**
    * Trigger manual synchronization
    */
-  async triggerManualSync(req: Request, res: Response): Promise<void> {
+  async triggerManualSync(_req: Request, res: Response): Promise<void> {
     try {
       const logId = await loggingService.logBlockchainOperation('triggerManualSync', {});
 
@@ -214,7 +214,7 @@ export class SyncController {
   /**
    * Get sync dashboard data
    */
-  async getDashboard(req: Request, res: Response): Promise<void> {
+  async getDashboard(_req: Request, res: Response): Promise<void> {
     try {
       // Get dashboard data from view
       const { data: dashboard, error: dashboardError } = await supabase
@@ -268,7 +268,7 @@ export class SyncController {
   /**
    * Retry failed events
    */
-  async retryFailedEvents(req: Request, res: Response): Promise<void> {
+  async retryFailedEvents(_req: Request, res: Response): Promise<void> {
     try {
       const logId = await loggingService.logBlockchainOperation('retryFailedEvents', {});
 
@@ -367,7 +367,7 @@ export class SyncController {
       // If either fails, we'll handle it gracefully
       let eventsDeleted = 0;
       let logsDeleted = 0;
-      let partialFailure = false;
+      let _partialFailure = false;
       let failureDetails = '';
 
       try {
@@ -396,7 +396,7 @@ export class SyncController {
         logsDeleted = logsResult?.length || 0;
       } catch (deletionError) {
         // If deletion fails, we have a partial failure scenario
-        partialFailure = true;
+        _partialFailure = true;
         failureDetails =
           deletionError instanceof Error ? deletionError.message : 'Unknown deletion error';
 

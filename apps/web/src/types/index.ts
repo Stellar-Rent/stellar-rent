@@ -105,7 +105,7 @@ export function transformToLegacyBooking(booking: DashboardBooking): LegacyBooki
   }
 
   return {
-    id: Number.parseInt(booking.id) || 0,
+    id: Number.parseInt(booking.id, 10) || 0,
     propertyTitle: booking.propertyTitle,
     propertyLocation: booking.propertyLocation,
     propertyImage: booking.propertyImage,
@@ -133,7 +133,7 @@ export function transformToLegacyUser(user: UserProfile): LegacyUserProfile {
 
   return {
     ...user,
-    id: Number.parseInt(user.id) || 1,
+    id: Number.parseInt(user.id, 10) || 1,
   };
 }
 

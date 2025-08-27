@@ -1,7 +1,7 @@
 'use client';
 
-import type { EscrowData, EscrowStatus, UseEscrowStatusReturn } from '@/types/booking';
 import { useCallback, useEffect, useState } from 'react';
+import type { EscrowData, EscrowStatus, UseEscrowStatusReturn } from '@/types/booking';
 
 // Constants for timing consistency
 const PENDING_TO_CONFIRMED_MINUTES = 5;

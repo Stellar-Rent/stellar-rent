@@ -1,11 +1,11 @@
 'use client';
 
+import { ChevronLeft, ChevronRight, ZoomIn } from 'lucide-react';
+import Image from 'next/image';
+import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import type { PropertyImageGalleryProps } from '@/lib/types/property';
-import { ChevronLeft, ChevronRight, X, ZoomIn } from 'lucide-react';
-import Image from 'next/image';
-import { useCallback, useEffect, useState } from 'react';
 
 export function PropertyImageGallery({ images, title, className = '' }: PropertyImageGalleryProps) {
   const [currentIndex, setCurrentIndex] = useState(0);

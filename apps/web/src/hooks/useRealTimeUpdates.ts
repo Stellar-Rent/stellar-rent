@@ -109,7 +109,7 @@ export const useRealTimeUpdates = ({
       onError?.(error as Error);
       scheduleReconnect();
     }
-  }, [enabled, userId, onError]);
+  }, [enabled, userId, onError, handleMessage, scheduleReconnect]);
 
   const disconnect = useCallback(() => {
     if (wsRef.current) {

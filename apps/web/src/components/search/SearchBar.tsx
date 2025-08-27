@@ -1,10 +1,9 @@
 'use client';
 
 import { format } from 'date-fns/format';
-import { Calendar as CalendarIcon, MapPin, Search, Users } from 'lucide-react';
+import { Calendar as CalendarIcon, Search, Users } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { z } from 'zod';
 import { Button } from '../ui/button';
 import { Calendar } from '../ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
@@ -70,7 +69,7 @@ export default function SearchBar() {
 
   useEffect(() => {
     const paramsLocation = searchParams.get('location') || '';
-    const paramsGuests = Number.parseInt(searchParams.get('guests') || '2');
+    const paramsGuests = Number.parseInt(searchParams.get('guests') || '2', 10);
     const paramsCheckIn = searchParams.get('checkIn');
     const paramsCheckOut = searchParams.get('checkOut');
 

@@ -3,7 +3,7 @@
 import type { LatLngExpression } from 'leaflet';
 import { MapContainer, Marker, Popup, TileLayer, Tooltip, ZoomControl } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import L, { marker } from 'leaflet';
+import L from 'leaflet';
 
 (L.Icon.Default.prototype as any)._getIconUrl = undefined;
 

@@ -4,18 +4,12 @@ import {
   Activity,
   ArrowDownRight,
   ArrowUpRight,
-  BarChart3,
   Calendar,
   DollarSign,
   Download,
-  Eye,
-  Filter,
   Home,
-  PieChart,
   RefreshCw,
   Star,
-  TrendingDown,
-  TrendingUp,
   Users,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
@@ -170,7 +164,10 @@ const Analytics: React.FC<AnalyticsProps> = ({
   const SimpleBarChart = ({
     data,
     height = 200,
-  }: { data: Array<{ label: string; value: number }>; height?: number }) => (
+  }: {
+    data: Array<{ label: string; value: number }>;
+    height?: number;
+  }) => (
     <div className="relative" style={{ height }}>
       <div className="flex items-end justify-between h-full space-x-2">
         {data.map((item, index) => {
@@ -194,7 +191,10 @@ const Analytics: React.FC<AnalyticsProps> = ({
   const SimpleLineChart = ({
     data,
     height = 200,
-  }: { data: Array<{ label: string; value: number }>; height?: number }) => (
+  }: {
+    data: Array<{ label: string; value: number }>;
+    height?: number;
+  }) => (
     <div className="relative" style={{ height }}>
       <svg className="w-full h-full" viewBox={`0 0 ${data.length * 40} ${height}`}>
         <polyline

@@ -1,8 +1,8 @@
 'use client';
-import { BlockchainVerification } from '@/components/blockchain/BlockchainVerification';
 import { Bath, Bed, Calendar, Edit3, Eye, MapPin, Star, Trash2, Users } from 'lucide-react';
 import Image from 'next/image';
 import type React from 'react';
+import { BlockchainVerification } from '@/components/blockchain/BlockchainVerification';
 import type { Property } from '../types';
 
 interface PropertyCardProps {

@@ -1,5 +1,3 @@
-import type React from 'react';
-
 interface PayoutRecord {
   id: string;
   date: string;

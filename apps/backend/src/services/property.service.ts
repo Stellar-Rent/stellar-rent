@@ -17,12 +17,12 @@
  * GitHub Issue: https://github.com/Stellar-Rent/stellar-rent/issues/99
  */
 
-const pLimit = require('p-limit');
+import * as pLimit from 'p-limit';
 import { checkBookingAvailability } from '../blockchain/bookingContract';
 import {
-  type PropertyListing,
   createPropertyListing,
   getPropertyListing,
+  type PropertyListing,
   propertyToHashData,
   updatePropertyListing,
   updatePropertyStatus,
@@ -39,9 +39,10 @@ import type {
 } from '../types/property.types';
 // import{ checkB }
 import { propertySchema, updatePropertySchema } from '../types/property.types';
+import { cacheService } from './cache.service';
 
-// Polyfill for Number.isNaN for older TypeScript targets
-const isNaN = Number.isNaN || ((value: any) => typeof value === 'number' && value !== value);
+// Use Number.isNaN directly (available in modern Node.js)
+const isNaNValue = Number.isNaN;
 
 // Allowed amenities list
 const ALLOWED_AMENITIES = [
@@ -75,8 +76,6 @@ const ALLOWED_AMENITIES = [
   'carbon_monoxide_alarm',
 ] as const;
 
-type AllowedAmenity = (typeof ALLOWED_AMENITIES)[number];
-
 export interface ServiceResponse<T> {
   success: boolean;
   data?: T;
@@ -104,13 +103,22 @@ export interface PropertySearchFilters {
   status?: 'available' | 'booked' | 'maintenance';
   from?: string;
   to?: string;
+  // Advanced filtering options
+  property_type?: string;
+  instant_book?: boolean;
+  free_cancellation?: boolean;
+  latitude?: number;
+  longitude?: number;
+  radius?: number; // in kilometers
+  search_text?: string; // for full-text search
 }
 
 export interface PropertySearchOptions {
   page?: number;
   limit?: number;
-  sort_by?: 'price' | 'created_at' | 'title';
+  sort_by?: 'price' | 'created_at' | 'title' | 'relevance' | 'distance';
   sort_order?: 'asc' | 'desc';
+  include_count?: boolean;
 }
 
 // Validation functions
@@ -123,9 +131,7 @@ function validateAmenities(amenities: string[]): {
   valid: boolean;
   invalidAmenities: string[];
 } {
-  const invalidAmenities = amenities.filter(
-    (amenity) => !(ALLOWED_AMENITIES as any).includes(amenity)
-  );
+  const invalidAmenities = amenities.filter((amenity) => !ALLOWED_AMENITIES.includes(amenity));
 
   return {
     valid: invalidAmenities.length === 0,
@@ -137,7 +143,9 @@ function validateAvailabilityRanges(availability: AvailabilityRange[]): boolean 
   return availability.every((range) => {
     const startDate = new Date(range.start_date);
     const endDate = new Date(range.end_date);
-    return startDate < endDate && !isNaN(startDate.getTime()) && !isNaN(endDate.getTime());
+    return (
+      startDate < endDate && !isNaNValue(startDate.getTime()) && !isNaNValue(endDate.getTime())
+    );
   });
 }
 
@@ -232,6 +240,9 @@ export async function createProperty(
         details: insertError,
       };
     }
+
+    // Invalidate related caches
+    await cacheService.invalidatePropertyCaches(property.id);
 
     // Create blockchain listing
     try {
@@ -470,6 +481,9 @@ export async function updateProperty(
       };
     }
 
+    // Invalidate related caches
+    await cacheService.invalidatePropertyCaches(id);
+
     // Update blockchain listing if property data changed
     try {
       const updatedProperty = property as Property;
@@ -542,14 +556,24 @@ export async function getFeaturedProperties(): Promise<ServiceResponse<FeaturedP
       };
     }
 
-    const formatted = (data || []).map((property: any) => ({
-      ...property,
-      image: property.images?.[0] ?? null,
-      location: {
-        city: property.city,
-        country: property.country,
-      },
-    }));
+    const formatted = (data || []).map(
+      (property: {
+        id: string;
+        title: string;
+        price: number;
+        city: string;
+        country: string;
+        images: string[] | null;
+        availability: unknown;
+      }) => ({
+        ...property,
+        image: property.images?.[0] ?? null,
+        location: {
+          city: property.city,
+          country: property.country,
+        },
+      })
+    );
 
     return {
       success: true,
@@ -589,6 +613,9 @@ export async function deleteProperty(id: string): Promise<ServiceResponse<boolea
         details: error,
       };
     }
+
+    // Invalidate related caches
+    await cacheService.invalidatePropertyCaches(id);
 
     return {
       success: true,
@@ -633,7 +660,14 @@ export async function verifyPropertyWithBlockchain(
     }
 
     // Verify integrity
-    const propertyHashData = propertyToHashData(propertyResult.data!);
+    if (!propertyResult.data) {
+      return {
+        success: false,
+        error: 'Property data not found',
+      };
+    }
+
+    const propertyHashData = propertyToHashData(propertyResult.data);
     const isValid = verifyPropertyIntegrity(propertyHashData, blockchainListing.data_hash);
 
     return {
@@ -702,34 +736,80 @@ export async function getPropertiesByOwner(
 }
 
 /**
- * Search properties with filters
+ * Search properties with filters and advanced optimizations
  */
 export async function searchProperties(
   filters: PropertySearchFilters = {},
-  options: PropertySearchOptions = {}
+  options: PropertySearchOptions = {},
+  userId?: string
 ): Promise<ServiceResponse<PropertyListResponse>> {
+  const startTime = Date.now();
+
   try {
-    const { page = 1, limit = 10, sort_by = 'created_at', sort_order = 'desc' } = options;
+    const {
+      page = 1,
+      limit = 10,
+      sort_by = 'created_at',
+      sort_order = 'desc',
+      include_count = true,
+    } = options;
     const offset = (page - 1) * limit;
 
+    // Generate cache key
+    const cacheKey = cacheService.generateSearchKey(filters, options);
+
+    // Check cache first
+    const cachedResult = await cacheService.get<PropertyListResponse>(cacheKey);
+    if (cachedResult) {
+      const responseTime = Date.now() - startTime;
+
+      // Log analytics for cached result
+      await cacheService.cacheSearchAnalytics(cacheKey, cachedResult.total, responseTime, userId);
+
+      return {
+        success: true,
+        data: cachedResult,
+      };
+    }
+
+    // Build optimized query with proper indexing
     let query = supabase
       .from('properties')
-      .select('*', { count: 'exact' })
-      .order(sort_by, { ascending: sort_order === 'asc' })
-      .range(offset, offset + limit - 1);
+      .select('*', { count: include_count ? 'exact' : undefined });
 
-    // Apply filters
+    // Apply filters in optimal order (most selective first)
+    if (filters.status) {
+      query = query.eq('status', filters.status);
+    } else {
+      query = query.eq('status', 'available'); // Default to available
+    }
+
+    // Location filtering (simplified for now, can optimize later)
     if (filters.city) {
       query = query.ilike('city', `%${filters.city}%`);
     }
     if (filters.country) {
       query = query.ilike('country', `%${filters.country}%`);
     }
+
+    // Text search (simplified)
+    if (filters.search_text) {
+      query = query.or(
+        `title.ilike.%${filters.search_text}%,description.ilike.%${filters.search_text}%`
+      );
+    }
+
+    // Price range filtering
     if (filters.min_price !== undefined) {
       query = query.gte('price', filters.min_price);
     }
     if (filters.max_price !== undefined) {
       query = query.lte('price', filters.max_price);
+    }
+
+    // Capacity filtering
+    if (filters.max_guests !== undefined) {
+      query = query.gte('max_guests', filters.max_guests);
     }
     if (filters.bedrooms !== undefined) {
       query = query.eq('bedrooms', filters.bedrooms);
@@ -737,17 +817,19 @@ export async function searchProperties(
     if (filters.bathrooms !== undefined) {
       query = query.eq('bathrooms', filters.bathrooms);
     }
-    if (filters.max_guests !== undefined) {
-      query = query.gte('max_guests', filters.max_guests);
-    }
-    if (filters.status) {
-      query = query.eq('status', filters.status);
-    }
+
+    // Amenities filtering (using GIN index)
     if (filters.amenities && filters.amenities.length > 0) {
       query = query.contains('amenities', filters.amenities);
     }
 
-    const { data: properties, error } = await query;
+    // Apply sorting
+    query = query.order(sort_by, { ascending: sort_order === 'asc' });
+
+    // Apply pagination
+    query = query.range(offset, offset + limit - 1);
+
+    const { data: properties, error, count } = await query;
 
     if (error) {
       console.error('Database search error:', error);
@@ -760,56 +842,86 @@ export async function searchProperties(
 
     let filteredProperties = properties as Property[];
 
-    if (filters.from && filters.to) {
+    // Date availability filtering (expensive operation, do last)
+    if (filters.from && filters.to && filteredProperties.length > 0) {
       const fromDate = new Date(filters.from);
       const toDate = new Date(filters.to);
 
-      if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) {
+      if (isNaNValue(fromDate.getTime()) || isNaNValue(toDate.getTime())) {
         return {
           success: false,
           error: 'Invalid date format for from or to',
         };
       }
 
-      // Use fromDate and toDate as needed, e.g.:
-      // - Pass to checkBookingAvailability
-      // - Convert to UNIX timestamp if needed
+      // Limit concurrency for blockchain calls
+      const concurrencyLimit = pLimit(5);
 
-      // Limit concurrency to 10 at a time
+      try {
+        const availabilityChecks = await Promise.all(
+          filteredProperties.map((property) =>
+            concurrencyLimit(async () => {
+              try {
+                const isAvailable = await checkBookingAvailability(
+                  property.id,
+                  fromDate.toISOString(),
+                  toDate.toISOString()
+                );
+                return isAvailable ? property : null;
+              } catch (error) {
+                console.warn(`Availability check failed for property ${property.id}:`, error);
+                // Include property if blockchain check fails (graceful degradation)
+                return property;
+              }
+            })
+          )
+        );
 
-      const limit = pLimit(10);
-
-      const checked = await Promise.all(
-        filteredProperties.map((property) =>
-          limit(async () => {
-            try {
-              return (await checkBookingAvailability(
-                property.id,
-                fromDate.toISOString(),
-                toDate.toISOString()
-              ))
-                ? property
-                : null;
-            } catch (_e) {
-              // Optionally log or handle error
-              return null;
-            }
-          })
-        )
-      );
-      filteredProperties = checked.filter(Boolean) as Property[];
+        filteredProperties = availabilityChecks.filter(Boolean) as Property[];
+      } catch (error) {
+        console.error('Availability checking failed:', error);
+        // Continue without availability filtering if blockchain is down
+      }
     }
+
+    const result: PropertyListResponse = {
+      properties: filteredProperties,
+      total: count || filteredProperties.length,
+      page,
+      limit,
+    };
+
+    // Cache successful results for 2 minutes (shorter for real-time data)
+    await cacheService.set(cacheKey, result, 120);
+
+    const responseTime = Date.now() - startTime;
+
+    // Log search analytics
+    await cacheService.cacheSearchAnalytics(cacheKey, result.total, responseTime, userId);
+
+    // Log slow queries for optimization
+    if (responseTime > 2000) {
+      console.warn('Slow search query detected:', {
+        filters,
+        options,
+        responseTime,
+        resultCount: result.total,
+      });
+    }
+
     return {
       success: true,
-      data: {
-        properties: filteredProperties,
-        total: filteredProperties.length,
-        page,
-        limit,
-      },
+      data: result,
     };
   } catch (error) {
     console.error('Property search error:', error);
+
+    const responseTime = Date.now() - startTime;
+    const cacheKey = cacheService.generateSearchKey(filters, options);
+
+    // Log failed search analytics
+    await cacheService.cacheSearchAnalytics(cacheKey, 0, responseTime, userId);
+
     return {
       success: false,
       error: 'Internal server error',

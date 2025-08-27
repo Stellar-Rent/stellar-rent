@@ -1,11 +1,11 @@
 'use client';
 
+import { AlertCircle, ArrowLeft } from 'lucide-react';
+import { useParams, useRouter } from 'next/navigation';
 import { BookingConfirmationPage } from '@/components/booking/confirmation/BookingConfirmationPage';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useBookingDetails } from '@/hooks/useBookingDetails';
-import { AlertCircle, ArrowLeft } from 'lucide-react';
-import { useParams, useRouter } from 'next/navigation';
 
 // Layout component to avoid repetition
 function BookingPageLayout({ children }: { children: React.ReactNode }) {

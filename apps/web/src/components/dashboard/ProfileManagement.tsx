@@ -4,8 +4,6 @@ import {
   AlertCircle,
   Bell,
   Camera,
-  CheckCircle,
-  CreditCard,
   Edit,
   Eye,
   EyeOff,
@@ -19,7 +17,6 @@ import {
   Trash2,
   Upload,
   User,
-  X,
 } from 'lucide-react';
 import Image from 'next/image';
 import { useCallback, useRef, useState } from 'react';

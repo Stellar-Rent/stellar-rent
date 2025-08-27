@@ -80,7 +80,7 @@ export async function deleteFromSupabaseStorage(imageUrl: string): Promise<boole
   try {
     const url = new URL(imageUrl);
     const pathParts = url.pathname.split('/');
-    const bucketIndex = pathParts.findIndex((part) => part === 'property-images');
+    const bucketIndex = pathParts.indexOf('property-images');
     if (bucketIndex === -1) return false;
 
     const filePath = pathParts.slice(bucketIndex + 1).join('/');

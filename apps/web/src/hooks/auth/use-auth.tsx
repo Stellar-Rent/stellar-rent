@@ -1,6 +1,6 @@
 'use client';
 
-import { type ReactNode, createContext, useContext, useEffect, useState } from 'react';
+import { createContext, type ReactNode, useContext, useEffect, useState } from 'react';
 import { signTransactionWithFreighter } from '~/lib/freighter-utils';
 import { getNetworkName, getNetworkPassphrase, logNetworkInfo } from '~/lib/network-utils';
 import { apiUtils, authAPI } from '../../services/api';

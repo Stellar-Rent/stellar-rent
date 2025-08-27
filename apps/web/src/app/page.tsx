@@ -1,9 +1,9 @@
-import { SearchBar } from '@/components/features/search/SearchBar';
-import { RightSidebar } from '@/components/layout/RightSidebar';
-import { PropertyGrid } from '@/components/search/PropertyGrid';
 import { House } from 'lucide-react';
 import Image from 'next/image';
 import { Suspense } from 'react';
+import { SearchBar } from '@/components/features/search/SearchBar';
+import { RightSidebar } from '@/components/layout/RightSidebar';
+import { PropertyGrid } from '@/components/search/PropertyGrid';
 
 export default function Home() {
   return (

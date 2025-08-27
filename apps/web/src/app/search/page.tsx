@@ -1,11 +1,11 @@
 'use client';
 
-import PropertyGrid from '@/components/search/PropertyGrid';
 import type { LatLngTuple } from 'leaflet';
 import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
 import { MOCK_PROPERTIES } from 'public/mock-data';
 import { useCallback, useMemo, useState } from 'react';
+import PropertyGrid from '@/components/search/PropertyGrid';
 import FilterSidebar from '~/components/search/FilterSidebar';
 import SearchBar from '~/components/search/SearchBar';
 import { SortOptions } from '~/components/search/SortOptions';

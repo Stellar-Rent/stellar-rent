@@ -1,13 +1,13 @@
 'use client';
+import { useRouter } from 'next/navigation';
+import { useTheme } from 'next-themes';
+import { useState } from 'react';
+import type { DateRange } from 'react-day-picker';
+import { toast } from 'react-hot-toast';
 import { BookingConfirmation } from '@/components/booking/BookingConfirmation';
 import { BookingForm } from '@/components/booking/BookingForm';
 import { WalletConnectionModal } from '@/components/booking/WalletConnectionModal';
 import { useWallet } from '@/hooks/useWallet';
-import { useTheme } from 'next-themes';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
-import type { DateRange } from 'react-day-picker';
-import { toast } from 'react-hot-toast';
 import PaymentButton from '~/components/payment/paymentButton';
 import { bookingAPI } from '~/services/api';
 

@@ -1,20 +1,15 @@
 import type {
   APIResponse,
-  AccountDetails,
   Booking,
   BookingFilters,
   BookingFormData,
   DateRangeFilter,
-  Notification,
-  NotificationFilters,
-  PaginatedResponse,
   ProfileFormData,
   Property,
   PropertyAvailabilityData,
   PropertyFilters,
   PropertyFormData,
   PropertyUpdateData,
-  Transaction,
   UserProfile,
 } from '../types/shared';
 

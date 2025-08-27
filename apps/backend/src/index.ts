@@ -5,12 +5,11 @@ import express from 'express';
 import { errorMiddleware } from './middleware/error.middleware';
 import { rateLimiter } from './middleware/rateLimiter';
 
-import { locationRoutes, profileRoutes, propertyRoutes } from './routes';
+import { locationRoutes, profileRoutes, propertyRoutes, searchAnalyticsRoutes } from './routes';
 import authRoutes from './routes/auth';
 import bookingRoutes from './routes/booking.routes';
-import walletAuthRoutes from './routes/wallet-auth.routes';
-
 import syncRoutes from './routes/sync.routes';
+import walletAuthRoutes from './routes/wallet-auth.routes';
 import { runInitialCleanup, startCleanupScheduler } from './services/cleanup-schedular';
 import { syncService } from './services/sync.service';
 
@@ -61,6 +60,7 @@ app.use('/api/locations', locationRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/properties', propertyRoutes);
 app.use('/api/sync', syncRoutes);
+app.use('/api/analytics', searchAnalyticsRoutes);
 
 // Test route
 app.get('/', (_req, res) => {

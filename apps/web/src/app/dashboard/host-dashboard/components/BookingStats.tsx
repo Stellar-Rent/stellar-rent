@@ -1,5 +1,4 @@
 import { Calendar, Check, CheckCircle, Clock } from 'lucide-react';
-import type React from 'react';
 import type { Booking } from '../types';
 
 interface BookingStatsProps {

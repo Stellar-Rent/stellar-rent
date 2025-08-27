@@ -20,24 +20,25 @@ import type { Request, Response } from 'express';
 import { z } from 'zod';
 import { deleteFromSupabaseStorage, uploadToSupabaseStorage } from '../config/supabase-storage';
 import {
-  type PropertySearchFilters,
-  type PropertySearchOptions,
   createProperty,
   deleteProperty,
   getAllowedAmenities,
   getFeaturedProperties,
   getPropertiesByOwner,
   getPropertyById,
+  type PropertySearchFilters,
+  type PropertySearchOptions,
   searchProperties,
   updateProperty,
   updatePropertyAvailability,
   verifyPropertyWithBlockchain,
 } from '../services/property.service';
+import { searchAnalyticsService } from '../services/search-analytics.service';
 import {
   type AvailabilityRangeInput,
+  availabilityRangeSchema,
   type CreatePropertyInput,
   type FeaturedProperty,
-  availabilityRangeSchema,
   propertySchema,
   searchPropertiesQuerySchema,
   updatePropertySchema,
@@ -489,6 +490,13 @@ export async function searchPropertiesController(req: Request, res: Response): P
       sort_order,
       from,
       to,
+      property_type,
+      instant_book,
+      free_cancellation,
+      latitude,
+      longitude,
+      radius,
+      search_text,
     } = queryValidation.data;
 
     const filters: PropertySearchFilters = {
@@ -503,6 +511,13 @@ export async function searchPropertiesController(req: Request, res: Response): P
       status,
       from,
       to,
+      property_type,
+      instant_book,
+      free_cancellation,
+      latitude,
+      longitude,
+      radius,
+      search_text,
     };
 
     const options: PropertySearchOptions = {
@@ -513,7 +528,24 @@ export async function searchPropertiesController(req: Request, res: Response): P
     };
 
     // Search properties using service
-    const result = await searchProperties(filters, options);
+    const startTime = Date.now();
+    const result = await searchProperties(filters, options, req.user?.id);
+
+    // Log search analytics
+    const responseTime = Date.now() - startTime;
+    const clientIp = req.ip || req.socket.remoteAddress;
+
+    searchAnalyticsService
+      .logSearch(
+        { filters, options },
+        result.success ? result.data?.total || 0 : 0,
+        responseTime,
+        req.user?.id,
+        clientIp
+      )
+      .catch((error) => {
+        console.error('Failed to log search analytics:', error);
+      });
 
     if (!result.success) {
       if (

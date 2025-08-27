@@ -1,5 +1,5 @@
-import type { Transaction } from '@/types';
 import { Clock, CreditCard, Download, Wallet } from 'lucide-react';
+import type { Transaction } from '@/types';
 
 interface PaymentMethod {
   type: string;

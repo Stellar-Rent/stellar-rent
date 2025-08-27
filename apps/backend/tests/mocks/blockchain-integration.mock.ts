@@ -9,8 +9,6 @@ export interface MockBlockchainConfig {
 
 export class MockBlockchainServices {
   private config: MockBlockchainConfig;
-  private escrowCounter = 0;
-  private transactionCounter = 0;
 
   constructor(config: MockBlockchainConfig = {}) {
     this.config = {

@@ -1,11 +1,10 @@
 'use client';
 
-import { IconContainer } from '@/components/ui/icon-container';
 import Image from 'next/image';
-import { useSearchParams } from 'next/navigation';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useRef, useState } from 'react';
 import { z } from 'zod';
+import { IconContainer } from '@/components/ui/icon-container';
 
 // Schema for form validation
 const searchSchema = z.object({

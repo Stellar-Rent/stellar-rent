@@ -1,7 +1,7 @@
 'use client';
 
-import { useTheme } from 'next-themes';
 import dynamic from 'next/dynamic';
+import { useTheme } from 'next-themes';
 import React from 'react';
 import { AuthProvider } from '~/hooks/auth/use-auth';
 import { StellarProvider } from '~/hooks/stellar/stellar-context';
