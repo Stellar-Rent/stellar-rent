@@ -1,13 +1,13 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { getAvailabilityStatus, getFeaturedProperties } from '@/lib/data/properties';
-import type { PropertyCardProps } from '@/lib/types/property';
 import { Heart, MapPin, Star } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useInView } from 'react-intersection-observer';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { getAvailabilityStatus, getFeaturedProperties } from '@/lib/data/properties';
+import type { PropertyCardProps } from '@/lib/types/property';
 
 // Property Card Component
 const PropertyCard = ({ property }: PropertyCardProps) => {

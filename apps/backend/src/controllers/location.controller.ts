@@ -1,5 +1,4 @@
 import type { Request, Response } from 'express';
-import { z } from 'zod';
 import { LocationService, locationService } from '../services/location.service';
 import {
   formatErrorResponse,

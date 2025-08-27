@@ -1,8 +1,8 @@
-import type { BookingData } from '@/types/booking';
 /**
  * @jest-environment jsdom
  */
 import { render, screen } from '@testing-library/react';
+import type { BookingData } from '@/types/booking';
 import { BookingConfirmationPage } from '../BookingConfirmationPage';
 
 jest.mock('@/hooks/useEscrowStatus', () => ({

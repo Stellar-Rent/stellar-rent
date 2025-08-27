@@ -1,4 +1,4 @@
-import { Contract, Networks, xdr } from '@stellar/stellar-sdk';
+import { Contract } from '@stellar/stellar-sdk';
 import { Server as SorobanRpcServer } from '@stellar/stellar-sdk/rpc';
 import { supabase } from '../config/supabase';
 import { loggingService } from '../services/logging.service';
@@ -26,7 +26,6 @@ export interface EventListenerConfig {
 
 export class BlockchainEventListener {
   private server: SorobanRpcServer;
-  private contract: Contract;
   private config: EventListenerConfig;
   private isRunning = false;
   private pollInterval: NodeJS.Timeout | null = null;

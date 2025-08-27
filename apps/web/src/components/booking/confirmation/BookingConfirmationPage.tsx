@@ -1,7 +1,7 @@
 'use client';
 
-import type { BookingData } from '@/types/booking';
 import { CheckCircle2 } from 'lucide-react';
+import type { BookingData } from '@/types/booking';
 import { BookingDetailsCard } from './BookingDetailsCard';
 import { EscrowStatusCard } from './EscrowStatusCard';
 import { HostContactCard } from './HostContactCard';

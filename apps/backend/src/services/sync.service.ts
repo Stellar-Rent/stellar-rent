@@ -18,7 +18,7 @@
  * - Status monitoring and statistics
  */
 
-import { Contract, Networks, nativeToScVal, scValToNative } from '@stellar/stellar-sdk';
+import { Contract, Networks } from '@stellar/stellar-sdk';
 import { Server as SorobanRpcServer } from '@stellar/stellar-sdk/rpc';
 import { supabase } from '../config/supabase';
 import { loggingService } from './logging.service';
@@ -57,9 +57,6 @@ export interface SyncStatus {
 }
 
 export class SyncService {
-  private server: SorobanRpcServer;
-  private contract: Contract;
-  private networkPassphrase: string;
   private pollingInterval: number;
   private isRunning = false;
   private syncInterval: NodeJS.Timeout | null = null;
@@ -364,13 +361,13 @@ export class SyncService {
    * Get contract events from Stellar network
    */
   private async getContractEvents(
-    fromBlock: number,
-    toBlock: number
+    _fromBlock: number,
+    _toBlock: number
   ): Promise<Record<string, unknown>[]> {
     try {
       // This is a simplified implementation
       // In a real scenario, you'd query the Stellar network for contract events
-      const contractId = process.env.SOROBAN_CONTRACT_ID;
+      const _contractId = process.env.SOROBAN_CONTRACT_ID;
 
       // For now, we'll return an empty array
       // TODO: Implement actual event querying from Stellar network

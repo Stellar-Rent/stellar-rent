@@ -1,5 +1,4 @@
 import type { Mock } from 'bun:test';
-import type { SupabaseClient } from '@supabase/supabase-js';
 import type { AvailabilityRequest, AvailabilityResponse } from '../blockchain/soroban';
 import type { BookingEscrowParams } from '../blockchain/trustlessWork';
 import type { Booking } from './booking.types';

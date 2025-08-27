@@ -1,6 +1,6 @@
-import type { LegacyBooking as Booking } from '@/types';
 import { Calendar, MapPin, X } from 'lucide-react';
 import Image from 'next/image';
+import type { LegacyBooking as Booking } from '@/types';
 
 interface BookingModalProps {
   booking: Booking | null;

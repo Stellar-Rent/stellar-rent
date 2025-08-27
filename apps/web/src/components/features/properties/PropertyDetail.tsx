@@ -24,14 +24,8 @@
 
 'use client';
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { getPropertyById } from '@/lib/data/properties';
-import type { PropertyDetailProps } from '@/lib/types/property';
 import {
   Bath,
-  Calendar,
   Car,
   ChevronDown,
   ChevronUp,
@@ -49,12 +43,16 @@ import {
   Wifi,
   Wind,
 } from 'lucide-react';
-import Image from 'next/image';
 import Link from 'next/link';
 import type React from 'react';
 import { useState } from 'react';
 import type { DateRange } from 'react-day-picker';
 import { toast } from 'sonner';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { getPropertyById } from '@/lib/data/properties';
+import type { PropertyDetailProps } from '@/lib/types/property';
 import { BlockchainVerification } from '../../blockchain/BlockchainVerification';
 import { PropertyCalendar } from './PropertyCalendar';
 import { PropertyImageGallery } from './PropertyImageGallery';

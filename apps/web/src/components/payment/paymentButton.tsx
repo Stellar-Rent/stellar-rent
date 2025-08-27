@@ -1,5 +1,7 @@
 'use client';
 
+import { CheckCircle, Loader2, ShieldCheck, Wallet, XCircle } from 'lucide-react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -9,8 +11,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { CheckCircle, Loader2, ShieldCheck, Wallet, XCircle } from 'lucide-react';
-import { useState } from 'react';
 import { useWallet } from '~/hooks/useWallet';
 import { getFreighterInstallUrl } from '~/lib/freighter-utils';
 import { processPayment } from '~/lib/stellar';

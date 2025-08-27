@@ -1,15 +1,12 @@
 'use client';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { format } from 'date-fns/format';
 import { Calendar, Home, MapPin, Star, Users, Wallet } from 'lucide-react';
-import { CalendarIcon } from 'lucide-react';
 import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
 import type { FullPropertyProps } from 'public/mock-data';
 import { MOCK_PROPERTIES } from 'public/mock-data';
 import { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 
 export default function PropertyDetailPage() {
   const searchParams = useSearchParams();

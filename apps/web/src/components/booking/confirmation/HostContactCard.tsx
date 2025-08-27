@@ -1,8 +1,8 @@
 'use client';
 
+import { Mail, MessageCircle, Phone, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader } from '@/components/ui/card';
-import { Mail, MessageCircle, Phone, User } from 'lucide-react';
 
 interface Host {
   name: string;

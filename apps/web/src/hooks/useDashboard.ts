@@ -134,7 +134,7 @@ export const useDashboard = ({ userId, userType }: UseDashboardProps): UseDashbo
     if (userId) {
       refreshAll();
     }
-  }, [userId, userType, refreshAll]);
+  }, [userId, refreshAll]);
 
   return {
     bookings,

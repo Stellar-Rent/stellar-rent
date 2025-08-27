@@ -1,11 +1,9 @@
 'use client';
 
 import {
-  TrustlessWorkConfig,
   // development environment = "https://dev.api.trustlesswork.com"
   development,
-  // mainnet environment = "https://api.trustlesswork.com"
-  mainNet,
+  TrustlessWorkConfig,
 } from '@trustless-work/escrow';
 import type React from 'react';
 

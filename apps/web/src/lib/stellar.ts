@@ -1,5 +1,4 @@
-import { Asset, Horizon, Operation, TransactionBuilder } from 'stellar-sdk';
-import Server from 'stellar-sdk';
+import Server, { Asset, Horizon, Operation, TransactionBuilder } from 'stellar-sdk';
 import { HORIZON_URL, NETWORK_PASSPHRASE, USDC_ISSUER } from './config/config';
 
 const USDC_ASSET = new Asset('USDC', USDC_ISSUER);

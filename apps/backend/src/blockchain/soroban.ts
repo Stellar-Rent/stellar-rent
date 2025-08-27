@@ -4,11 +4,11 @@ import {
   Contract,
   Horizon,
   Networks,
-  type Operation,
-  TransactionBuilder,
   nativeToScVal,
+  type Operation,
   rpc,
   scValToNative,
+  TransactionBuilder,
 } from '@stellar/stellar-sdk';
 
 const USDC_ISSUER = process.env.USDC_ISSUER;

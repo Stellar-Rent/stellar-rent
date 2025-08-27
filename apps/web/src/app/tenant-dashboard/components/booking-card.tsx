@@ -1,6 +1,6 @@
-import type { LegacyBooking as Booking } from '@/types';
 import { Calendar, Clock, CreditCard, Eye, MapPin, Star } from 'lucide-react';
 import Image from 'next/image';
+import type { LegacyBooking as Booking } from '@/types';
 
 interface BookingCardProps {
   booking: Booking;
@@ -165,8 +165,7 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking, onViewDetails, onCan
             {isUpcoming() && booking.status === 'upcoming' && (
               <span className="text-blue-600 dark:text-blue-400 font-medium">
                 {Math.ceil(
-                  (new Date(booking.checkIn).getTime() - new Date().getTime()) /
-                    (1000 * 60 * 60 * 24)
+                  (new Date(booking.checkIn).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
                 )}{' '}
                 days to go
               </span>

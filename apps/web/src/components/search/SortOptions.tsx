@@ -1,5 +1,8 @@
 'use client';
 
+import { ChevronDown } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -7,9 +10,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { ChevronDown } from 'lucide-react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
 
 const sortOptions = [
   { label: 'Price: Low to High', value: 'price_asc' },
@@ -19,11 +19,7 @@ const sortOptions = [
   { label: 'Newest', value: 'newest' },
 ];
 
-export function SortOptions({
-  onSortChange,
-}: {
-  onSortChange: (sortValue: string) => void;
-}) {
+export function SortOptions({ onSortChange }: { onSortChange: (sortValue: string) => void }) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const defaultSort = searchParams.get('sort') || 'price_asc';

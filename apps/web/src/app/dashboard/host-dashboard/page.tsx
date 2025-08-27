@@ -1,13 +1,13 @@
 'use client';
-import NetworkStatus from '@/components/NetworkStatus';
+import { Calendar, DollarSign, Settings, User, Wallet } from 'lucide-react';
+import Image from 'next/image';
+import { useState } from 'react';
 import BookingHistory from '@/components/dashboard/BookingHistory';
 import NotificationSystem from '@/components/dashboard/NotificationSystem';
 import ProfileManagement from '@/components/dashboard/ProfileManagement';
 import PropertyManagement from '@/components/dashboard/PropertyManagement';
+import NetworkStatus from '@/components/NetworkStatus';
 import { useRealTimeNotifications } from '@/hooks/useRealTimeUpdates';
-import { Calendar, DollarSign, Settings, User, Wallet } from 'lucide-react';
-import Image from 'next/image';
-import { useState } from 'react';
 import { AddPropertyModal } from './components/AddPropertyModal';
 import { AvailableBalance } from './components/AvailableBalance';
 import { BookingStats } from './components/BookingStats';
@@ -22,7 +22,7 @@ import type { Property, UserProfile } from './types';
 const HostDashboard = () => {
   const [activeTab, setActiveTab] = useState('properties');
   const [properties, setProperties] = useState(mockProperties);
-  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
+  const [selectedProperty, _setSelectedProperty] = useState<Property | null>(null);
   const [showCalendarModal, setShowCalendarModal] = useState(false);
   const [showAddPropertyModal, setShowAddPropertyModal] = useState(false);
   const [selectedDates, setSelectedDates] = useState<Set<string>>(new Set());
@@ -54,7 +54,7 @@ const HostDashboard = () => {
 
   const handleAddProperty = (e: React.FormEvent) => {
     e.preventDefault();
-    const price = Number.parseInt(newProperty.price);
+    const price = Number.parseInt(newProperty.price, 10);
     if (Number.isNaN(price) || price <= 0) {
       alert('Please enter a valid price');
       return;

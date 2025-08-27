@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, test } from 'bun:test';
 import {
-  type PropertyHashData,
   generatePropertyHash,
+  type PropertyHashData,
   propertyToHashData,
   verifyPropertyIntegrity,
 } from '../../blockchain/propertyListingContract';

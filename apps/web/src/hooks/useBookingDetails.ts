@@ -1,7 +1,7 @@
 'use client';
 
-import type { BookingData, UseBookingDetailsReturn } from '@/types/booking';
 import { useCallback, useEffect, useState } from 'react';
+import type { BookingData, UseBookingDetailsReturn } from '@/types/booking';
 
 // Validation function for booking IDs
 function isValidBookingId(bookingId: string): boolean {

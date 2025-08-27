@@ -1,8 +1,8 @@
 'use client';
 
-import { Card } from '@/components/ui/card';
 import { format } from 'date-fns';
 import { CheckCircle2 as CheckCircle2Icon } from 'lucide-react';
+import { Card } from '@/components/ui/card';
 
 interface BookingConfirmationProps {
   bookingId: string;

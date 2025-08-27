@@ -1,8 +1,8 @@
 'use client';
 
-import { Card } from '@/components/ui/card';
 import { QuoteIcon } from 'lucide-react';
 import Image from 'next/image';
+import { Card } from '@/components/ui/card';
 
 type Testimonial = {
   id: number;

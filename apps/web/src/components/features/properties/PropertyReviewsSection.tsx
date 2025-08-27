@@ -1,11 +1,11 @@
 'use client';
 
+import { MessageCircle, Shield, Star, ThumbsUp } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { getReviewsByPropertyId } from '@/lib/data/properties';
 import type { PropertyReviewsSectionProps } from '@/lib/types/property';
-import { MessageCircle, Shield, Star, ThumbsUp } from 'lucide-react';
 
 export function PropertyReviewsSection({
   propertyId,

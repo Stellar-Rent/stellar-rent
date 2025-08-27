@@ -1,7 +1,7 @@
 'use client';
-import React from 'react';
 import ListingForm from '~/components/properties/ListingForm';
 import { useAuthGuard } from '~/hooks/auth/use-auth-guard';
+
 const Page = () => {
   const { isLoading } = useAuthGuard();
   if (isLoading) return <div>Please wait... checking authentication status</div>;

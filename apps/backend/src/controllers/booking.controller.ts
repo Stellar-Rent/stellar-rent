@@ -1,8 +1,7 @@
 import type { NextFunction, Request, Response } from 'express';
 import { ZodError } from 'zod';
 import { verifyStellarTransaction } from '../blockchain/soroban';
-import { confirmBookingPayment, getBookingById } from '../services/booking.service';
-import { bookingService } from '../services/booking.service';
+import { bookingService, confirmBookingPayment, getBookingById } from '../services/booking.service';
 import type { AuthRequest } from '../types/auth.types';
 import {
   BookingParamsSchema,

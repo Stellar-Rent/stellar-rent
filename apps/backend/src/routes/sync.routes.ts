@@ -26,8 +26,8 @@
  * - Parameter sanitization and validation
  */
 
-import { Router } from 'express';
 import type { NextFunction, Response } from 'express';
+import { Router } from 'express';
 import { supabase } from '../config/supabase';
 import { syncController } from '../controllers/sync.controller';
 import type { AuthRequest } from '../types/auth.types';

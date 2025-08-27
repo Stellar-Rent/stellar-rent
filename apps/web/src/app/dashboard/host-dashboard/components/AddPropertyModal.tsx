@@ -1,7 +1,6 @@
 'use client';
 import { X } from 'lucide-react';
 import type React from 'react';
-import type { Property } from '../types';
 
 interface AddPropertyModalProps {
   open: boolean;
@@ -198,7 +197,10 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                     id="bedrooms"
                     value={newProperty.bedrooms}
                     onChange={(e) =>
-                      setNewProperty({ ...newProperty, bedrooms: Number.parseInt(e.target.value) })
+                      setNewProperty({
+                        ...newProperty,
+                        bedrooms: Number.parseInt(e.target.value, 10),
+                      })
                     }
                     className="w-full px-3 py-2 border dark:text-white border-gray-300 rounded-lg focus:ring-0 bg-transparent focus:ring-blue-500 focus:border-transparent"
                   >
@@ -221,7 +223,10 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                     id="bathroom"
                     value={newProperty.bathrooms}
                     onChange={(e) =>
-                      setNewProperty({ ...newProperty, bathrooms: Number.parseInt(e.target.value) })
+                      setNewProperty({
+                        ...newProperty,
+                        bathrooms: Number.parseInt(e.target.value, 10),
+                      })
                     }
                     className="w-full px-3 py-2 border dark:text-white border-gray-300 rounded-lg focus:ring-0 bg-transparent focus:ring-blue-500 focus:border-transparent"
                   >
@@ -244,7 +249,10 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                     id="guest"
                     value={newProperty.guests}
                     onChange={(e) =>
-                      setNewProperty({ ...newProperty, guests: Number.parseInt(e.target.value) })
+                      setNewProperty({
+                        ...newProperty,
+                        guests: Number.parseInt(e.target.value, 10),
+                      })
                     }
                     className="w-full px-3 py-2 dark:text-white border border-gray-300 rounded-lg focus:ring-0 bg-transparent focus:ring-blue-500 focus:border-transparent"
                   >

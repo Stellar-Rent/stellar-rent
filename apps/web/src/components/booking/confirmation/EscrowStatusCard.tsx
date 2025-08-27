@@ -1,10 +1,10 @@
 'use client';
 
+import { CheckCircle, Clock, ExternalLink, Shield, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader } from '@/components/ui/card';
 import { useEscrowStatus } from '@/hooks/useEscrowStatus';
 import type { EscrowStatus } from '@/types/booking';
-import { CheckCircle, Clock, ExternalLink, Shield, XCircle } from 'lucide-react';
 
 interface EscrowStatusCardProps {
   escrowStatus: EscrowStatus;

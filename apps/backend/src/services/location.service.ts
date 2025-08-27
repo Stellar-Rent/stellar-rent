@@ -5,6 +5,7 @@ import type {
   LocationServiceResponse,
   LocationSuggestion,
 } from '../types/location.types';
+import { cacheService } from './cache.service';
 
 export class LocationService {
   private supabase: SupabaseClient;
@@ -38,11 +39,24 @@ export class LocationService {
         };
       }
 
-      // Query database for distinct city/country combinations
+      // Check cache first
+      const cacheKey = cacheService.generateLocationKey(sanitizedQuery, limit);
+      const cachedResult = await cacheService.get<LocationAutocompleteResponse>(cacheKey);
+
+      if (cachedResult) {
+        return {
+          success: true,
+          data: cachedResult,
+        };
+      }
+
+      // Use optimized fuzzy search with trigram indexes
       const { data, error } = await this.supabase
         .from('properties')
         .select('city, country')
-        .or(`city.ilike.${sanitizedQuery}%,country.ilike.${sanitizedQuery}%`)
+        .or(
+          `city % '${sanitizedQuery}',country % '${sanitizedQuery}',city.ilike.${sanitizedQuery}%,country.ilike.${sanitizedQuery}%`
+        )
         .eq('status', 'available') // Only include available properties
         .order('city', { ascending: true })
         .limit(limit * 2); // Get more results to account for deduplication
@@ -57,26 +71,36 @@ export class LocationService {
       }
 
       if (!data || data.length === 0) {
+        const result = {
+          suggestions: [],
+          total: 0,
+          query,
+        };
+
+        // Cache empty results for shorter time
+        await cacheService.set(cacheKey, result, 60);
+
         return {
           success: true,
-          data: {
-            suggestions: [],
-            total: 0,
-            query,
-          },
+          data: result,
         };
       }
 
       // Process and deduplicate results
       const suggestions = this.processLocationResults(data, sanitizedQuery, limit);
 
+      const result = {
+        suggestions,
+        total: suggestions.length,
+        query,
+      };
+
+      // Cache successful results for 5 minutes
+      await cacheService.set(cacheKey, result, 300);
+
       return {
         success: true,
-        data: {
-          suggestions,
-          total: suggestions.length,
-          query,
-        },
+        data: result,
       };
     } catch (error) {
       console.error('Location service error:', error);
@@ -202,71 +226,65 @@ export class LocationService {
     limit = 10
   ): Promise<LocationServiceResponse<LocationAutocompleteResponse>> {
     try {
+      // Check cache first
+      const cacheKey = cacheService.generatePopularLocationsKey(limit);
+      const cachedResult = await cacheService.get<LocationAutocompleteResponse>(cacheKey);
+
+      if (cachedResult) {
+        return {
+          success: true,
+          data: cachedResult,
+        };
+      }
+
+      // Use materialized view for better performance
       const { data, error } = await this.supabase
-        .from('properties')
-        .select('city, country')
-        .eq('status', 'available')
-        .order('created_at', { ascending: false });
+        .from('popular_locations')
+        .select('city, country, property_count')
+        .order('property_count', { ascending: false })
+        .limit(limit);
 
       if (error) {
-        console.error('Database error in popular locations:', error);
-        return {
-          success: false,
-          error: 'Failed to fetch popular locations',
-          details: error,
-        };
+        // Fallback to regular query if materialized view fails
+        console.warn('Materialized view not available, falling back to regular query');
+        return this.getPopularLocationsFallback(limit);
       }
 
       if (!data || data.length === 0) {
+        const result = {
+          suggestions: [],
+          total: 0,
+          query: '',
+        };
+
+        // Cache empty results for shorter time
+        await cacheService.set(cacheKey, result, 300);
+
         return {
           success: true,
-          data: {
-            suggestions: [],
-            total: 0,
-            query: '',
-          },
+          data: result,
         };
       }
 
-      // Count frequency of each location
-      const locationCounts = new Map<
-        string,
-        { location: { city: string; country: string }; count: number }
-      >();
+      // Convert to suggestions format
+      const suggestions: LocationSuggestion[] = data.map((item) => ({
+        city: item.city,
+        country: item.country,
+        match_type: 'city' as const,
+      }));
 
-      for (const item of data) {
-        const key = `${item.city.toLowerCase()}-${item.country.toLowerCase()}`;
-        const existing = locationCounts.get(key);
+      const result = {
+        suggestions,
+        total: suggestions.length,
+        query: '',
+      };
 
-        if (existing) {
-          existing.count++;
-        } else {
-          locationCounts.set(key, {
-            location: { city: item.city, country: item.country },
-            count: 1,
-          });
-        }
-      }
-
-      // Sort by frequency and convert to suggestions
-      const suggestions = Array.from(locationCounts.values())
-        .sort((a, b) => b.count - a.count)
-        .slice(0, limit)
-        .map(
-          (item): LocationSuggestion => ({
-            city: item.location.city,
-            country: item.location.country,
-            match_type: 'city' as const,
-          })
-        );
+      // Cache popular locations for 30 minutes
+      await cacheService.set(cacheKey, result, 1800);
 
       return {
         success: true,
-        data: {
-          suggestions,
-          total: suggestions.length,
-          query: '',
-        },
+        data: result,
       };
     } catch (error) {
       console.error('Popular locations service error:', error);
@@ -276,6 +294,79 @@ export class LocationService {
         details: error,
       };
     }
+  }
+
+  /**
+   * Fallback method for popular locations when materialized view is not available
+   */
+  private async getPopularLocationsFallback(
+    limit: number
+  ): Promise<LocationServiceResponse<LocationAutocompleteResponse>> {
+    const { data, error } = await this.supabase
+      .from('properties')
+      .select('city, country')
+      .eq('status', 'available')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      return {
+        success: false,
+        error: 'Failed to fetch popular locations',
+        details: error,
+      };
+    }
+
+    if (!data || data.length === 0) {
+      return {
+        success: true,
+        data: {
+          suggestions: [],
+          total: 0,
+          query: '',
+        },
+      };
+    }
+
+    // Count frequency of each location
+    const locationCounts = new Map<
+      string,
+      { location: { city: string; country: string }; count: number }
+    >();
+
+    for (const item of data) {
+      const key = `${item.city.toLowerCase()}-${item.country.toLowerCase()}`;
+      const existing = locationCounts.get(key);
+
+      if (existing) {
+        existing.count++;
+      } else {
+        locationCounts.set(key, {
+          location: { city: item.city, country: item.country },
+          count: 1,
+        });
+      }
+    }
+
+    // Sort by frequency and convert to suggestions
+    const suggestions = Array.from(locationCounts.values())
+      .sort((a, b) => b.count - a.count)
+      .slice(0, limit)
+      .map(
+        (item): LocationSuggestion => ({
+          city: item.location.city,
+          country: item.location.country,
+          match_type: 'city' as const,
+        })
+      );
+
+    return {
+      success: true,
+      data: {
+        suggestions,
+        total: suggestions.length,
+        query: '',
+      },
+    };
   }
 }
 

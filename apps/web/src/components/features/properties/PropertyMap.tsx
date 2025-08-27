@@ -1,10 +1,10 @@
 'use client';
 
+import { ExternalLink, MapPin, Navigation } from 'lucide-react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import type { PropertyMapProps } from '@/lib/types/property';
-import { ExternalLink, MapPin, Navigation } from 'lucide-react';
-import { useState } from 'react';
 
 export function PropertyMap({
   address,

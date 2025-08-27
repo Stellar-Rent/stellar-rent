@@ -129,10 +129,18 @@ export const searchPropertiesQuerySchema = z.object({
   status: z.enum(['available', 'booked', 'maintenance']).optional(),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(10),
-  sort_by: z.enum(['price', 'created_at', 'title']).default('created_at'),
+  sort_by: z.enum(['price', 'created_at', 'title', 'relevance', 'distance']).default('created_at'),
   sort_order: z.enum(['asc', 'desc']).default('desc'),
   from: z.string().date('Invalid date format').optional(),
   to: z.string().date('Invalid date format').optional(),
+  // Advanced filtering options
+  property_type: z.string().optional(),
+  instant_book: z.coerce.boolean().optional(),
+  free_cancellation: z.coerce.boolean().optional(),
+  latitude: z.coerce.number().min(-90).max(90).optional(),
+  longitude: z.coerce.number().min(-180).max(180).optional(),
+  radius: z.coerce.number().min(0).max(100).optional(), // km
+  search_text: z.string().min(2).max(100).optional(),
 });
 
 export const updatePropertySchema = propertySchema.partial();

@@ -1,17 +1,5 @@
 'use client';
-import {
-  AlertCircle,
-  Bell,
-  Check,
-  ChevronDown,
-  Home,
-  Loader2,
-  RefreshCw,
-  Search,
-  Settings,
-  User,
-  Wallet,
-} from 'lucide-react';
+import { AlertCircle, Check, Home, Loader2, RefreshCw, Settings, User, Wallet } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
@@ -19,14 +7,12 @@ import { useEffect, useRef, useState } from 'react';
 import BookingHistory from '@/components/dashboard/BookingHistory';
 import NotificationSystem from '@/components/dashboard/NotificationSystem';
 import { useDashboard } from '@/hooks/useDashboard';
-import { transformFromLegacyUser, transformToLegacyBooking, transformToLegacyUser } from '@/types';
 import type {
   LegacyBooking as BookingType,
   Notification,
-  Transaction,
   LegacyUserProfile as UserProfile,
 } from '@/types';
-import BookingCard from './components/booking-card';
+import { transformFromLegacyUser, transformToLegacyBooking, transformToLegacyUser } from '@/types';
 import { BookingModal, CancelModal } from './components/modal';
 import ProfileManagement from './components/profile-management';
 import WalletTransactions from './components/wallet-transaction';

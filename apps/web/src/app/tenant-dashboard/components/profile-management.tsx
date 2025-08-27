@@ -1,7 +1,7 @@
-import type { LegacyUserProfile as UserProfile } from '@/types';
 import Image from 'next/image';
 import type React from 'react';
 import { useState } from 'react';
+import type { LegacyUserProfile as UserProfile } from '@/types';
 
 interface ProfileManagementProps {
   user: UserProfile;
@@ -18,7 +18,7 @@ const ProfileManagement: React.FC<ProfileManagementProps> = ({ user, onUpdateUse
       alert('Please enter a valid email address');
       return;
     }
-    const phoneRegex = /^[\d\s\-\+\(\)]+$/;
+    const phoneRegex = /^[\d\s\-+()]+$/;
     if (editedUser.phone && !phoneRegex.test(editedUser.phone)) {
       alert('Please enter a valid phone number');
       return;

@@ -1,6 +1,6 @@
 import express from 'express';
-import request from 'supertest';
 import type { Response } from 'supertest';
+import request from 'supertest';
 import {
   createConflictBookingInput,
   createInvalidBookingInput,

@@ -1,6 +1,6 @@
 // src/services/auth.service.ts
 import { supabase } from '../config/supabase';
-import type { AuthResponse, LoginInput, PublicProfile, RegisterInput } from '../types/auth.types';
+import type { AuthResponse, LoginInput, RegisterInput } from '../types/auth.types';
 
 export const registerUser = async (input: RegisterInput): Promise<AuthResponse> => {
   const { email, password, name, avatar_url, phone, address, preferences, social_links } = input;

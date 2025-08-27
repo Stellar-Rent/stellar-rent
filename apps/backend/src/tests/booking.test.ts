@@ -4,8 +4,8 @@ import { supabase } from '../config/supabase';
 import { BookingService } from '../services/booking.service';
 import { loggingService } from '../services/logging.service';
 import type { CreateBookingInput } from '../types/booking.types';
-import { BookingError } from '../types/common.types';
 import type { TransactionLog } from '../types/common.types';
+import { BookingError } from '../types/common.types';
 import type {
   MockBlockchainServices,
   MockLoggingService,
