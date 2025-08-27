@@ -41,8 +41,8 @@ import type {
 import { propertySchema, updatePropertySchema } from '../types/property.types';
 import { cacheService } from './cache.service';
 
-// Polyfill for Number.isNaN for older TypeScript targets
-const isNaN = Number.isNaN || ((value: any) => typeof value === 'number' && value !== value);
+// Use Number.isNaN directly (available in modern Node.js)
+const isNaNValue = Number.isNaN;
 
 // Allowed amenities list
 const ALLOWED_AMENITIES = [
@@ -75,8 +75,6 @@ const ALLOWED_AMENITIES = [
   'smoke_alarm',
   'carbon_monoxide_alarm',
 ] as const;
-
-type AllowedAmenity = (typeof ALLOWED_AMENITIES)[number];
 
 export interface ServiceResponse<T> {
   success: boolean;
@@ -133,9 +131,7 @@ function validateAmenities(amenities: string[]): {
   valid: boolean;
   invalidAmenities: string[];
 } {
-  const invalidAmenities = amenities.filter(
-    (amenity) => !(ALLOWED_AMENITIES as any).includes(amenity)
-  );
+  const invalidAmenities = amenities.filter((amenity) => !ALLOWED_AMENITIES.includes(amenity));
 
   return {
     valid: invalidAmenities.length === 0,
@@ -147,7 +143,9 @@ function validateAvailabilityRanges(availability: AvailabilityRange[]): boolean 
   return availability.every((range) => {
     const startDate = new Date(range.start_date);
     const endDate = new Date(range.end_date);
-    return startDate < endDate && !isNaN(startDate.getTime()) && !isNaN(endDate.getTime());
+    return (
+      startDate < endDate && !isNaNValue(startDate.getTime()) && !isNaNValue(endDate.getTime())
+    );
   });
 }
 
@@ -558,14 +556,24 @@ export async function getFeaturedProperties(): Promise<ServiceResponse<FeaturedP
       };
     }
 
-    const formatted = (data || []).map((property: any) => ({
-      ...property,
-      image: property.images?.[0] ?? null,
-      location: {
-        city: property.city,
-        country: property.country,
-      },
-    }));
+    const formatted = (data || []).map(
+      (property: {
+        id: string;
+        title: string;
+        price: number;
+        city: string;
+        country: string;
+        images: string[] | null;
+        availability: unknown;
+      }) => ({
+        ...property,
+        image: property.images?.[0] ?? null,
+        location: {
+          city: property.city,
+          country: property.country,
+        },
+      })
+    );
 
     return {
       success: true,
@@ -652,7 +660,14 @@ export async function verifyPropertyWithBlockchain(
     }
 
     // Verify integrity
-    const propertyHashData = propertyToHashData(propertyResult.data!);
+    if (!propertyResult.data) {
+      return {
+        success: false,
+        error: 'Property data not found',
+      };
+    }
+
+    const propertyHashData = propertyToHashData(propertyResult.data);
     const isValid = verifyPropertyIntegrity(propertyHashData, blockchainListing.data_hash);
 
     return {
@@ -832,7 +847,7 @@ export async function searchProperties(
       const fromDate = new Date(filters.from);
       const toDate = new Date(filters.to);
 
-      if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) {
+      if (isNaNValue(fromDate.getTime()) || isNaNValue(toDate.getTime())) {
         return {
           success: false,
           error: 'Invalid date format for from or to',
