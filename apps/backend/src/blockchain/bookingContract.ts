@@ -106,5 +106,164 @@ export async function checkBookingAvailability(
   }
 }
 
+export async function createBookingOnChain(
+  propertyId: string,
+  guestId: string,
+  fromTimestamp: number,
+  toTimestamp: number,
+  totalAmount: string,
+  guests: number
+): Promise<string> {
+  if (useMock) {
+    // Generate a mock booking ID for testing
+    return `mock-booking-${Date.now()}`;
+  }
+
+  try {
+    const contract = new StellarSdk.Contract(contractId);
+
+    const propertyIdScVal = StellarSdk.nativeToScVal(propertyId, { type: 'string' });
+    const guestIdScVal = StellarSdk.nativeToScVal(guestId, { type: 'string' });
+    const fromScVal = StellarSdk.nativeToScVal(fromTimestamp, { type: 'i64' });
+    const toScVal = StellarSdk.nativeToScVal(toTimestamp, { type: 'i64' });
+    const amountScVal = StellarSdk.nativeToScVal(totalAmount, { type: 'string' });
+    const guestsScVal = StellarSdk.nativeToScVal(guests, { type: 'u32' });
+
+    const account = await server.getAccount(sourceKeypair.publicKey());
+    const tx = new StellarSdk.TransactionBuilder(account, {
+      fee: '1000',
+      networkPassphrase,
+    })
+      .addOperation(
+        contract.call(
+          'create_booking',
+          propertyIdScVal,
+          guestIdScVal,
+          fromScVal,
+          toScVal,
+          amountScVal,
+          guestsScVal
+        )
+      )
+      .setTimeout(30)
+      .build();
+
+    tx.sign(sourceKeypair);
+    const result = await server.sendTransaction(tx);
+
+    if (result.status === 'SUCCESS') {
+      // Extract booking ID from transaction result
+      const sim = await server.simulateTransaction(tx);
+      if ('results' in sim && Array.isArray(sim.results) && sim.results.length > 0) {
+        const xdrResult = sim.results[0].xdr;
+        const scVal = StellarSdk.xdr.ScVal.fromXDR(xdrResult, 'base64');
+        const bookingId = StellarSdk.scValToNative(scVal);
+        return bookingId || result.hash;
+      }
+      return result.hash;
+    }
+
+    throw new Error(`Transaction failed with status: ${result.status}`);
+  } catch (error) {
+    console.error('Blockchain booking creation failed:', error);
+    throw new Error(
+      `Failed to create booking on chain: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
+  }
+}
+
+export async function cancelBookingOnChain(
+  propertyId: string,
+  bookingId: string,
+  requestorId: string
+): Promise<boolean> {
+  if (useMock) {
+    return true;
+  }
+
+  try {
+    const contract = new StellarSdk.Contract(contractId);
+
+    const propertyIdScVal = StellarSdk.nativeToScVal(propertyId, { type: 'string' });
+    const bookingIdScVal = StellarSdk.nativeToScVal(bookingId, { type: 'string' });
+    const requestorIdScVal = StellarSdk.nativeToScVal(requestorId, { type: 'string' });
+
+    const account = await server.getAccount(sourceKeypair.publicKey());
+    const tx = new StellarSdk.TransactionBuilder(account, {
+      fee: '1000',
+      networkPassphrase,
+    })
+      .addOperation(
+        contract.call('cancel_booking', propertyIdScVal, bookingIdScVal, requestorIdScVal)
+      )
+      .setTimeout(30)
+      .build();
+
+    tx.sign(sourceKeypair);
+    const result = await server.sendTransaction(tx);
+
+    return result.status === 'SUCCESS';
+  } catch (error) {
+    console.error('Blockchain booking cancellation failed:', error);
+    throw new Error(
+      `Failed to cancel booking on chain: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
+  }
+}
+
+export async function updateBookingStatusOnChain(
+  propertyId: string,
+  bookingId: string,
+  newStatus: string,
+  requestorId: string
+): Promise<boolean> {
+  if (useMock) {
+    return true;
+  }
+
+  try {
+    const contract = new StellarSdk.Contract(contractId);
+
+    const propertyIdScVal = StellarSdk.nativeToScVal(propertyId, { type: 'string' });
+    const bookingIdScVal = StellarSdk.nativeToScVal(bookingId, { type: 'string' });
+    const statusScVal = StellarSdk.nativeToScVal(newStatus, { type: 'string' });
+    const requestorIdScVal = StellarSdk.nativeToScVal(requestorId, { type: 'string' });
+
+    const account = await server.getAccount(sourceKeypair.publicKey());
+    const tx = new StellarSdk.TransactionBuilder(account, {
+      fee: '1000',
+      networkPassphrase,
+    })
+      .addOperation(
+        contract.call(
+          'update_status',
+          propertyIdScVal,
+          bookingIdScVal,
+          statusScVal,
+          requestorIdScVal
+        )
+      )
+      .setTimeout(30)
+      .build();
+
+    tx.sign(sourceKeypair);
+    const result = await server.sendTransaction(tx);
+
+    return result.status === 'SUCCESS';
+  } catch (error) {
+    console.error('Blockchain booking status update failed:', error);
+    throw new Error(
+      `Failed to update booking status on chain: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
+  }
+}
+
 // Re-export mock helpers for testing
 export const { addMockBooking, clearMockBookings } = mockBookingContract;
+
+export interface BlockchainBookingResult {
+  success: boolean;
+  bookingId?: string;
+  transactionHash?: string;
+  error?: string;
+}
