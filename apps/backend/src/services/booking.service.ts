@@ -1,3 +1,4 @@
+import { StrKey } from '@stellar/stellar-sdk';
 import {
   cancelBookingOnChain,
   checkBookingAvailability,
@@ -33,7 +34,53 @@ export class BookingService {
     const log = await loggingService.logBlockchainOperation('createBooking', input);
 
     try {
-      // 1. Check property availability using existing soroban utility
+      // Generate unique booking ID upfront
+      const bookingId = crypto.randomUUID();
+
+      // 1. Fetch property details and seller info
+      const propertyResult = await getPropertyById(input.propertyId);
+      if (!propertyResult.success || !propertyResult.data) {
+        throw new BookingError('Property not found', 'PROPERTY_NOT_FOUND');
+      }
+
+      // Fetch seller's Stellar address
+      const { data: sellerProfile, error: sellerError } = await supabase
+        .from('profiles')
+        .select('stellar_address')
+        .eq('id', propertyResult.data.ownerId)
+        .single();
+
+      if (sellerError || !sellerProfile?.stellar_address) {
+        throw new BookingError(
+          'Property owner wallet address not found',
+          'SELLER_WALLET_NOT_FOUND'
+        );
+      }
+
+      // Fetch buyer's Stellar address
+      const { data: buyerProfile, error: buyerError } = await supabase
+        .from('profiles')
+        .select('stellar_address')
+        .eq('id', input.userId)
+        .single();
+
+      if (buyerError || !buyerProfile?.stellar_address) {
+        throw new BookingError(
+          'Buyer wallet address not found. Please connect a Stellar wallet to your account.',
+          'BUYER_WALLET_NOT_FOUND'
+        );
+      }
+
+      // Validate Stellar addresses
+      if (!StrKey.isValidEd25519PublicKey(buyerProfile.stellar_address)) {
+        throw new BookingError('Invalid buyer Stellar wallet address', 'INVALID_BUYER_WALLET');
+      }
+
+      if (!StrKey.isValidEd25519PublicKey(sellerProfile.stellar_address)) {
+        throw new BookingError('Invalid seller Stellar wallet address', 'INVALID_SELLER_WALLET');
+      }
+
+      // 2. Check property availability using existing soroban utility
       const availabilityResult = await this.blockchainServices.checkAvailability({
         propertyId: input.propertyId,
         dates: {
@@ -50,23 +97,23 @@ export class BookingService {
         );
       }
 
-      // 2. Create escrow first
+      // 3. Create escrow with complete parameters
       const escrowAddress = await this.blockchainServices.createEscrow({
-        buyerAddress: input.userId,
+        bookingId,
+        buyerAddress: buyerProfile.stellar_address,
+        sellerAddress: sellerProfile.stellar_address,
         propertyId: input.propertyId,
+        propertyTitle: propertyResult.data.title,
         totalAmount: input.total,
         depositAmount: input.deposit,
         dates: {
           from: input.dates.from,
           to: input.dates.to,
         },
-        bookingId: '',
-        sellerAddress: '',
         guests: input.guests,
-        propertyTitle: '',
       });
 
-      // 3. Create booking on blockchain
+      // 4. Create booking on blockchain
       let blockchainBookingId: string;
       try {
         blockchainBookingId = await createBookingOnChain(
@@ -95,7 +142,7 @@ export class BookingService {
         );
       }
 
-      // 4. Create booking record in database
+      // 5. Create booking record in database
       const { data: booking, error: dbError } = await supabase
         .from('bookings')
         .insert({
@@ -336,31 +383,12 @@ const blockchainServices: BlockchainServices = {
 
   async createEscrow(params: BookingEscrowParams): Promise<string> {
     try {
-      // Get property details to find the owner
-      const propertyResult = await getPropertyById(params.propertyId);
-      if (!propertyResult.success || !propertyResult.data) {
-        throw new Error('Property not found');
+      // Validate required parameters
+      if (!params.bookingId || !params.buyerAddress || !params.sellerAddress) {
+        throw new Error('Missing required escrow parameters');
       }
 
-      // Get owner's wallet address from user profile
-      const { data: ownerProfile, error: ownerError } = await supabase
-        .from('profiles')
-        .select('stellar_address')
-        .eq('id', propertyResult.data.ownerId)
-        .single();
-
-      if (ownerError || !ownerProfile?.stellar_address) {
-        throw new Error('Property owner wallet address not found');
-      }
-
-      // Create complete escrow parameters
-      const completeEscrowParams: BookingEscrowParams = {
-        ...params,
-        sellerAddress: ownerProfile.stellar_address,
-        propertyTitle: propertyResult.data.title,
-      };
-
-      const escrowAddress = await createEscrow(completeEscrowParams);
+      const escrowAddress = await createEscrow(params);
       return escrowAddress;
     } catch (error) {
       console.error('Escrow creation failed:', error);
