@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, mock } from 'bun:test';
 import type { Response } from 'express';
 import type { AuthRequest } from '../../src/types/auth.types';
+import { BookingError } from '../../src/types/common.types';
 
 const mockGetBookingById = mock(() => Promise.resolve({}));
 const mockVerifyStellarTransaction = mock(() => Promise.resolve(true));
@@ -22,6 +23,7 @@ import { confirmPayment } from '../../src/controllers/booking.controller';
 describe('confirmPayment Controller', () => {
   let req: Partial<AuthRequest>;
   let res: Partial<Response>;
+  // biome-ignore lint/suspicious/noExplicitAny: Test mock function signature
   let _next: (...args: any[]) => any;
 
   beforeEach(() => {
@@ -34,6 +36,7 @@ describe('confirmPayment Controller', () => {
       total: 100,
       escrow_address: 'test-escrow-address',
       status: 'pending',
+      // biome-ignore lint/suspicious/noExplicitAny: Test mock object
     } as any);
     mockVerifyStellarTransaction.mockResolvedValue(true);
     mockConfirmBookingPayment.mockResolvedValue({
@@ -41,12 +44,15 @@ describe('confirmPayment Controller', () => {
       total: 100,
       escrow_address: 'test-escrow-address',
       status: 'confirmed',
+      // biome-ignore lint/suspicious/noExplicitAny: Test mock object
     } as any);
 
     req = {
       user: {
         id: 'test-user-id',
+        // biome-ignore lint/suspicious/noExplicitAny: Test mock object
         app_metadata: {} as any,
+        // biome-ignore lint/suspicious/noExplicitAny: Test mock object
         user_metadata: {} as any,
         aud: '',
         created_at: '',
@@ -58,9 +64,12 @@ describe('confirmPayment Controller', () => {
       },
     };
     res = {
+      // biome-ignore lint/suspicious/noExplicitAny: Test mock function
       status: mock(() => res) as any,
+      // biome-ignore lint/suspicious/noExplicitAny: Test mock function
       json: mock(() => {}) as any,
     };
+    // biome-ignore lint/suspicious/noExplicitAny: Test mock function signature
     _next = mock(() => {}) as any;
   });
 
@@ -96,15 +105,29 @@ describe('confirmPayment Controller', () => {
     req.user = undefined;
     await confirmPayment(req as AuthRequest, res as Response);
     expect(res.status).toHaveBeenCalledWith(401);
-    expect(res.json).toHaveBeenCalledWith({ error: 'User authentication required' });
+    expect(res.json).toHaveBeenCalledWith({
+      success: false,
+      data: null,
+      error: {
+        message: 'User authentication required',
+        details: null,
+      },
+    });
     expect(mockGetBookingById).not.toHaveBeenCalled();
   });
 
-  it('should return 400 if bookingId is missing', async () => {
+  it('should return 400 if required fields are missing', async () => {
     req.body.bookingId = undefined;
     await confirmPayment(req as AuthRequest, res as Response);
     expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({ error: 'bookingId is required' });
+    expect(res.json).toHaveBeenCalledWith({
+      success: false,
+      data: null,
+      error: {
+        message: 'Missing required fields: bookingId',
+        details: null,
+      },
+    });
     expect(mockGetBookingById).not.toHaveBeenCalled();
   });
 
@@ -112,7 +135,14 @@ describe('confirmPayment Controller', () => {
     req.body.transactionHash = undefined;
     await confirmPayment(req as AuthRequest, res as Response);
     expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({ error: 'transactionHash is required' });
+    expect(res.json).toHaveBeenCalledWith({
+      success: false,
+      data: null,
+      error: {
+        message: 'Missing required fields: transactionHash',
+        details: null,
+      },
+    });
     expect(mockGetBookingById).not.toHaveBeenCalled();
   });
 
@@ -120,16 +150,30 @@ describe('confirmPayment Controller', () => {
     req.body.sourcePublicKey = undefined;
     await confirmPayment(req as AuthRequest, res as Response);
     expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({ error: 'sourcePublicKey is required' });
+    expect(res.json).toHaveBeenCalledWith({
+      success: false,
+      data: null,
+      error: {
+        message: 'Missing required fields: sourcePublicKey',
+        details: null,
+      },
+    });
     expect(mockGetBookingById).not.toHaveBeenCalled();
   });
 
   it('should return 404 if booking is not found', async () => {
-    mockGetBookingById.mockResolvedValue(null);
+    mockGetBookingById.mockRejectedValue(new BookingError('Booking not found', 'NOT_FOUND'));
     await confirmPayment(req as AuthRequest, res as Response);
     expect(mockGetBookingById).toHaveBeenCalledWith('test-booking-id');
     expect(res.status).toHaveBeenCalledWith(404);
-    expect(res.json).toHaveBeenCalledWith({ error: 'Booking not found' });
+    expect(res.json).toHaveBeenCalledWith({
+      success: false,
+      data: null,
+      error: {
+        message: 'Booking not found',
+        details: null,
+      },
+    });
     expect(mockVerifyStellarTransaction).not.toHaveBeenCalled();
     expect(mockConfirmBookingPayment).not.toHaveBeenCalled();
   });
@@ -138,14 +182,22 @@ describe('confirmPayment Controller', () => {
     const mockBookingWithoutEscrow = {
       id: 'test-booking-id',
       total: 100,
-      escrow_address: undefined,
+      escrow_address: null,
       status: 'pending',
     };
+    // biome-ignore lint/suspicious/noExplicitAny: Test mock object
     mockGetBookingById.mockResolvedValue(mockBookingWithoutEscrow as any);
     await confirmPayment(req as AuthRequest, res as Response);
     expect(mockGetBookingById).toHaveBeenCalledWith('test-booking-id');
     expect(res.status).toHaveBeenCalledWith(500);
-    expect(res.json).toHaveBeenCalledWith({ error: 'Booking missing escrow address' });
+    expect(res.json).toHaveBeenCalledWith({
+      success: false,
+      data: null,
+      error: {
+        message: 'Booking missing escrow address',
+        details: null,
+      },
+    });
     expect(mockVerifyStellarTransaction).not.toHaveBeenCalled();
     expect(mockConfirmBookingPayment).not.toHaveBeenCalled();
   });
@@ -159,15 +211,19 @@ describe('confirmPayment Controller', () => {
     expect(mockVerifyStellarTransaction).toHaveBeenCalled();
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
-      error: 'Transaction verification failed',
-      details: [{ message: 'Transaction verification failed: Invalid signature' }],
+      success: false,
+      data: null,
+      error: {
+        message: 'Transaction verification failed',
+        details: 'Transaction verification failed: Invalid signature',
+      },
     });
     expect(mockConfirmBookingPayment).not.toHaveBeenCalled();
   });
 
-  it('should return 400 if confirmBookingPayment fails with a specific message', async () => {
+  it('should return 400 if confirmBookingPayment fails with BookingError', async () => {
     mockConfirmBookingPayment.mockRejectedValue(
-      new Error('Cannot confirm booking: Already confirmed')
+      new BookingError('Cannot confirm booking: Already confirmed', 'CONFIRM_FAIL')
     );
     await confirmPayment(req as AuthRequest, res as Response);
     expect(mockGetBookingById).toHaveBeenCalledWith('test-booking-id');
@@ -178,7 +234,12 @@ describe('confirmPayment Controller', () => {
     );
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
-      error: 'Cannot confirm booking: Already confirmed',
+      success: false,
+      data: null,
+      error: {
+        message: 'Cannot confirm booking: Already confirmed',
+        details: null,
+      },
     });
   });
 
@@ -193,8 +254,12 @@ describe('confirmPayment Controller', () => {
     );
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.json).toHaveBeenCalledWith({
-      error: 'Failed to confirm payment',
-      details: [{ message: 'Internal server error' }],
+      success: false,
+      data: null,
+      error: {
+        message: 'Failed to confirm payment',
+        details: null,
+      },
     });
   });
 });
