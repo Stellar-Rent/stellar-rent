@@ -12,7 +12,7 @@ import {
 } from '@stellar/stellar-sdk';
 
 const USDC_ISSUER = process.env.USDC_ISSUER;
-const USDC_ASSET = Asset.native();
+const USDC_ASSET = new Asset('USDC', USDC_ISSUER);
 interface AvailabilityRequest {
   propertyId: string;
   dates: {
