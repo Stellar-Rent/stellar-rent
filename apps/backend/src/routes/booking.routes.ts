@@ -13,14 +13,17 @@ import { validateConfirmPayment } from '../validators/booking.validator';
 
 const router = Router();
 
+// Property availability check (PUBLIC - no auth required)
+router.get('/availability/:propertyId', checkPropertyAvailability);
+
 // Booking CRUD operations
 router.post('/', authenticateToken, postBooking);
+router.get('/', authenticateToken, getUserBookings);
+
+// Routes with :bookingId parameter (must come after concrete routes)
 router.get('/:bookingId', authenticateToken, getBooking);
 router.put('/:bookingId/cancel', authenticateToken, cancelBooking);
 router.put('/:bookingId/status', authenticateToken, updateBookingStatus);
-
-// User bookings
-router.get('/', authenticateToken, getUserBookings);
 
 // Payment confirmation
 router.post(
@@ -29,8 +32,5 @@ router.post(
   validateConfirmPayment,
   confirmPayment
 );
-
-// Property availability check
-router.get('/availability/:propertyId', checkPropertyAvailability);
 
 export default router;
