@@ -73,6 +73,14 @@ export const confirmPaymentSchema = z.object({
   transactionHash: z.string().min(10, 'Transaction hash is required and must be valid'),
 });
 
+export interface ConflictingBooking {
+  bookingId: string;
+  dates: {
+    from: Date;
+    to: Date;
+  };
+}
+
 export type CreateBookingInput = z.infer<typeof createBookingSchema>;
 export type BookingResponse = z.infer<typeof BookingResponseSchema>;
 export type BookingParams = z.infer<typeof BookingParamsSchema>;

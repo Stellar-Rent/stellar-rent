@@ -1,12 +1,26 @@
-import type { AvailabilityRequest, AvailabilityResponse } from '../blockchain/soroban';
-import type { BookingEscrowParams } from '../blockchain/trustlessWork';
+import {
+  cancelBookingOnChain,
+  checkBookingAvailability,
+  createBookingOnChain,
+  updateBookingStatusOnChain,
+} from '../blockchain/bookingContract';
+import { checkAvailability } from '../blockchain/soroban';
+import {
+  type BookingEscrowParams,
+  createEscrow,
+  trustlessWorkClient,
+} from '../blockchain/trustlessWork';
 import { supabase } from '../config/supabase';
 import { loggingService } from '../services/logging.service';
-import type { CreateBookingInput } from '../types/booking.types';
+import { getPropertyById } from '../services/property.service';
+import type { Booking, ConflictingBooking, CreateBookingInput } from '../types/booking.types';
 import { BookingError } from '../types/common.types';
 
 export interface BlockchainServices {
-  checkAvailability: (request: AvailabilityRequest) => Promise<AvailabilityResponse>;
+  checkAvailability: (request: { propertyId: string; dates: { from: Date; to: Date } }) => Promise<{
+    isAvailable: boolean;
+    conflictingBookings?: Array<ConflictingBooking>;
+  }>;
   createEscrow: (params: BookingEscrowParams) => Promise<string>;
   cancelEscrow: (escrowAddress: string) => Promise<void>;
 }
@@ -15,14 +29,17 @@ export class BookingService {
   constructor(private readonly blockchainServices: BlockchainServices) {}
 
   async createBooking(input: CreateBookingInput) {
-    // Log the start of blockchain operation
-    const logId = loggingService.logBlockchainOperation('createBooking', input);
+    // Start logging blockchain operation
+    const log = await loggingService.logBlockchainOperation('createBooking', input);
 
     try {
-      // Check property availability
+      // 1. Check property availability using existing soroban utility
       const availabilityResult = await this.blockchainServices.checkAvailability({
         propertyId: input.propertyId,
-        dates: input.dates,
+        dates: {
+          from: input.dates.from,
+          to: input.dates.to,
+        },
       });
 
       if (!availabilityResult.isAvailable) {
@@ -33,20 +50,52 @@ export class BookingService {
         );
       }
 
-      // Create escrow
+      // 2. Create escrow first
       const escrowAddress = await this.blockchainServices.createEscrow({
         buyerAddress: input.userId,
         propertyId: input.propertyId,
         totalAmount: input.total,
         depositAmount: input.deposit,
-        dates: input.dates,
+        dates: {
+          from: input.dates.from,
+          to: input.dates.to,
+        },
         bookingId: '',
         sellerAddress: '',
         guests: input.guests,
         propertyTitle: '',
       });
 
-      // Create booking record in database
+      // 3. Create booking on blockchain
+      let blockchainBookingId: string;
+      try {
+        blockchainBookingId = await createBookingOnChain(
+          input.propertyId,
+          input.userId,
+          Math.floor(input.dates.from.getTime() / 1000),
+          Math.floor(input.dates.to.getTime() / 1000),
+          input.total.toString(),
+          input.guests
+        );
+      } catch (blockchainError) {
+        // Rollback escrow if blockchain booking fails
+        try {
+          await this.blockchainServices.cancelEscrow(escrowAddress);
+        } catch (rollbackError) {
+          await loggingService.logBlockchainError(log, {
+            error: rollbackError,
+            context: 'Failed to rollback escrow after blockchain booking error',
+            originalError: blockchainError,
+          });
+        }
+        throw new BookingError(
+          'Failed to create booking on blockchain',
+          'BLOCKCHAIN_FAIL',
+          blockchainError
+        );
+      }
+
+      // 4. Create booking record in database
       const { data: booking, error: dbError } = await supabase
         .from('bookings')
         .insert({
@@ -60,28 +109,31 @@ export class BookingService {
           total: input.total,
           deposit: input.deposit,
           escrow_address: escrowAddress,
+          blockchain_booking_id: blockchainBookingId,
           status: 'pending',
         })
         .select()
         .single();
 
       if (dbError || !booking) {
-        // Attempt to cancel escrow if database operation fails
+        // Rollback both escrow and blockchain booking if database fails
         try {
-          await this.blockchainServices.cancelEscrow(escrowAddress);
+          await Promise.all([
+            this.blockchainServices.cancelEscrow(escrowAddress),
+            cancelBookingOnChain(input.propertyId, blockchainBookingId, input.userId),
+          ]);
         } catch (rollbackError) {
-          loggingService.logBlockchainError(logId, {
-            error: rollbackError as Error,
-            context: 'Failed to rollback escrow after database error',
+          await loggingService.logBlockchainError(log, {
+            error: rollbackError,
+            context: 'Failed to rollback escrow and blockchain booking after database error',
             originalError: dbError,
           });
         }
-
         throw new BookingError('Failed to create booking record', 'DB_FAIL', dbError);
       }
 
       // Log successful operation
-      loggingService.logBlockchainSuccess(logId, { booking, escrowAddress });
+      await loggingService.logBlockchainSuccess(log, { booking, escrowAddress });
 
       return {
         bookingId: booking.id,
@@ -93,13 +145,243 @@ export class BookingService {
         throw error;
       }
 
-      // Log and rethrow other errors
-      loggingService.logBlockchainError(logId, error as Error);
-      throw new BookingError('Failed to create escrow', 'ESCROW_FAIL', (error as Error).message);
+      // Log and rethrow unexpected errors
+      await loggingService.logBlockchainError(log, error);
+      throw new BookingError('Failed to create booking', 'CREATE_FAIL', error);
+    }
+  }
+
+  async cancelBooking(
+    bookingId: string,
+    userId: string
+  ): Promise<{ success: boolean; message: string }> {
+    const log = await loggingService.logBlockchainOperation('cancelBooking', { bookingId, userId });
+
+    try {
+      // Get booking details from database
+      const { data: booking, error: fetchError } = await supabase
+        .from('bookings')
+        .select('*')
+        .eq('id', bookingId)
+        .single();
+
+      if (fetchError || !booking) {
+        throw new BookingError('Booking not found', 'NOT_FOUND', fetchError);
+      }
+
+      // Check authorization
+      if (booking.user_id !== userId) {
+        throw new BookingError('Unauthorized to cancel this booking', 'UNAUTHORIZED');
+      }
+
+      // Check if booking can be cancelled
+      if (booking.status === 'cancelled' || booking.status === 'completed') {
+        throw new BookingError(
+          `Cannot cancel booking with status: ${booking.status}`,
+          'INVALID_STATUS'
+        );
+      }
+
+      // Cancel booking on blockchain
+      try {
+        if (booking.blockchain_booking_id) {
+          await cancelBookingOnChain(booking.property_id, booking.blockchain_booking_id, userId);
+        }
+      } catch (blockchainError) {
+        console.error('Blockchain cancellation failed:', blockchainError);
+        await loggingService.logBlockchainError(log, {
+          error: blockchainError,
+          context: 'Blockchain cancellation failed but continuing with database update',
+        });
+      }
+
+      // Cancel escrow if it exists
+      if (booking.escrow_address) {
+        try {
+          await this.blockchainServices.cancelEscrow(booking.escrow_address);
+        } catch (escrowError) {
+          console.error('Escrow cancellation failed:', escrowError);
+          await loggingService.logBlockchainError(log, {
+            error: escrowError,
+            context: 'Escrow cancellation failed',
+          });
+        }
+      }
+
+      // Update booking status in database
+      const { data: updatedBooking, error: updateError } = await supabase
+        .from('bookings')
+        .update({
+          status: 'cancelled',
+          cancelled_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', bookingId)
+        .select()
+        .single();
+
+      if (updateError) {
+        throw new BookingError('Failed to update booking status', 'DB_UPDATE_FAIL', updateError);
+      }
+
+      await loggingService.logBlockchainSuccess(log, { booking: updatedBooking });
+
+      return {
+        success: true,
+        message: 'Booking cancelled successfully',
+      };
+    } catch (error) {
+      if (error instanceof BookingError) {
+        throw error;
+      }
+
+      await loggingService.logBlockchainError(log, error);
+      throw new BookingError('Failed to cancel booking', 'CANCEL_FAIL', error);
+    }
+  }
+
+  async updateBookingStatus(
+    bookingId: string,
+    newStatus: string,
+    requestorId: string
+  ): Promise<{ success: boolean; booking: Booking }> {
+    const log = await loggingService.logBlockchainOperation('updateBookingStatus', {
+      bookingId,
+      newStatus,
+      requestorId,
+    });
+
+    try {
+      // Get booking details
+      const { data: booking, error: fetchError } = await supabase
+        .from('bookings')
+        .select('*')
+        .eq('id', bookingId)
+        .single();
+
+      if (fetchError || !booking) {
+        throw new BookingError('Booking not found', 'NOT_FOUND', fetchError);
+      }
+
+      // Update status on blockchain if blockchain booking exists
+      if (booking.blockchain_booking_id) {
+        try {
+          await updateBookingStatusOnChain(
+            booking.property_id,
+            booking.blockchain_booking_id,
+            newStatus,
+            requestorId
+          );
+        } catch (blockchainError) {
+          console.error('Blockchain status update failed:', blockchainError);
+          await loggingService.logBlockchainError(log, {
+            error: blockchainError,
+            context: 'Blockchain status update failed',
+          });
+        }
+      }
+
+      // Update status in database
+      const { data: updatedBooking, error: updateError } = await supabase
+        .from('bookings')
+        .update({
+          status: newStatus,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', bookingId)
+        .select()
+        .single();
+
+      if (updateError) {
+        throw new BookingError('Failed to update booking status', 'DB_UPDATE_FAIL', updateError);
+      }
+
+      await loggingService.logBlockchainSuccess(log, { booking: updatedBooking });
+
+      return {
+        success: true,
+        booking: updatedBooking,
+      };
+    } catch (error) {
+      if (error instanceof BookingError) {
+        throw error;
+      }
+
+      await loggingService.logBlockchainError(log, error);
+      throw new BookingError('Failed to update booking status', 'STATUS_UPDATE_FAIL', error);
     }
   }
 }
 
+// Implementation of BlockchainServices following codebase patterns
+const blockchainServices: BlockchainServices = {
+  async checkAvailability(request: { propertyId: string; dates: { from: Date; to: Date } }) {
+    try {
+      // Use existing availability check utility
+      const availabilityResult = await checkAvailability({
+        propertyId: request.propertyId,
+        dates: request.dates,
+      });
+
+      return availabilityResult;
+    } catch (error) {
+      console.error('Availability check failed:', error);
+      throw new BookingError(
+        'Failed to check property availability',
+        'AVAILABILITY_CHECK_FAIL',
+        error
+      );
+    }
+  },
+
+  async createEscrow(params: BookingEscrowParams): Promise<string> {
+    try {
+      // Get property details to find the owner
+      const propertyResult = await getPropertyById(params.propertyId);
+      if (!propertyResult.success || !propertyResult.data) {
+        throw new Error('Property not found');
+      }
+
+      // Get owner's wallet address from user profile
+      const { data: ownerProfile, error: ownerError } = await supabase
+        .from('profiles')
+        .select('stellar_address')
+        .eq('id', propertyResult.data.ownerId)
+        .single();
+
+      if (ownerError || !ownerProfile?.stellar_address) {
+        throw new Error('Property owner wallet address not found');
+      }
+
+      // Create complete escrow parameters
+      const completeEscrowParams: BookingEscrowParams = {
+        ...params,
+        sellerAddress: ownerProfile.stellar_address,
+        propertyTitle: propertyResult.data.title,
+      };
+
+      const escrowAddress = await createEscrow(completeEscrowParams);
+      return escrowAddress;
+    } catch (error) {
+      console.error('Escrow creation failed:', error);
+      throw new BookingError('Failed to create booking escrow', 'ESCROW_CREATE_FAIL', error);
+    }
+  },
+
+  async cancelEscrow(escrowAddress: string): Promise<void> {
+    try {
+      await trustlessWorkClient.cancelEscrow(escrowAddress, 'Booking cancelled');
+    } catch (error) {
+      console.error('Escrow cancellation failed:', error);
+      throw new BookingError('Failed to cancel booking escrow', 'ESCROW_CANCEL_FAIL', error);
+    }
+  },
+};
+
+// Export the booking service with implemented blockchain services
+export const bookingService = new BookingService(blockchainServices);
+
+// Existing utility functions for payment confirmation and booking retrieval
 export async function confirmBookingPayment(bookingId: string, transactionHash: string) {
   try {
     const { data: existingBooking, error: fetchError } = await supabase
@@ -144,15 +426,3 @@ export async function getBookingById(id: string) {
 
   return data;
 }
-
-export const bookingService = new BookingService({
-  checkAvailability: async () => {
-    throw new Error('checkAvailability not implemented');
-  },
-  createEscrow: async () => {
-    throw new Error('createEscrow not implemented');
-  },
-  cancelEscrow: async () => {
-    throw new Error('cancelEscrow not implemented');
-  },
-});
