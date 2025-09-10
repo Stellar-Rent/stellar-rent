@@ -9,7 +9,9 @@
     "start": "bun run dist/index.js",
     "dev": "bun run --watch src/index.ts",
     "build": "bun build ./src/index.ts --outdir ./dist",
-    "test": "bun test"
+    "test": "bun test",
+    "test:watch": "bun test --watch",
+    "test:coverage": "bun test --coverage"
   },
   "dependencies": {
     "@stellar/stellar-sdk": "^13.3.0",
