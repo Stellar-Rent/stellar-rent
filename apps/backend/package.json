@@ -25,6 +25,7 @@
     "node-cron": "^4.2.0",
     "node-fetch": "^3.3.2",
     "soroban-client": "^1.0.1",
+    "stellar-cli": "^1.0.3",
     "stellar-sdk": "^13.3.0",
     "supertest": "^7.1.2",
     "uuid": "^11.1.0",
