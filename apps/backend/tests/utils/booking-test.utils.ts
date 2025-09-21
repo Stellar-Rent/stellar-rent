@@ -7,23 +7,27 @@ import {
 import { createMockBlockchainServices } from '../mocks/blockchain-integration.mock';
 
 // Mock Supabase client
-jest.mock('../../src/config/supabase', () => ({
-  supabase: {
-    from: jest.fn().mockReturnThis(),
-    select: jest.fn().mockReturnThis(),
-    insert: jest.fn().mockReturnThis(),
-    update: jest.fn().mockReturnThis(),
-    delete: jest.fn().mockReturnThis(),
-    eq: jest.fn().mockReturnThis(),
-    single: jest.fn().mockReturnThis(),
-    upsert: jest.fn().mockReturnThis(),
-    auth: {
-      getUser: jest.fn().mockResolvedValue({
-        data: { user: { id: 'test-user-id', email: 'test@example.com' } },
-        error: null,
-      }),
-    },
+import { mock } from 'bun:test';
+
+const mockSupabase = {
+  from: mock(() => mockSupabase),
+  select: mock(() => mockSupabase),
+  insert: mock(() => mockSupabase),
+  update: mock(() => mockSupabase),
+  delete: mock(() => mockSupabase),
+  eq: mock(() => mockSupabase),
+  single: mock(() => mockSupabase),
+  upsert: mock(() => mockSupabase),
+  auth: {
+    getUser: mock(() => Promise.resolve({
+      data: { user: { id: 'test-user-id', email: 'test@example.com' } },
+      error: null,
+    })),
   },
+};
+
+mock.module('../../src/config/supabase', () => ({
+  supabase: mockSupabase,
 }));
 
 import { supabase } from '../../src/config/supabase';

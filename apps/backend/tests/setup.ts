@@ -1,4 +1,5 @@
 import { config } from 'dotenv';
+import { beforeAll, afterAll } from 'bun:test';
 
 // Load environment variables for testing
 config({ path: '.env.test' });
@@ -19,6 +20,10 @@ Object.defineProperty(process.env, 'BOOKING_CONTRACT_ADDRESS', {
   value: 'CB3ILSDNHL6TWZYZJAS4L27GLHNAGW4ISW6YXIBHGHL4QYI4JPLP6W3E',
   writable: true,
 });
+Object.defineProperty(process.env, 'SOROBAN_CONTRACT_ID', {
+  value: 'CB3ILSDNHL6TWZYZJAS4L27GLHNAGW4ISW6YXIBHGHL4QYI4JPLP6W3E',
+  writable: true,
+});
 Object.defineProperty(process.env, 'SUPABASE_URL', {
   value: 'https://test.supabase.co/',
   writable: true,
@@ -27,9 +32,10 @@ Object.defineProperty(process.env, 'SUPABASE_SERVICE_ROLE_KEY', {
   value: 'test-service-role-key',
   writable: true,
 });
-
-// Global test timeout
-jest.setTimeout(30000);
+Object.defineProperty(process.env, 'SYNC_POLL_INTERVAL', {
+  value: '1000',
+  writable: true,
+});
 
 // Suppress console logs during tests unless explicitly needed
 const originalConsoleLog = console.log;
@@ -37,8 +43,8 @@ const originalConsoleError = console.error;
 
 beforeAll(() => {
   // Suppress console output during tests
-  console.log = jest.fn();
-  console.error = jest.fn();
+  console.log = () => {};
+  console.error = () => {};
 });
 
 afterAll(() => {
@@ -79,7 +85,12 @@ global.testUtils = {
 };
 
 // Mock fetch for external API calls
-global.fetch = jest.fn() as unknown as typeof fetch;
+global.fetch = (() => Promise.resolve({
+  ok: true,
+  status: 200,
+  json: () => Promise.resolve({}),
+  text: () => Promise.resolve(''),
+})) as unknown as typeof fetch;
 
 // Mock crypto for UUID generation
 Object.defineProperty(global, 'crypto', {
