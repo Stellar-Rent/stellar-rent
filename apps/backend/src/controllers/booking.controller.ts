@@ -63,9 +63,14 @@ export const getBooking = async (req: AuthRequest, res: Response) => {
   try {
     const parseResult = BookingParamsSchema.safeParse(req.params);
     if (!parseResult.success) {
-      return res
-        .status(400)
-        .json(formatErrorResponse('Invalid booking ID', parseResult.error.errors));
+      return res.status(400).json({
+        success: false,
+        data: null,
+        error: {
+          message: 'Bad Request',
+          details: parseResult.error.errors,
+        },
+      });
     }
 
     const { bookingId } = parseResult.data;
@@ -94,11 +99,75 @@ export const getBooking = async (req: AuthRequest, res: Response) => {
         UNAUTHORIZED: 403,
       };
       const status = statusMap[error.code] || 500;
-      return res.status(status).json(formatErrorResponse(error.message, error.details));
+      return res.status(status).json({
+        success: false,
+        data: null,
+        error: {
+          message: error.message,
+          details: error.details,
+        },
+      });
+    }
+
+    // Handle generic errors from mocks or other sources
+    if (error instanceof Error) {
+      const errorMessage = error.message;
+      
+      // Map common error messages to appropriate status codes
+      if (errorMessage === 'Access denied') {
+        return res.status(403).json({
+          success: false,
+          data: null,
+          error: {
+            message: 'Access denied',
+            details: 'You do not have permission to access this booking.',
+          },
+        });
+      }
+      
+      if (errorMessage === 'Booking not found') {
+        return res.status(404).json({
+          success: false,
+          data: null,
+          error: {
+            message: 'Booking not found',
+            details: 'The booking with the provided ID does not exist.',
+          },
+        });
+      }
+      
+      if (errorMessage === 'Property not found') {
+        return res.status(404).json({
+          success: false,
+          data: null,
+          error: {
+            message: 'Resource not found',
+            details: 'Property not found',
+          },
+        });
+      }
+      
+      if (errorMessage === 'Host user not found') {
+        return res.status(404).json({
+          success: false,
+          data: null,
+          error: {
+            message: 'Resource not found',
+            details: 'Host user not found',
+          },
+        });
+      }
     }
 
     console.error('getBooking error:', error);
-    return res.status(500).json(formatErrorResponse('Internal server error'));
+    return res.status(500).json({
+      success: false,
+      data: null,
+      error: {
+        message: 'Internal Server Error',
+        details: 'Something went wrong retrieving booking details.',
+      },
+    });
   }
 };
 

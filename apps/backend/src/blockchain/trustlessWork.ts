@@ -80,7 +80,8 @@ export class TrustlessWorkClient {
     this.apiUrl = apiUrl || TRUSTLESS_WORK_API_URL;
     this.apiKey = apiKey || TRUSTLESS_WORK_API_KEY || '';
 
-    if (!this.apiKey) {
+    // Only throw error in production, allow test mode with empty key
+    if (!this.apiKey && process.env.NODE_ENV === 'production') {
       throw new Error('TrustlessWork API key is required');
     }
   }

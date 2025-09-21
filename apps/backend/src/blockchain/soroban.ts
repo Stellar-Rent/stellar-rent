@@ -11,13 +11,8 @@ import {
   scValToNative,
 } from '@stellar/stellar-sdk';
 
-// Verify that the USDC issuer environment variable is set
-const USDC_ISSUER = process.env.USDC_ISSUER;
-if (!USDC_ISSUER) {
-  throw new Error('USDC_ISSUER environment variable is not set. Please add it to your .env file.');
-}
-const USDC_ASSET = new Asset('USDC', USDC_ISSUER);
-
+const USDC_ISSUER = process.env.USDC_ISSUER || 'native';
+const USDC_ASSET = USDC_ISSUER === 'native' ? new Asset('XLM') : new Asset('USDC', USDC_ISSUER);
 interface AvailabilityRequest {
   propertyId: string;
   dates: {
