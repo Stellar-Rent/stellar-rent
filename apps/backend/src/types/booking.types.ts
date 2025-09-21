@@ -57,8 +57,10 @@ export const BookingResponseSchema = z.object({
   userId: z.string().uuid(),
   propertyId: z.string().uuid(),
   dates: z.object({
-    from: z.string().refine((val) => !Number(Date.parse(val)), { message: 'Invalid from date' }),
-    to: z.string().refine((val) => !Number(Date.parse(val)), { message: 'Invalid to date' }),
+    from: z
+      .string()
+      .refine((val) => !Number.isNaN(Date.parse(val)), { message: 'Invalid from date' }),
+    to: z.string().refine((val) => !Number.isNaN(Date.parse(val)), { message: 'Invalid to date' }),
   }),
   guests: z.number(),
   total: z.number(),
@@ -72,6 +74,14 @@ export const BookingResponseSchema = z.object({
 export const confirmPaymentSchema = z.object({
   transactionHash: z.string().min(10, 'Transaction hash is required and must be valid'),
 });
+
+export interface ConflictingBooking {
+  bookingId: string;
+  dates: {
+    from: Date;
+    to: Date;
+  };
+}
 
 export type CreateBookingInput = z.infer<typeof createBookingSchema>;
 export type BookingResponse = z.infer<typeof BookingResponseSchema>;

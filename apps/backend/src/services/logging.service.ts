@@ -73,7 +73,7 @@ class LoggingService {
         for (const key of errorKeys) {
           if (!['name', 'message', 'stack', 'cause'].includes(key)) {
             try {
-              const value = (error as Record<string, unknown>)[key];
+              const value = (error as unknown as Record<string, unknown>)[key];
               // Only include serializable values
               if (value !== undefined && value !== null) {
                 serializedError[key] = this.sanitizeValue(value);
@@ -242,11 +242,15 @@ class LoggingService {
     await this.logTransaction(successLog);
   }
 
-  public async logBlockchainError(operation: string, error: unknown) {
+  public async logBlockchainError(log: TransactionLog, error: unknown) {
     const errorLog: TransactionLog = {
-      timestamp: new Date().toISOString(),
-      operation,
+      ...log,
       status: 'failed',
+      details: {
+        ...(log.details as Record<string, unknown>),
+        error: error instanceof Error ? { message: error.message, stack: error.stack } : error,
+        failedAt: new Date().toISOString(),
+      },
       error,
     };
     await this.logTransaction(errorLog);
