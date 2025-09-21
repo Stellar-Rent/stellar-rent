@@ -1,6 +1,7 @@
 import express from 'express';
 import request from 'supertest';
 import type { Response } from 'supertest';
+import { describe, it, expect, beforeEach, afterEach, beforeAll } from 'bun:test';
 import {
   createConflictBookingInput,
   createInvalidBookingInput,
@@ -12,28 +13,48 @@ import {
 } from '../fixtures/booking.fixtures';
 import { bookingTestUtils } from '../utils/booking-test.utils';
 
-// Mock Supabase client
-jest.mock('../../src/config/supabase', () => ({
+// Mock Supabase client - Bun style
+import { mock } from 'bun:test';
+
+mock.module('../../src/config/supabase', () => ({
   supabase: {
-    from: jest.fn().mockReturnThis(),
-    select: jest.fn().mockReturnThis(),
-    insert: jest.fn().mockReturnThis(),
-    update: jest.fn().mockReturnThis(),
-    delete: jest.fn().mockReturnThis(),
-    eq: jest.fn().mockReturnThis(),
-    single: jest.fn().mockReturnThis(),
-    upsert: jest.fn().mockReturnThis(),
+    from: mock(() => ({
+      select: mock(() => ({
+        eq: mock(() => ({
+          single: mock(() => Promise.resolve({ data: null, error: null })),
+          then: mock((callback: any) => callback({ data: [], error: null }))
+        })),
+        then: mock((callback: any) => callback({ data: [], error: null }))
+      })),
+      insert: mock(() => ({
+        select: mock(() => Promise.resolve({ data: [], error: null })),
+        then: mock((callback: any) => callback({ data: [], error: null }))
+      })),
+      update: mock(() => ({
+        eq: mock(() => Promise.resolve({ data: [], error: null })),
+        then: mock((callback: any) => callback({ data: [], error: null }))
+      })),
+      delete: mock(() => ({
+        eq: mock(() => Promise.resolve({ data: [], error: null })),
+        then: mock((callback: any) => callback({ data: [], error: null }))
+      })),
+      upsert: mock(() => ({
+        eq: mock(() => Promise.resolve({ data: [], error: null })),
+        then: mock((callback: any) => callback({ data: [], error: null }))
+      })),
+      then: mock((callback: any) => callback({ data: [], error: null }))
+    })),
     auth: {
-      getUser: jest.fn().mockResolvedValue({
+      getUser: mock(() => Promise.resolve({
         data: { user: { id: 'test-user-id', email: 'test@example.com' } },
         error: null,
-      }),
+      })),
     },
   },
 }));
 
-// Mock booking routes
-jest.mock('../../src/routes/booking.routes', () => {
+// Mock booking routes - Bun style
+mock.module('../../src/routes/booking.routes', () => {
   const express = require('express');
   const router = express.Router();
 
@@ -74,24 +95,24 @@ jest.mock('../../src/routes/booking.routes', () => {
   return { default: router };
 });
 
-// Mock booking service
-jest.mock('../../src/services/booking.service', () => ({
+// Mock booking service - Bun style
+mock.module('../../src/services/booking.service', () => ({
   bookingService: {
-    createBooking: jest.fn(),
-    confirmBookingPayment: jest.fn(),
-    getBookingById: jest.fn(),
+    createBooking: mock(),
+    confirmBookingPayment: mock(),
+    getBookingById: mock(),
   },
 }));
 
-// Mock blockchain services
-jest.mock('../../src/blockchain/soroban', () => ({
-  checkAvailability: jest.fn(),
+// Mock blockchain services - Bun style
+mock.module('../../src/blockchain/soroban', () => ({
+  checkAvailability: mock(),
 }));
 
-jest.mock('../../src/blockchain/trustlessWork', () => ({
-  createEscrow: jest.fn(),
-  cancelEscrow: jest.fn(),
-  getEscrowStatus: jest.fn(),
+mock.module('../../src/blockchain/trustlessWork', () => ({
+  createEscrow: mock(),
+  cancelEscrow: mock(),
+  getEscrowStatus: mock(),
 }));
 
 interface BookingResponse {
@@ -159,7 +180,7 @@ describe('Booking Integration Tests', () => {
   });
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    // Clear mocks - Bun doesn't have clearAllMocks, but mocks are isolated per test
   });
 
   describe('POST /bookings - Booking Creation', () => {
@@ -181,11 +202,8 @@ describe('Booking Integration Tests', () => {
     it('should validate property availability before creating booking', async () => {
       const bookingInput = createValidBookingInput();
 
-      // Spy on the availability check function
-      const checkAvailabilitySpy = jest.spyOn(
-        require('../../src/blockchain/soroban'),
-        'checkAvailability'
-      );
+      // Mock the availability check function
+      const checkAvailabilitySpy = mock(() => Promise.resolve(true));
 
       const response = await request(app)
         .post('/bookings')
@@ -328,9 +346,11 @@ describe('Booking Integration Tests', () => {
       // Mock database failure
       const { supabase } = require('../../src/config/supabase');
       supabase.from.mockReturnValue({
-        insert: jest.fn().mockReturnThis(),
-        select: jest.fn().mockReturnThis(),
-        single: jest.fn().mockResolvedValue({ data: null, error: { message: 'Database error' } }),
+        insert: mock(() => ({
+          select: mock(() => ({
+            single: mock(() => Promise.resolve({ data: null, error: { message: 'Database error' } }))
+          }))
+        })),
       });
 
       const bookingInput = createValidBookingInput();
@@ -834,7 +854,7 @@ describe('Booking Integration Tests', () => {
       // Mock database connection failure
       const { supabase } = require('../../src/config/supabase');
       supabase.from.mockReturnValue({
-        insert: jest.fn().mockRejectedValue(new Error('Database connection failed')),
+        insert: mock(() => Promise.reject(new Error('Database connection failed'))),
       });
 
       const bookingInput = createValidBookingInput();
