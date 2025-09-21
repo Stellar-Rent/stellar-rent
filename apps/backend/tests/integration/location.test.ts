@@ -1,7 +1,7 @@
 import express from 'express';
 import request from 'supertest';
-import locationRoutes from '../../src/routes/location.routes';
-import { LocationService } from '../../src/services/location.service';
+import locationRoutes from '../src/routes/location.routes';
+import { LocationService } from '../src/services/location.service';
 
 // Mock Supabase with proper typing
 interface MockChain {

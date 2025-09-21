@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'bun:test';
 import type { Server } from 'bun';
-import express from 'express';
-import { LocationService } from '../../src/services/location.service';
+import { app } from '../index';
+import { LocationService } from '../services/location.service';
 
 describe('Location API', () => {
   let server: Server;

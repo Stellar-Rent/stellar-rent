@@ -6,28 +6,44 @@ import {
 } from '../fixtures/booking.fixtures';
 import { createMockBlockchainServices } from '../mocks/blockchain-integration.mock';
 
-// Mock Supabase client
+// Mock Supabase client - Bun style
 import { mock } from 'bun:test';
 
-const mockSupabase = {
-  from: mock(() => mockSupabase),
-  select: mock(() => mockSupabase),
-  insert: mock(() => mockSupabase),
-  update: mock(() => mockSupabase),
-  delete: mock(() => mockSupabase),
-  eq: mock(() => mockSupabase),
-  single: mock(() => mockSupabase),
-  upsert: mock(() => mockSupabase),
-  auth: {
-    getUser: mock(() => Promise.resolve({
-      data: { user: { id: 'test-user-id', email: 'test@example.com' } },
-      error: null,
-    })),
-  },
-};
-
 mock.module('../../src/config/supabase', () => ({
-  supabase: mockSupabase,
+  supabase: {
+    from: mock(() => ({
+      select: mock(() => ({
+        eq: mock(() => ({
+          single: mock(() => Promise.resolve({ data: null, error: null })),
+          then: mock((callback: any) => callback({ data: [], error: null }))
+        })),
+        then: mock((callback: any) => callback({ data: [], error: null }))
+      })),
+      insert: mock(() => ({
+        select: mock(() => Promise.resolve({ data: [], error: null })),
+        then: mock((callback: any) => callback({ data: [], error: null }))
+      })),
+      update: mock(() => ({
+        eq: mock(() => Promise.resolve({ data: [], error: null })),
+        then: mock((callback: any) => callback({ data: [], error: null }))
+      })),
+      delete: mock(() => ({
+        eq: mock(() => Promise.resolve({ data: [], error: null })),
+        then: mock((callback: any) => callback({ data: [], error: null }))
+      })),
+      upsert: mock(() => ({
+        eq: mock(() => Promise.resolve({ data: [], error: null })),
+        then: mock((callback: any) => callback({ data: [], error: null }))
+      })),
+      then: mock((callback: any) => callback({ data: [], error: null }))
+    })),
+    auth: {
+      getUser: mock(() => Promise.resolve({
+        data: { user: { id: 'test-user-id', email: 'test@example.com' } },
+        error: null,
+      })),
+    },
+  },
 }));
 
 import { supabase } from '../../src/config/supabase';
@@ -83,11 +99,11 @@ export class BookingTestUtils {
     });
 
     // Mock the blockchain services in the booking service
-    jest.doMock('../../src/blockchain/soroban', () => ({
+    mock.module('../../src/blockchain/soroban', () => ({
       checkAvailability: mockServices.checkAvailability,
     }));
 
-    jest.doMock('../../src/blockchain/trustlessWork', () => ({
+    mock.module('../../src/blockchain/trustlessWork', () => ({
       createEscrow: mockServices.createEscrow,
       cancelEscrow: mockServices.cancelEscrow,
       getEscrowStatus: mockServices.getEscrowStatus,
@@ -318,11 +334,11 @@ export class BookingTestUtils {
     }
 
     // Apply the mock services to override the actual blockchain service imports
-    jest.doMock('../../src/blockchain/soroban', () => ({
+    mock.module('../../src/blockchain/soroban', () => ({
       checkAvailability: mockServices.checkAvailability,
     }));
 
-    jest.doMock('../../src/blockchain/trustlessWork', () => ({
+    mock.module('../../src/blockchain/trustlessWork', () => ({
       createEscrow: mockServices.createEscrow,
       cancelEscrow: mockServices.cancelEscrow,
       getEscrowStatus: mockServices.getEscrowStatus,
@@ -339,11 +355,11 @@ export class BookingTestUtils {
     });
 
     // Apply the mock services to override the actual blockchain service imports
-    jest.doMock('../../src/blockchain/soroban', () => ({
+    mock.module('../../src/blockchain/soroban', () => ({
       checkAvailability: mockServices.checkAvailability,
     }));
 
-    jest.doMock('../../src/blockchain/trustlessWork', () => ({
+    mock.module('../../src/blockchain/trustlessWork', () => ({
       createEscrow: mockServices.createEscrow,
       cancelEscrow: mockServices.cancelEscrow,
       getEscrowStatus: mockServices.getEscrowStatus,
@@ -353,7 +369,7 @@ export class BookingTestUtils {
   }
 
   resetBlockchainMocks(): void {
-    jest.resetModules();
+    // Bun doesn't need resetModules - mocks are isolated per test
     this.setupBlockchainMocks();
   }
 }
