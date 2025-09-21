@@ -6,7 +6,7 @@ declare global {
     waitForCondition: (condition: () => boolean, timeoutMs?: number) => Promise<boolean>;
     simulateDelay: (ms: number) => Promise<void>;
   };
-  var fetch: jest.Mock;
+  var fetch: typeof globalThis.fetch;
 }
 
 export {};
