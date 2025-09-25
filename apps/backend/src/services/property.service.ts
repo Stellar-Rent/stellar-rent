@@ -294,6 +294,7 @@ export async function createProperty(
         },
       });
 
+      // Invalidate search caches when property is created
       await cacheService.invalidateSearchCaches();
 
       return {
@@ -314,6 +315,8 @@ export async function createProperty(
         },
       });
 
+      // Property was created but blockchain integration failed
+      // Still invalidate caches since property was created
       await cacheService.invalidateSearchCaches();
 
       return {
