@@ -82,7 +82,7 @@ CREATE TABLE IF NOT EXISTS public.bookings (
     updated_at timestamptz NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
--- Create indexes
+-- Create basic indexes
 CREATE INDEX IF NOT EXISTS users_email_idx ON public.users(email);
 CREATE INDEX IF NOT EXISTS users_created_at_idx ON public.users(created_at);
 CREATE INDEX IF NOT EXISTS profiles_user_id_idx ON public.profiles(user_id);
@@ -98,6 +98,56 @@ CREATE INDEX IF NOT EXISTS bookings_user_id_idx ON public.bookings(user_id);
 CREATE INDEX IF NOT EXISTS bookings_property_id_idx ON public.bookings(property_id);
 CREATE INDEX IF NOT EXISTS bookings_status_idx ON public.bookings(status);
 CREATE INDEX IF NOT EXISTS bookings_created_at_idx ON public.bookings(created_at);
+
+-- =============================================================================
+-- OPTIMIZED SEARCH INDEXES FOR TASK 2
+-- =============================================================================
+
+-- Composite indexes for common search patterns (status + filters)
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_properties_status_city_country 
+ON public.properties (status, city, country) 
+WHERE status = 'available';
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_properties_status_price 
+ON public.properties (status, price) 
+WHERE status = 'available';
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_properties_status_capacity 
+ON public.properties (status, max_guests) 
+WHERE status = 'available';
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_properties_status_bedrooms_bathrooms 
+ON public.properties (status, bedrooms, bathrooms) 
+WHERE status = 'available';
+
+-- Spatial index for location-based searches
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_properties_location_spatial 
+ON public.properties USING GIST (ll_to_earth(latitude, longitude))
+WHERE latitude IS NOT NULL AND longitude IS NOT NULL AND status = 'available';
+
+-- Text pattern indexes for ILIKE operations
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_properties_city_ilike 
+ON public.properties (city text_pattern_ops) 
+WHERE status = 'available';
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_properties_country_ilike 
+ON public.properties (country text_pattern_ops) 
+WHERE status = 'available';
+
+-- Full-text search index for descriptions
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_properties_description_fts 
+ON public.properties USING GIN (to_tsvector('english', description))
+WHERE status = 'available';
+
+-- Composite index for price range + capacity searches
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_properties_price_capacity 
+ON public.properties (status, price, max_guests) 
+WHERE status = 'available';
+
+-- Index for property type filtering (if property_type column exists)
+-- CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_properties_status_type 
+-- ON public.properties (status, property_type) 
+-- WHERE status = 'available';
 
 -- Create storage buckets
 INSERT INTO storage.buckets (id, name, public)

@@ -39,9 +39,9 @@ import type {
 } from '../types/property.types';
 // import{ checkB }
 import { propertySchema, updatePropertySchema } from '../types/property.types';
+import { cacheService } from './cache.service';
 
-// Polyfill for Number.isNaN for older TypeScript targets
-const isNaN = Number.isNaN || ((value: any) => typeof value === 'number' && value !== value);
+// Use Number.isNaN directly
 
 // Allowed amenities list
 const ALLOWED_AMENITIES = [
@@ -75,7 +75,7 @@ const ALLOWED_AMENITIES = [
   'carbon_monoxide_alarm',
 ] as const;
 
-type AllowedAmenity = (typeof ALLOWED_AMENITIES)[number];
+// type AllowedAmenity = (typeof ALLOWED_AMENITIES)[number];
 
 export interface ServiceResponse<T> {
   success: boolean;
@@ -124,7 +124,7 @@ function validateAmenities(amenities: string[]): {
   invalidAmenities: string[];
 } {
   const invalidAmenities = amenities.filter(
-    (amenity) => !(ALLOWED_AMENITIES as any).includes(amenity)
+    (amenity) => !(ALLOWED_AMENITIES as readonly string[]).includes(amenity)
   );
 
   return {
@@ -137,7 +137,9 @@ function validateAvailabilityRanges(availability: AvailabilityRange[]): boolean 
   return availability.every((range) => {
     const startDate = new Date(range.start_date);
     const endDate = new Date(range.end_date);
-    return startDate < endDate && !isNaN(startDate.getTime()) && !isNaN(endDate.getTime());
+    return (
+      startDate < endDate && !Number.isNaN(startDate.getTime()) && !Number.isNaN(endDate.getTime())
+    );
   });
 }
 
@@ -263,6 +265,9 @@ export async function createProperty(
         };
       }
 
+      // Invalidate search caches when property is created
+      await cacheService.invalidateSearchCaches();
+
       return {
         success: true,
         data: updatedProperty as Property,
@@ -270,6 +275,9 @@ export async function createProperty(
     } catch (blockchainError) {
       console.error('Blockchain listing creation failed:', blockchainError);
       // Property was created but blockchain integration failed
+      // Still invalidate caches since property was created
+      await cacheService.invalidateSearchCaches();
+
       return {
         success: true,
         data: property as Property,
@@ -295,7 +303,8 @@ export async function getPropertyById(id: string): Promise<ServiceResponse<Prope
   try {
     const { data: property, error } = await supabase
       .from('properties')
-      .select(`
+      .select(
+        `
         id,
         title,
         description,
@@ -317,7 +326,8 @@ export async function getPropertyById(id: string): Promise<ServiceResponse<Prope
         cancellation_policy,
         created_at,
         updated_at
-      `)
+      `
+      )
       .eq('id', id)
       .single();
 
@@ -509,6 +519,9 @@ export async function updateProperty(
       // Continue with database update even if blockchain fails
     }
 
+    // Invalidate search caches when property is updated
+    await cacheService.invalidateSearchCaches();
+
     return {
       success: true,
       data: property as Property,
@@ -542,7 +555,7 @@ export async function getFeaturedProperties(): Promise<ServiceResponse<FeaturedP
       };
     }
 
-    const formatted = (data || []).map((property: any) => ({
+    const formatted = (data || []).map((property: Record<string, unknown>) => ({
       ...property,
       image: property.images?.[0] ?? null,
       location: {
@@ -590,6 +603,9 @@ export async function deleteProperty(id: string): Promise<ServiceResponse<boolea
       };
     }
 
+    // Invalidate search caches when property is deleted
+    await cacheService.invalidateSearchCaches();
+
     return {
       success: true,
       data: true,
@@ -633,7 +649,7 @@ export async function verifyPropertyWithBlockchain(
     }
 
     // Verify integrity
-    const propertyHashData = propertyToHashData(propertyResult.data!);
+    const propertyHashData = propertyToHashData(propertyResult.data as Property);
     const isValid = verifyPropertyIntegrity(propertyHashData, blockchainListing.data_hash);
 
     return {
@@ -709,16 +725,40 @@ export async function searchProperties(
   options: PropertySearchOptions = {}
 ): Promise<ServiceResponse<PropertyListResponse>> {
   try {
+    console.time('property-search-query');
+
     const { page = 1, limit = 10, sort_by = 'created_at', sort_order = 'desc' } = options;
     const offset = (page - 1) * limit;
 
+    // Check cache first
+    console.time('property-cache-check');
+    const cachedResult = await cacheService.getCachedPropertySearch(
+      filters as Record<string, unknown>,
+      options as Record<string, unknown>
+    );
+    console.timeEnd('property-cache-check');
+
+    if (cachedResult) {
+      console.timeEnd('property-search-query');
+      return {
+        success: true,
+        data: cachedResult as PropertyListResponse,
+      };
+    }
+
+    // TODO: PERFORMANCE ISSUE - Missing indexes for common filter combinations
+    // TODO: Add composite indexes for (status, city, country), (status, price), (status, bedrooms)
+    // TODO: Consider partial indexes for available properties only
     let query = supabase
       .from('properties')
       .select('*', { count: 'exact' })
       .order(sort_by, { ascending: sort_order === 'asc' })
       .range(offset, offset + limit - 1);
 
-    // Apply filters
+    // TODO: PERFORMANCE ISSUE - ILIKE queries are expensive without proper indexes
+    // TODO: Consider full-text search indexes for city/country searches
+    // TODO: Add indexes for price ranges, bedroom/bathroom counts
+    console.time('property-filters-application');
     if (filters.city) {
       query = query.ilike('city', `%${filters.city}%`);
     }
@@ -744,10 +784,15 @@ export async function searchProperties(
       query = query.eq('status', filters.status);
     }
     if (filters.amenities && filters.amenities.length > 0) {
+      // TODO: PERFORMANCE ISSUE - Array contains operations can be slow
+      // TODO: Consider GIN indexes for array operations
       query = query.contains('amenities', filters.amenities);
     }
+    console.timeEnd('property-filters-application');
 
+    console.time('property-db-execution');
     const { data: properties, error } = await query;
+    console.timeEnd('property-db-execution');
 
     if (error) {
       console.error('Database search error:', error);
@@ -761,10 +806,15 @@ export async function searchProperties(
     let filteredProperties = properties as Property[];
 
     if (filters.from && filters.to) {
+      // TODO: PERFORMANCE ISSUE - N+1 query problem with blockchain availability checks
+      // TODO: This makes individual blockchain calls for each property (very slow)
+      // TODO: Consider batching blockchain calls or caching availability data
+      // TODO: Consider storing availability in database and syncing periodically
+      console.time('availability-checking');
       const fromDate = new Date(filters.from);
       const toDate = new Date(filters.to);
 
-      if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) {
+      if (Number.isNaN(fromDate.getTime()) || Number.isNaN(toDate.getTime())) {
         return {
           success: false,
           error: 'Invalid date format for from or to',
@@ -776,7 +826,6 @@ export async function searchProperties(
       // - Convert to UNIX timestamp if needed
 
       // Limit concurrency to 10 at a time
-
       const limit = pLimit(10);
 
       const checked = await Promise.all(
@@ -798,18 +847,33 @@ export async function searchProperties(
         )
       );
       filteredProperties = checked.filter(Boolean) as Property[];
+      console.timeEnd('availability-checking');
     }
+    const result = {
+      properties: filteredProperties,
+      total: filteredProperties.length,
+      page,
+      limit,
+    };
+
+    // Cache the result
+    console.time('property-cache-set');
+    await cacheService.cachePropertySearch(
+      filters as Record<string, unknown>,
+      options as Record<string, unknown>,
+      result,
+      180
+    ); // 3 minutes TTL
+    console.timeEnd('property-cache-set');
+
+    console.timeEnd('property-search-query');
     return {
       success: true,
-      data: {
-        properties: filteredProperties,
-        total: filteredProperties.length,
-        page,
-        limit,
-      },
+      data: result,
     };
   } catch (error) {
     console.error('Property search error:', error);
+    console.timeEnd('property-search-query');
     return {
       success: false,
       error: 'Internal server error',
