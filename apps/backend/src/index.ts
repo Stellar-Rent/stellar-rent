@@ -10,6 +10,7 @@ import authRoutes from './routes/auth';
 import bookingRoutes from './routes/booking.routes';
 import walletAuthRoutes from './routes/wallet-auth.routes';
 
+import { connectRedis } from './config/redis';
 import syncRoutes from './routes/sync.routes';
 import { runInitialCleanup, startCleanupScheduler } from './services/cleanup-schedular';
 import { syncService } from './services/sync.service';
@@ -18,6 +19,15 @@ import { syncService } from './services/sync.service';
 dotenv.config();
 
 async function initializeServices() {
+  // Initialize Redis connection
+  try {
+    await connectRedis();
+    console.log('✅ Redis connection established');
+  } catch (error) {
+    console.error('❌ Failed to connect to Redis:', error);
+    console.log('⚠️  Caching will be disabled - search performance may be impacted');
+  }
+
   // Initialize cleanup scheduler
   await runInitialCleanup();
   startCleanupScheduler();
