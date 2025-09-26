@@ -19,12 +19,12 @@ export const mockedTrustlessWork = {
 // so all consumers get our mocked behaviors
 jest.mock('../../src/blockchain/trustlessWork', () => {
   const mock = mockedTrustlessWork;
+  const TrustlessWorkClient = jest.fn().mockImplementation(() => mock);
 
   return {
-    // Class constructor returns the mocked instance
-    TrustlessWorkClient: jest.fn().mockImplementation(() => mock),
-
-    // Named exports proxy to the mocked instance methods if referenced directly
+    __esModule: true,
+    default: mock,
+    TrustlessWorkClient,
     trustlessWorkClient: mock,
     createEscrow: (...args: unknown[]) => mock.createEscrow(...args),
     getEscrowStatus: (...args: unknown[]) => mock.getEscrowStatus(...args),
