@@ -17,16 +17,6 @@ export default function LoginPage() {
   const searchParams = useSearchParams();
   const redirect = searchParams.get('redirect');
 
-  const validateRedirect = (redirectParam: string | null): string => {
-    if (!redirectParam) return '/dashboard';
-
-    if (redirectParam.startsWith('/') && !redirectParam.startsWith('//')) {
-      return redirectParam;
-    }
-
-    return '/dashboard';
-  };
-
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
@@ -35,11 +25,11 @@ export default function LoginPage() {
     const formData = new FormData(e.currentTarget);
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
-    const safeRedirect = validateRedirect(redirect);
+    const redirectUrl = redirect || '/dashboard';
 
     try {
       await login(email, password);
-      router.replace(safeRedirect);
+      router.push(redirectUrl);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to login');
     } finally {
