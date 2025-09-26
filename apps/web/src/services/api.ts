@@ -18,7 +18,7 @@ import type {
   UserProfile,
 } from '../types/shared';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 // Utility function to safely convert filters to URL parameters
 const createURLParams = (
@@ -39,78 +39,9 @@ const createURLParams = (
   return params;
 };
 
-// Define the expected shape of the backend response
-interface BackendBooking {
-  id: string;
-  user_id?: string;
-  property_id?: string;
-  property_title?: string;
-  propertyTitle?: string;
-  property_location?: string;
-  propertyLocation?: string;
-  property_image?: string;
-  propertyImage?: string;
-  check_in?: string;
-  checkIn?: string;
-  check_out?: string;
-  checkOut?: string;
-  total_amount?: number;
-  totalAmount?: number;
-  created_at?: string;
-  bookingDate?: string;
-  status?: string;
-  host_name?: string;
-  hostName?: string;
-  guests?: number;
-  rating?: number;
-  transaction_hash?: string;
-  escrow_address?: string;
-  updated_at?: string;
-}
-
-interface BackendProfile {
-  user_id?: string;
-  id?: string;
-  full_name?: string;
-  name?: string;
-  email?: string;
-  phone?: string;
-  avatar_url?: string;
-  avatar?: string;
-  created_at?: string;
-  location?: string;
-  bio?: string;
-}
-
 interface ChallengeResponse {
   challenge: string;
   expiresAt: string;
-}
-
-interface ConfirmPaymentResponse {
-  success: boolean;
-  message: string;
-  transactionHash: string;
-}
-
-interface DashboardBooking {
-  id: string;
-  propertyTitle: string;
-  propertyImage: string;
-  location: string;
-  checkIn: string;
-  checkOut: string;
-  guests: number;
-  totalAmount: number;
-  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
-  bookingDate: string;
-  propertyId: string;
-  escrowAddress?: string;
-  transactionHash?: string;
-  canCancel: boolean;
-  canReview: boolean;
-  guestName: string;
-  guestEmail: string;
 }
 
 // Generic API call function
@@ -410,6 +341,45 @@ export const dashboardAPI = {
   ) {
     const params = new URLSearchParams({ userId, ...dateRange });
     return apiUtils.request(`/dashboard/${userType}/${userId}/bookings/analytics?${params}`);
+  },
+};
+
+export const authAPI = {
+  async login(email: string, password: string) {
+    return apiUtils.request('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    });
+  },
+
+  async register(email: string, password: string, fullName: string) {
+    return apiUtils.request('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ email, password, name: fullName }),
+    });
+  },
+
+  async requestChallenge(publicKey: string): Promise<ChallengeResponse> {
+    return apiUtils.request('/auth/challenge', {
+      method: 'POST',
+      body: JSON.stringify({ publicKey }),
+    });
+  },
+
+  async authenticateWallet(
+    publicKey: string,
+    signedTxXdr: string,
+    challenge: string
+  ): Promise<WalletAuthResponse> {
+    return apiUtils.request('/auth/wallet', {
+      method: 'POST',
+      body: JSON.stringify({ publicKey, signedTxXdr, challenge }),
+    });
+  },
+
+  async logout() {
+    // No logout endpoint found in backend - just clear client-side
+    return Promise.resolve();
   },
 };
 

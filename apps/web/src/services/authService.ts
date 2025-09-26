@@ -38,7 +38,7 @@ export interface RegisterResponse {
   user: {
     id: string;
     email: string;
-    fullName: string;
+    name: string;
   };
 }
 
@@ -52,7 +52,7 @@ export const authService = {
       body: JSON.stringify({
         email: data.email,
         password: data.password,
-        name: data.fullName, // Cambiado de fullName a name para coincidir con el backend
+        fullName: data.fullName,
       }),
     });
 
