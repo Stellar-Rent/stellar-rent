@@ -7,7 +7,14 @@ export const registerSchema = z
       .min(2, 'Name must be at least 2 characters')
       .max(50, 'Name cannot exceed 50 characters'),
     email: z.string().email('Invalid email address'),
-    password: z.string().min(8, 'Password must be at least 8 characters'),
+    password: z
+      .string()
+      .min(8, 'Password must be at least 8 characters')
+      .max(50, 'Password cannot exceed 50 characters')
+      .regex(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$/,
+        'Password must contain at least one uppercase letter, one lowercase letter, and one number'
+      ),
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
