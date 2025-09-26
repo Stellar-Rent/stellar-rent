@@ -5,9 +5,22 @@ import { cn } from '@/lib/utils';
 import { ArrowRight, CreditCard, Home } from 'lucide-react';
 import Link from 'next/link';
 
-export const HeroSection = () => {
+interface HeroSectionProps {
+  title: string;
+  subtitle: string;
+  ctaText: string;
+  ctaLink: string;
+  className?: string;
+}
+
+export const HeroSection = ({ title, subtitle, ctaText, ctaLink, className }: HeroSectionProps) => {
   return (
-    <div className="w-full bg-gradient-to-b from-blue-900 via-blue-800 to-white dark:from-blue-900 dark:via-blue-800 dark:to-[#0B1D39] py-16 md:py-24 relative overflow-hidden">
+    <div
+      className={cn(
+        'w-full bg-gradient-to-b from-blue-900 via-blue-800 to-white dark:from-blue-900 dark:via-blue-800 dark:to-[#0B1D39] py-16 md:py-24 relative overflow-hidden',
+        className
+      )}
+    >
       {/* Decorative elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div
@@ -33,12 +46,11 @@ export const HeroSection = () => {
           </div>
 
           <h1 className="text-4xl md:text-6xl font-bold text-white dark:text-[#C2F2FF] leading-tight animate-fade-in">
-            Rent properties instantly with cryptocurrency
+            {title}
           </h1>
 
           <p className="text-lg md:text-xl text-blue-100 dark:text-blue-200 max-w-3xl animate-fade-in-delay-100">
-            StellarRent makes it easy to find your perfect home and pay securely using
-            cryptocurrency. No middlemen, no hassles.
+            {subtitle}
           </p>
 
           <div className="flex flex-wrap gap-6 justify-center mt-4 mb-6">
@@ -75,6 +87,15 @@ export const HeroSection = () => {
               <Link href="/list/create">
                 List My Property{' '}
                 <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </Button>
+          </div>
+
+          <div className="flex flex-wrap gap-4 justify-center mt-8">
+            <Button asChild size="lg" className="text-lg px-8 py-6">
+              <Link href={ctaLink}>
+                {ctaText}
+                <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
           </div>

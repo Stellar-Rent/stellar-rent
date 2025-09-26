@@ -1,39 +1,62 @@
+import { FeaturedProperties } from '@/components/features/properties/FeaturedProperties';
 import { SearchBar } from '@/components/features/search/SearchBar';
-import { RightSidebar } from '@/components/layout/RightSidebar';
-import { PropertyGrid } from '@/components/search/PropertyGrid';
-import { House } from 'lucide-react';
-import Image from 'next/image';
-import { Suspense } from 'react';
+import { HowItWorks } from '@/components/shared/HowItWorks';
+import { Testimonials } from '@/components/shared/Testimonials';
+import { Footer } from '@/components/shared/layout/Footer';
+import { HeroSection } from '@/components/shared/layout/HeroSection';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 export default function Home() {
   return (
-    <div className="flex w-full min-h-screen">
-      <main className="flex flex-1 flex-col w-full min-h-screen px-5 pr-16">
-        <header className="flex items-center justify-between p-4 border-b border-gray-800">
-          <Image src="/logo.png" alt="StellaRent" width={100} height={100} />
-        </header>
-
-        <section className="p-4">
-          <SearchBar />
-        </section>
-
-        <section className="flex-1 px-4 pb-4">
-          <div className="flex items-center gap-2 mb-4">
-            <span className="text-white text-sm bg-secondary p-2 px-4 rounded-full flex items-center gap-2">
-              <House className="w-4 h-4" />
-              Showing 23 properties
-            </span>
+    <div className="flex flex-col min-h-screen">
+      <header className="bg-white shadow-sm">
+        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+          <div className="flex items-center">
+            <img src="/logo.png" alt="StellaRent" className="h-10" />
           </div>
+          <nav className="flex items-center space-x-4">
+            <Button variant="ghost" asChild>
+              <Link href="/login">Login</Link>
+            </Button>
+            <Button asChild>
+              <Link href="/register">Register</Link>
+            </Button>
+          </nav>
+        </div>
+      </header>
 
-          <Suspense
-            fallback={<div className="py-16 text-center text-white">Loading properties...</div>}
-          >
-            <PropertyGrid />
-          </Suspense>
+      <main className="flex-grow">
+        <HeroSection
+          title="Find Your Perfect Rental Property"
+          subtitle="Discover and book unique homes, apartments, and more with secure blockchain-based rentals"
+          ctaText="Get Started"
+          ctaLink="/register"
+        />
+
+        <section className="container mx-auto px-4 py-12 -mt-12 relative z-10">
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <SearchBar />
+          </div>
         </section>
+
+        <section className="bg-gray-50 py-16">
+          <div className="container mx-auto px-4">
+            <h2 className="text-3xl font-bold text-center mb-12">Featured Properties</h2>
+            <FeaturedProperties limit={4} />
+            <div className="text-center mt-8">
+              <Button asChild variant="outline">
+                <Link href="/search">View All Properties</Link>
+              </Button>
+            </div>
+          </div>
+        </section>
+
+        <HowItWorks />
+        <Testimonials />
       </main>
 
-      <RightSidebar />
+      <Footer />
     </div>
   );
 }
