@@ -146,6 +146,18 @@ bun test tests/api
 bun test tests/unit/location.test.ts
 ```
 
+## Integration Tests
+
+Integration tests exercise end-to-end flows across routing, controllers, services, and the database to verify real-world scenarios (e.g., booking creation, payment confirmation, concurrency handling).
+
+Run integration tests:
+
+```bash
+npm run test:int
+```
+
+These tests run against a separate test database. Make sure you have a `.env.test` file configured with valid test database credentials and any required API keys. The test runner will load this environment to avoid interfering with your development or production databases.
+
 ## Environment Variables
 
 All environment variables should be in the `.env` file:
