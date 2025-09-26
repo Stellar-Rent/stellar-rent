@@ -66,6 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
     try {
       const response = (await authAPI.login(email, password)) as {
+        token: string;
         user: { id: string; email: string; name: string };
       };
       const userData: User = {
@@ -77,6 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       setUser(userData);
       setAuthType('email');
+      localStorage.setItem('authToken', response.token);
       localStorage.setItem('user', JSON.stringify(userData));
       localStorage.setItem('authType', 'email');
     } catch (error) {
@@ -91,6 +93,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
     try {
       const response = (await authAPI.register(email, password, fullName)) as {
+        token: string;
         user: { id: string; email: string; name: string };
       };
       const userData: User = {
@@ -102,6 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       setUser(userData);
       setAuthType('email');
+      localStorage.setItem('authToken', response.token);
       localStorage.setItem('user', JSON.stringify(userData));
       localStorage.setItem('authType', 'email');
     } catch (error) {

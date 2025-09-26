@@ -52,7 +52,7 @@ export const authService = {
       body: JSON.stringify({
         email: data.email,
         password: data.password,
-        fullName: data.fullName,
+        name: data.fullName,
       }),
     });
 
