@@ -16,9 +16,10 @@ import type {
   PropertyUpdateData,
   Transaction,
   UserProfile,
-} from '../types/shared';
+} from "../types/shared";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
 
 // Utility function to safely convert filters to URL parameters
 const createURLParams = (
@@ -102,7 +103,7 @@ interface DashboardBooking {
   checkOut: string;
   guests: number;
   totalAmount: number;
-  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
+  status: "pending" | "confirmed" | "completed" | "cancelled";
   bookingDate: string;
   propertyId: string;
   escrowAddress?: string;
@@ -114,13 +115,16 @@ interface DashboardBooking {
 }
 
 // Generic API call function
-const _apiCall = async <T>(endpoint: string, options: RequestInit = {}): Promise<T> => {
+const _apiCall = async <T>(
+  endpoint: string,
+  options: RequestInit = {}
+): Promise<T> => {
   const url = `${API_BASE_URL}${endpoint}`;
-  const token = localStorage.getItem('authToken');
+  const token = localStorage.getItem("authToken");
 
   const config: RequestInit = {
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       ...(token && { Authorization: `Bearer ${token}` }),
       ...options.headers,
     },
@@ -132,12 +136,14 @@ const _apiCall = async <T>(endpoint: string, options: RequestInit = {}): Promise
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      throw new Error(
+        errorData.message || `HTTP error! status: ${response.status}`
+      );
     }
 
     return await response.json();
   } catch (error) {
-    console.error('API request failed:', error);
+    console.error("API request failed:", error);
     throw error;
   }
 };
@@ -145,10 +151,10 @@ const _apiCall = async <T>(endpoint: string, options: RequestInit = {}): Promise
 // Transform wallet user function
 const _transformWalletUser = (user: Record<string, unknown>): UserProfile => {
   return {
-    id: String(user.id || user.user_id || ''),
-    name: String(user.name || user.full_name || ''),
-    email: String(user.email || ''),
-    avatar: String(user.avatar || user.avatar_url || ''),
+    id: String(user.id || user.user_id || ""),
+    name: String(user.name || user.full_name || ""),
+    email: String(user.email || ""),
+    avatar: String(user.avatar || user.avatar_url || ""),
     phone: user.phone ? String(user.phone) : undefined,
     location: user.location ? String(user.location) : undefined,
     bio: user.bio ? String(user.bio) : undefined,
@@ -171,11 +177,11 @@ interface WalletAuthResponse {
 export const apiUtils = {
   async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem("authToken");
 
     const config: RequestInit = {
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
         ...(token && { Authorization: `Bearer ${token}` }),
         ...options.headers,
       },
@@ -187,19 +193,21 @@ export const apiUtils = {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+        throw new Error(
+          errorData.message || `HTTP error! status: ${response.status}`
+        );
       }
 
       return await response.json();
     } catch (error) {
-      console.error('API request failed:', error);
+      console.error("API request failed:", error);
       throw error;
     }
   },
 
   clearAuth() {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('user');
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("user");
   },
 };
 
@@ -213,17 +221,17 @@ export const profileAPI = {
     updates: Partial<ProfileFormData>
   ): Promise<APIResponse<UserProfile>> {
     return apiUtils.request(`/profile/${userId}`, {
-      method: 'PUT',
+      method: "PUT",
       body: JSON.stringify(updates),
     });
   },
 
   async uploadAvatar(userId: string, file: File) {
     const formData = new FormData();
-    formData.append('avatar', file);
+    formData.append("avatar", file);
 
     return apiUtils.request(`/profile/${userId}/avatar`, {
-      method: 'POST',
+      method: "POST",
       headers: {},
       body: formData,
     });
@@ -231,13 +239,16 @@ export const profileAPI = {
 
   async deleteAccount(userId: string) {
     return apiUtils.request(`/profile/${userId}`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
   },
 };
 
 export const bookingAPI = {
-  async getBookings(userId: string, filters?: BookingFilters): Promise<APIResponse<Booking[]>> {
+  async getBookings(
+    userId: string,
+    filters?: BookingFilters
+  ): Promise<APIResponse<Booking[]>> {
     const params = createURLParams({ userId }, filters);
     return apiUtils.request(`/bookings?${params}`);
   },
@@ -246,22 +257,24 @@ export const bookingAPI = {
     return apiUtils.request(`/bookings/${bookingId}`);
   },
 
-  async createBooking(bookingData: BookingFormData): Promise<APIResponse<Booking>> {
-    return apiUtils.request('/bookings', {
-      method: 'POST',
+  async createBooking(
+    bookingData: BookingFormData
+  ): Promise<APIResponse<Booking>> {
+    return apiUtils.request("/bookings", {
+      method: "POST",
       body: JSON.stringify(bookingData),
     });
   },
 
   async cancelBooking(bookingId: string) {
     return apiUtils.request(`/bookings/${bookingId}/cancel`, {
-      method: 'POST',
+      method: "POST",
     });
   },
 
   async confirmBooking(bookingId: string) {
     return apiUtils.request(`/bookings/${bookingId}/confirm`, {
-      method: 'POST',
+      method: "POST",
     });
   },
 
@@ -275,7 +288,10 @@ export const bookingAPI = {
 };
 
 export const propertyAPI = {
-  async getProperties(userId: string, filters?: PropertyFilters): Promise<APIResponse<Property[]>> {
+  async getProperties(
+    userId: string,
+    filters?: PropertyFilters
+  ): Promise<APIResponse<Property[]>> {
     const params = createURLParams({ userId }, filters);
     return apiUtils.request(`/properties?${params}`);
   },
@@ -284,9 +300,11 @@ export const propertyAPI = {
     return apiUtils.request(`/properties/${propertyId}`);
   },
 
-  async createProperty(propertyData: PropertyFormData): Promise<APIResponse<Property>> {
-    return apiUtils.request('/properties', {
-      method: 'POST',
+  async createProperty(
+    propertyData: PropertyFormData
+  ): Promise<APIResponse<Property>> {
+    return apiUtils.request("/properties", {
+      method: "POST",
       body: JSON.stringify(propertyData),
     });
   },
@@ -296,20 +314,20 @@ export const propertyAPI = {
     updates: PropertyUpdateData
   ): Promise<APIResponse<Property>> {
     return apiUtils.request(`/properties/${propertyId}`, {
-      method: 'PUT',
+      method: "PUT",
       body: JSON.stringify(updates),
     });
   },
 
   async deleteProperty(propertyId: string) {
     return apiUtils.request(`/properties/${propertyId}`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
   },
 
   async togglePropertyStatus(propertyId: string, status: string) {
     return apiUtils.request(`/properties/${propertyId}/status`, {
-      method: 'PUT',
+      method: "PUT",
       body: JSON.stringify({ status }),
     });
   },
@@ -327,7 +345,7 @@ export const propertyAPI = {
     availability: PropertyAvailabilityData
   ): Promise<APIResponse<Property>> {
     return apiUtils.request(`/properties/${propertyId}/availability`, {
-      method: 'PUT',
+      method: "PUT",
       body: JSON.stringify(availability),
     });
   },
@@ -338,21 +356,28 @@ export const walletAPI = {
     return apiUtils.request(`/wallet/${userId}/balance`);
   },
 
-  async getTransactionHistory(userId: string, filters?: Record<string, unknown>) {
+  async getTransactionHistory(
+    userId: string,
+    filters?: Record<string, unknown>
+  ) {
     const params = new URLSearchParams({ userId, ...filters });
     return apiUtils.request(`/wallet/${userId}/transactions?${params}`);
   },
 
   async addFunds(userId: string, amount: number, paymentMethod: string) {
     return apiUtils.request(`/wallet/${userId}/add-funds`, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify({ amount, paymentMethod }),
     });
   },
 
-  async withdrawFunds(userId: string, amount: number, accountDetails: Record<string, unknown>) {
+  async withdrawFunds(
+    userId: string,
+    amount: number,
+    accountDetails: Record<string, unknown>
+  ) {
     return apiUtils.request(`/wallet/${userId}/withdraw`, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify({ amount, accountDetails }),
     });
   },
@@ -366,73 +391,78 @@ export const notificationAPI = {
 
   async markAsRead(notificationId: string) {
     return apiUtils.request(`/notifications/${notificationId}/read`, {
-      method: 'PUT',
+      method: "PUT",
     });
   },
 
   async markAllAsRead(userId: string) {
     return apiUtils.request(`/notifications/${userId}/read-all`, {
-      method: 'PUT',
+      method: "PUT",
     });
   },
 
   async deleteNotification(notificationId: string) {
     return apiUtils.request(`/notifications/${notificationId}`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
   },
 
   async deleteAllNotifications(userId: string) {
     return apiUtils.request(`/notifications/${userId}/delete-all`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
   },
 };
 
 export const dashboardAPI = {
-  async getDashboardStats(userId: string, userType: 'host' | 'tenant') {
+  async getDashboardStats(userId: string, userType: "host" | "tenant") {
     return apiUtils.request(`/dashboard/${userType}/${userId}/stats`);
   },
 
-  async getRecentActivity(userId: string, userType: 'host' | 'tenant') {
+  async getRecentActivity(userId: string, userType: "host" | "tenant") {
     return apiUtils.request(`/dashboard/${userType}/${userId}/activity`);
   },
 
-  async getEarningsAnalytics(userId: string, dateRange?: Record<string, unknown>) {
+  async getEarningsAnalytics(
+    userId: string,
+    dateRange?: Record<string, unknown>
+  ) {
     const params = new URLSearchParams({ userId, ...dateRange });
     return apiUtils.request(`/dashboard/host/${userId}/earnings?${params}`);
   },
 
   async getBookingAnalytics(
     userId: string,
-    userType: 'host' | 'tenant',
+    userType: "host" | "tenant",
     dateRange?: Record<string, unknown>
   ) {
     const params = new URLSearchParams({ userId, ...dateRange });
-    return apiUtils.request(`/dashboard/${userType}/${userId}/bookings/analytics?${params}`);
+    return apiUtils.request(
+      `/dashboard/${userType}/${userId}/bookings/analytics?${params}`
+    );
   },
 };
 
 export const handleAPIError = (error: unknown) => {
   const errorMessage = error instanceof Error ? error.message : String(error);
 
-  if (errorMessage.includes('401')) {
+  if (errorMessage.includes("401")) {
     apiUtils.clearAuth();
-    window.location.href = '/login';
-    return 'Session expired. Please login again.';
+    window.location.href = "/login";
+    return "Session expired. Please login again.";
   }
 
-  if (errorMessage.includes('403')) {
-    return 'You do not have permission to perform this action.';
+  if (errorMessage.includes("403")) {
+    return "You do not have permission to perform this action.";
   }
 
-  if (errorMessage.includes('404')) {
-    return 'The requested resource was not found.';
+  if (errorMessage.includes("404")) {
+    return "The requested resource was not found.";
   }
 
-  if (errorMessage.includes('500')) {
-    return 'Server error. Please try again later.';
+  if (errorMessage.includes("500")) {
+    return "Server error. Please try again later.";
   }
 
-  return errorMessage || 'An unexpected error occurred.';
+  return errorMessage || "An unexpected error occurred.";
 };
