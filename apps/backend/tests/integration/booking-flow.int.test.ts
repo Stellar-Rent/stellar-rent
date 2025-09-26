@@ -52,6 +52,7 @@ describe('Booking + Payment integration (scaffold)', () => {
 
   beforeAll(() => {
     app = createTestApp();
+    mockedSoroban.verifyStellarTransaction.mockResolvedValue(true);
   });
 
   it('creates a booking (pending)', async () => {
@@ -130,14 +131,16 @@ describe('Booking + Payment integration (scaffold)', () => {
     const response = await request(app).post('/api/bookings').send({ propertyId: 'test' });
 
     expect(response.status).toBe(400);
-    expect(response.body.error).toBe('Missing required fields');
+    expect(response.body.error).toBe('Error de validación');
+    expect(response.body.details).toBeDefined();
   });
 
   it('should fail payment confirmation with missing transaction details', async () => {
     const response = await request(app).put('/api/bookings/test-booking-id/confirm').send({});
 
     expect(response.status).toBe(400);
-    expect(response.body.error).toBe('Missing transaction details');
+    expect(response.body.error).toBe('Error de validación');
+    expect(response.body.details).toBeDefined();
   });
 
   it('should handle payment confirmation replay (idempotency)', async () => {
