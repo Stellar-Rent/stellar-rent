@@ -18,6 +18,7 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string, fullName: string) => Promise<void>;
   loginWithWallet: () => Promise<void>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
@@ -28,6 +29,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   isLoading: false,
   login: async () => {},
+  register: async () => {},
   loginWithWallet: async () => {},
   logout: async () => {},
   isAuthenticated: false,
@@ -63,7 +65,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const response = await authAPI.login(email, password);
+      const response = (await authAPI.login(email, password)) as {
+        token: string;
+        user: { id: string; email: string; name: string };
+      };
       const userData: User = {
         id: response.user.id,
         email: response.user.email,
@@ -73,10 +78,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       setUser(userData);
       setAuthType('email');
+      localStorage.setItem('authToken', response.token);
       localStorage.setItem('user', JSON.stringify(userData));
       localStorage.setItem('authType', 'email');
     } catch (error) {
       console.error('Login failed:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const register = async (email: string, password: string, fullName: string) => {
+    setIsLoading(true);
+    try {
+      const response = (await authAPI.register(email, password, fullName)) as {
+        token: string;
+        user: { id: string; email: string; name: string };
+      };
+      const userData: User = {
+        id: response.user.id,
+        email: response.user.email,
+        name: response.user.name,
+        authType: 'email',
+      };
+
+      setUser(userData);
+      setAuthType('email');
+      localStorage.setItem('authToken', response.token);
+      localStorage.setItem('user', JSON.stringify(userData));
+      localStorage.setItem('authType', 'email');
+    } catch (error) {
+      console.error('Registration failed:', error);
       throw error;
     } finally {
       setIsLoading(false);
@@ -157,8 +190,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         );
 
         const userData: User = {
-          id: authResponse.user.id,
-          name: authResponse.user.name || 'Wallet User',
+          id: (authResponse.user as { id: string; name?: string }).id,
+          name: (authResponse.user as { id: string; name?: string }).name || 'Wallet User',
           publicKey: walletPublicKey,
           authType: 'wallet',
         };
@@ -203,6 +236,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         isLoading,
         login,
+        register,
         loginWithWallet,
         logout,
         isAuthenticated,

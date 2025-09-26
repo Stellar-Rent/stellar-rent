@@ -11,66 +11,28 @@ import type { RegisterFormData } from '~/validations/auth.schema';
 import { registerSchema } from '~/validations/auth.schema';
 import WalletAuthButton from './WalletAuthButton';
 
-function PasswordStrength({ password }: { password: string }) {
-  const getStrength = () => {
-    let score = 0;
-    if (!password) return score;
-
-    if (password.length >= 8) score++;
-    if (password.length >= 12) score++;
-    if (/[A-Z]/.test(password)) score++;
-    if (/[a-z]/.test(password)) score++;
-    if (/[0-9]/.test(password)) score++;
-    if (/[^A-Za-z0-9]/.test(password)) score++;
-
-    return score;
-  };
-
-  const strength = getStrength();
-  const width = `${(strength / 6) * 100}%`;
-
-  const getColor = () => {
-    if (strength <= 2) return 'bg-destructive';
-    if (strength <= 4) return 'bg-yellow-500';
-    return 'bg-green-500';
-  };
-
-  return (
-    <div className="mt-1">
-      <div className="h-2 w-full rounded-full bg-secondary">
-        <div
-          className={`h-full rounded-full transition-all duration-300 ${getColor()}`}
-          style={{ width }}
-        />
-      </div>
-      <p className="mt-1 text-sm text-muted-foreground">
-        {strength <= 2 && 'Débil'}
-        {strength > 2 && strength <= 4 && 'Media'}
-        {strength > 4 && 'Fuerte'}
-      </p>
-    </div>
-  );
-}
-
 export default function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
   const { register: registerUser, isLoading, error } = useRegister();
   const router = useRouter();
 
   const {
     register,
     handleSubmit,
-    watch,
     formState: { errors },
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
   });
 
-  const password = watch('password', '');
-
   const onSubmit = async (data: RegisterFormData) => {
-    await registerUser(data);
+    try {
+      setApiError(null); // Clear previous errors
+      await registerUser(data);
+    } catch (err) {
+      setApiError(err instanceof Error ? err.message : 'Registration failed. Please try again.');
+    }
   };
   const handleWalletSuccess = () => {
     toast.success('Successfully authenticated with wallet!');
@@ -88,12 +50,6 @@ export default function RegisterForm() {
           Choose your preferred authentication method
         </p>
       </div>
-
-      {error && (
-        <div className="rounded-md bg-red-50 p-4 text-red-700 dark:bg-red-900/50 dark:text-red-200">
-          {error}
-        </div>
-      )}
 
       {/* Wallet Authentication Section */}
       <div className="space-y-4">
@@ -217,7 +173,6 @@ export default function RegisterForm() {
                 )}
               </button>
             </div>
-            <PasswordStrength password={password} />
             {errors.password && (
               <p className="mt-1 text-sm text-red-600 dark:text-red-400">
                 {errors.password.message}
@@ -284,6 +239,22 @@ export default function RegisterForm() {
             )}
           </div>
         </div>
+
+        {(apiError || error) && (
+          <div className="rounded-md bg-red-50 p-3 border border-red-200 dark:bg-red-900/30 dark:border-red-700">
+            <div className="flex items-center">
+              <svg className="h-5 w-5 text-red-400 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <title>Error icon</title>
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              <p className="text-sm text-red-700 dark:text-red-200">{apiError || error}</p>
+            </div>
+          </div>
+        )}
 
         <button
           type="submit"
