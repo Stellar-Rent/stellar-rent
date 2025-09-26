@@ -26,12 +26,16 @@ export default function LoginPage() {
 
     try {
       await login(email, password);
-      router.push('/dashboard'); // Redirect to dashboard after login
+      router.push('/search');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to login');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleWalletAuthSuccess = () => {
+    router.push('/search');
   };
 
   return (
@@ -40,7 +44,7 @@ export default function LoginPage() {
         <h1 className="text-2xl font-bold mb-6 text-center">Login to StellarRent</h1>
 
         <div className="mb-6">
-          <WalletAuthButton />
+          <WalletAuthButton onSuccess={handleWalletAuthSuccess} />
         </div>
 
         <div className="relative mb-6">
