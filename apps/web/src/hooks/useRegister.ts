@@ -1,10 +1,11 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { authService } from '../services/authService';
 import type { RegisterFormData } from '../validations/auth.schema';
+import { useAuth } from './auth/use-auth';
 
 export const useRegister = () => {
   const router = useRouter();
+  const { register: authRegister, isLoading: authLoading } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -13,18 +14,12 @@ export const useRegister = () => {
       setIsLoading(true);
       setError(null);
 
-      const response = await authService.register(data);
+      await authRegister(data.email, data.password, data.fullName);
 
-      // Only access localStorage on the client side
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('token', response.token);
-        localStorage.setItem('user', JSON.stringify(response.user));
-      }
-
-      // Redirect to login page
-      router.push('/login');
+      // Redirect to dashboard after successful registration
+      router.push('/dashboard');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al registrar usuario');
+      setError(err instanceof Error ? err.message : 'Registration failed');
     } finally {
       setIsLoading(false);
     }
@@ -32,7 +27,7 @@ export const useRegister = () => {
 
   return {
     register,
-    isLoading,
+    isLoading: isLoading || authLoading,
     error,
   };
 };
