@@ -18,7 +18,7 @@ import type {
   UserProfile,
 } from '../types/shared';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 // Utility function to safely convert filters to URL parameters
 const createURLParams = (
