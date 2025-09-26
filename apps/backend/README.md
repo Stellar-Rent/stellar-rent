@@ -156,7 +156,11 @@ Run integration tests:
 npm run test:int
 ```
 
-These tests run against a separate test database. Make sure you have a `.env.test` file configured with valid test database credentials and any required API keys. The test runner will load this environment to avoid interfering with your development or production databases.
+**Test Environment Configuration:**
+- Tests use mocked blockchain services (TrustlessWork, Soroban) to avoid real network calls
+- When `NODE_ENV=test`, the Supabase configuration automatically switches to mocks instead of real database connections
+- To use a real test database, set `USE_REAL_DB=true` in your `.env.test` file
+- Make sure you have a `.env.test` file configured with valid test database credentials and any required API keys
 
 ## Environment Variables
 

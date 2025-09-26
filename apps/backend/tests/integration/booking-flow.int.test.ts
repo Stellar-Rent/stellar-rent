@@ -1,13 +1,6 @@
-// Set environment variables before any imports
-process.env.SUPABASE_URL = 'https://test.supabase.co';
-process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-role-key';
-process.env.SUPABASE_ANON_KEY = 'test-anon-key';
-process.env.JWT_SECRET = 'test-secret-key';
-process.env.NODE_ENV = 'test';
-
+import cors from 'cors';
 import express from 'express';
 import request from 'supertest';
-import { v4 as uuidv4 } from 'uuid';
 import { errorMiddleware } from '../../src/middleware/error.middleware';
 import { rateLimiter } from '../../src/middleware/rateLimiter';
 import authRoutes from '../../src/routes/auth';
@@ -20,62 +13,36 @@ import walletAuthRoutes from '../../src/routes/wallet-auth.routes';
 import { generateAuthToken } from '../fixtures/booking.fixtures';
 import { mockedSoroban, mockedTrustlessWork } from '../mocks/blockchain.mocks';
 
-// Create test app with mock endpoints
+// Create test app with real routes
 function createTestApp() {
   const app = express();
 
-  // Middleware
+  // Middleware (matching main app configuration)
   app.use(express.json());
+  app.use(
+    cors({
+      origin: ['http://localhost:3000', 'http://localhost:3001'],
+      credentials: true,
+    })
+  );
+  app.use(rateLimiter);
 
-  // Mock booking endpoint
-  app.post('/api/bookings', (req, res) => {
-    const { propertyId, userId, dates, guests, total, deposit } = req.body;
-
-    if (!propertyId || !userId || !dates || !guests || !total || !deposit) {
-      return res.status(400).json({ error: 'Missing required fields' });
-    }
-
-    res.status(201).json({
-      success: true,
-      data: {
-        id: uuidv4(),
-        propertyId,
-        userId,
-        dates,
-        guests,
-        total,
-        deposit,
-        status: 'pending',
-        escrowAddress: 'GABC123456789012345678901234567890123456789012345678901234567890',
-        createdAt: new Date().toISOString(),
-      },
-    });
-  });
-
-  // Mock payment confirmation endpoint
-  app.put('/api/bookings/:id/confirm', (req, res) => {
-    const { id } = req.params;
-    const { transactionHash, sourcePublicKey } = req.body;
-
-    if (!transactionHash || !sourcePublicKey) {
-      return res.status(400).json({ error: 'Missing transaction details' });
-    }
-
-    res.status(200).json({
-      success: true,
-      data: {
-        id,
-        status: 'confirmed',
-        transactionHash,
-        updatedAt: new Date().toISOString(),
-      },
-    });
-  });
+  // Routes (matching main app configuration)
+  app.use('/auth', authRoutes);
+  app.use('/api/auth', walletAuthRoutes);
+  app.use('/api/bookings', bookingRoutes);
+  app.use('/api/locations', locationRoutes);
+  app.use('/api/profile', profileRoutes);
+  app.use('/api/properties', propertyRoutes);
+  app.use('/api/sync', syncRoutes);
 
   // Test route
   app.get('/', (_req, res) => {
     res.json({ message: 'Stellar Rent API is running successfully 🚀' });
   });
+
+  // Error handling
+  app.use(errorMiddleware);
 
   return app;
 }

@@ -40,9 +40,7 @@ export const mockedSoroban = {
 };
 
 jest.mock('../../src/blockchain/soroban', () => {
-  const soroban = require.requireActual
-    ? require.requireActual('../../src/blockchain/soroban')
-    : undefined;
+  const soroban = jest.requireActual('../../src/blockchain/soroban');
   const mock = mockedSoroban;
   return {
     __esModule: true,
