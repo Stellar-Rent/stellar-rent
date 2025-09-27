@@ -34,14 +34,18 @@ export async function uploadToSupabaseStorage(
         const byteArray = new Uint8Array(byteNumbers);
         const blob = new Blob([byteArray], { type: mimeType });
 
-        file = new File([blob], `image-${imageIndex}.${extension}`, { type: mimeType });
+        file = new File([blob], `image-${imageIndex}.${extension}`, {
+          type: mimeType,
+        });
         fileName = `${propertyId}/image-${imageIndex}.${extension}`;
       } else {
         const response = await fetch(imageFile);
         const blob = await response.blob();
         const arrayBuffer = await blob.arrayBuffer();
         const uint8Array = new Uint8Array(arrayBuffer);
-        file = new File([uint8Array], `image-${imageIndex}.jpg`, { type: 'image/jpeg' });
+        file = new File([uint8Array], `image-${imageIndex}.jpg`, {
+          type: 'image/jpeg',
+        });
         fileName = `${propertyId}/image-${imageIndex}.jpg`;
       }
     } else {

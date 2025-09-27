@@ -1,5 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
-import type { AvailabilityRange, CancellationPolicy } from '../types/property.types';
+import type {
+  AvailabilityRange,
+  CancellationPolicy,
+} from '../types/property.types';
 
 // Define your database types
 export type Database = {
@@ -244,7 +247,11 @@ const createMockSupabase = () => {
 
   const createMockChain = (tableName: string) => {
     type FilterValue = string | number | boolean | null | undefined;
-    const filters: Array<{ column: string; value: FilterValue; operator: string }> = [];
+    const filters: Array<{
+      column: string;
+      value: FilterValue;
+      operator: string;
+    }> = [];
 
     const chain = {
       _tableName: tableName,
@@ -291,7 +298,8 @@ const createMockSupabase = () => {
         // Handle special filter cases
         if (filters.length > 0) {
           const hasNonExistentChallenge = filters.some(
-            (f) => f.column === 'challenge' && f.value === 'non-existent-challenge'
+            (f) =>
+              f.column === 'challenge' && f.value === 'non-existent-challenge'
           );
           if (hasNonExistentChallenge) {
             return Promise.resolve({ data: null, error: null });
@@ -299,7 +307,9 @@ const createMockSupabase = () => {
 
           const hasExpiredChallenge = filters.some(
             (f) =>
-              f.column === 'expires_at' && f.operator === 'gt' && new Date(f.value) < new Date()
+              f.column === 'expires_at' &&
+              f.operator === 'gt' &&
+              new Date(f.value) < new Date()
           );
           if (hasExpiredChallenge) {
             return Promise.resolve({ data: null, error: null });
@@ -317,7 +327,8 @@ const createMockSupabase = () => {
         // Handle special filter cases
         if (filters.length > 0) {
           const hasNonExistentChallenge = filters.some(
-            (f) => f.column === 'challenge' && f.value === 'non-existent-challenge'
+            (f) =>
+              f.column === 'challenge' && f.value === 'non-existent-challenge'
           );
           if (hasNonExistentChallenge) {
             return callback({ data: [], error: null });
@@ -325,7 +336,9 @@ const createMockSupabase = () => {
 
           const hasExpiredChallenge = filters.some(
             (f) =>
-              f.column === 'expires_at' && f.operator === 'gt' && new Date(f.value) < new Date()
+              f.column === 'expires_at' &&
+              f.operator === 'gt' &&
+              new Date(f.value) < new Date()
           );
           if (hasExpiredChallenge) {
             return callback({ data: [], error: null });
@@ -348,7 +361,11 @@ const createMockSupabase = () => {
         select: () => ({
           single: () => {
             const id = `mock-${Date.now()}`;
-            const record = { id, ...data, created_at: new Date().toISOString() };
+            const record = {
+              id,
+              ...data,
+              created_at: new Date().toISOString(),
+            };
             if (mockData[tableName]) {
               mockData[tableName].set(id, record);
             }
@@ -356,7 +373,11 @@ const createMockSupabase = () => {
           },
           then: (callback: any) => {
             const id = `mock-${Date.now()}`;
-            const record = { id, ...data, created_at: new Date().toISOString() };
+            const record = {
+              id,
+              ...data,
+              created_at: new Date().toISOString(),
+            };
             if (mockData[tableName]) {
               mockData[tableName].set(id, record);
             }
@@ -406,12 +427,18 @@ const createMockSupabase = () => {
       },
       signInWithPassword: () =>
         Promise.resolve({
-          data: { user: { id: 'test-user-id', email: 'test@example.com' }, session: null },
+          data: {
+            user: { id: 'test-user-id', email: 'test@example.com' },
+            session: null,
+          },
           error: null,
         }),
       signUp: () =>
         Promise.resolve({
-          data: { user: { id: 'test-user-id', email: 'test@example.com' }, session: null },
+          data: {
+            user: { id: 'test-user-id', email: 'test@example.com' },
+            session: null,
+          },
           error: null,
         }),
     },
@@ -424,7 +451,9 @@ export const supabase =
     ? (createMockSupabase() as any)
     : (() => {
         if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-          throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY environment variable');
+          throw new Error(
+            'Missing SUPABASE_SERVICE_ROLE_KEY environment variable'
+          );
         }
 
         return createClient<Database>(
