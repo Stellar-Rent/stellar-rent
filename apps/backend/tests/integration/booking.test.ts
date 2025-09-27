@@ -49,7 +49,7 @@ describe('GET /bookings/:bookingId', () => {
     const res = await request(app).get(`/bookings/${testBookingId}`);
     expect(res.status).toBe(401);
     expect(res.body).toEqual({
-      error: 'Token no proporcionado',
+      error: 'No token provided',
     });
   });
 
@@ -60,7 +60,7 @@ describe('GET /bookings/:bookingId', () => {
 
     expect(res.status).toBe(403);
     expect(res.body).toEqual({
-      error: 'Token inválido o expirado',
+      error: 'Invalid or expired token',
     });
   });
 

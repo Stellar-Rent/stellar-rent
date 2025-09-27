@@ -28,9 +28,13 @@ describe('GET /properties/:id', () => {
 
     expect(res.status).toBe(400);
     expect(res.body).toEqual({
-      success: false,
-      error: 'Invalid property ID',
-      details: expect.any(Array),
+      error: 'Validation error',
+      details: expect.arrayContaining([
+        expect.objectContaining({
+          path: 'id',
+          message: 'Invalid property ID format',
+        }),
+      ]),
     });
   });
 

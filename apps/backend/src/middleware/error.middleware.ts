@@ -16,24 +16,28 @@ export const errorMiddleware: ErrorRequestHandler = (err, _req, res, _next) => {
   }
 
   let statusCode = 500;
-  const response: ErrorResponse = { error: 'Error interno del servidor' };
+  const response: ErrorResponse = { error: 'Internal server error' };
 
   if (err instanceof ZodError) {
     statusCode = 400;
-    response.error = 'Error de validación';
+    response.error = 'Validation error';
     response.details = err.errors.map((e) => ({
       path: e.path.join('.'),
       message: e.message,
     }));
   } else if (err instanceof JsonWebTokenError) {
     statusCode = 401;
-    response.error = 'Token inválido';
+    response.error = 'Invalid token';
   } else if (err instanceof TokenExpiredError) {
     statusCode = 401;
-    response.error = 'Token expirado';
+    response.error = 'Token expired';
   } else if (err.name === 'PostgrestError') {
     statusCode = 400;
-    response.error = 'Error de base de datos';
+    response.error = 'Database error';
+    response.details = [{ message: err.message }];
+  } else if (err.name === 'ValidationError') {
+    statusCode = 400;
+    response.error = 'Validation error';
     response.details = [{ message: err.message }];
   }
 

@@ -49,15 +49,15 @@ SUPABASE_DB_PASSWORD=$(echo "$SUPABASE_URL" | sed -n 's/.*:\/\/postgres:\([^@]*\
 run_migration() {
     local file=$1
     local name=$(basename "$file" .sql)
-    
+
     echo -e "\n${GREEN}Running migration: $name${NC}"
-    
+
     echo "🔍 Checking if migration was already applied..."
-    
+
     # Check if migration was already applied
     local check_query="SELECT EXISTS(SELECT 1 FROM migrations WHERE name='$name')"
     echo "Running query: $check_query"
-    
+
     if ! PGPASSWORD="${SUPABASE_DB_PASSWORD}" psql "$SUPABASE_URL" -t -A -c "$check_query" 2>/dev/null; then
         echo "Creating migrations table..."
         # If migrations table doesn't exist, create it
@@ -68,16 +68,16 @@ run_migration() {
                 executed_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
             );" 2>/dev/null
     fi
-    
+
     local exists=$(PGPASSWORD="${SUPABASE_DB_PASSWORD}" psql "$SUPABASE_URL" -t -A -c "$check_query" 2>/dev/null)
-    
+
     if [ "$exists" = "t" ]; then
         echo "Migration $name already applied, skipping..."
         return 0
     fi
-    
+
     echo "📄 Applying migration file: $file"
-    
+
     # Run the migration with verbose output
     if PGPASSWORD="${SUPABASE_DB_PASSWORD}" psql "$SUPABASE_URL" -v ON_ERROR_STOP=1 -f "$file"; then
         echo -e "${GREEN}✓ Migration $name completed successfully${NC}"
@@ -101,4 +101,4 @@ for file in "$SCRIPT_DIR"/migrations/*.sql; do
     fi
 done
 
-echo -e "\n${GREEN}✅ All migrations completed successfully${NC}" 
+echo -e "\n${GREEN}✅ All migrations completed successfully${NC}"
