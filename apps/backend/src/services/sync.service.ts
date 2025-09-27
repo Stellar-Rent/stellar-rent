@@ -19,15 +19,24 @@
  */
 
 import { Contract, Networks, nativeToScVal, scValToNative } from '@stellar/stellar-sdk';
-import { Server as SorobanRpcServer } from '@stellar/stellar-sdk/rpc';
+import { Server as SorobanRpcServer } from '@stellar/stellar-sdk/lib/rpc';
 import { supabase } from '../config/supabase';
+import { bookingService } from './booking.service';
 import { loggingService } from './logging.service';
 
 export interface SyncEvent {
   id: string;
-  type: 'booking_created' | 'booking_updated' | 'booking_cancelled' | 'payment_confirmed';
-  bookingId: string;
-  propertyId: string;
+  type:
+    | 'booking_created'
+    | 'booking_updated'
+    | 'booking_cancelled'
+    | 'payment_confirmed'
+    | 'property_created'
+    | 'property_updated'
+    | 'escrow_created'
+    | 'escrow_released';
+  bookingId?: string;
+  propertyId?: string;
   userId: string;
   timestamp: Date;
   data: Record<string, unknown>;
@@ -320,7 +329,16 @@ export class SyncService {
     } catch (error) {
       console.error('Error polling for events:', error);
       this.failedEvents++;
-      loggingService.logBlockchainError('pollForEvents', error as Error);
+
+      // Log the error in sync_logs table instead of using loggingService
+      await supabase.from('sync_logs').insert({
+        operation: 'pollForEvents',
+        status: 'error',
+        message: 'Failed to poll for blockchain events',
+        error_details: {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+      });
     }
   }
 
@@ -368,16 +386,117 @@ export class SyncService {
     toBlock: number
   ): Promise<Record<string, unknown>[]> {
     try {
-      // This is a simplified implementation
-      // In a real scenario, you'd query the Stellar network for contract events
       const contractId = process.env.SOROBAN_CONTRACT_ID;
+      if (!contractId) {
+        console.warn('No contract ID configured, skipping event polling');
+        return [];
+      }
 
-      // For now, we'll return an empty array
-      // TODO: Implement actual event querying from Stellar network
-      return [];
+      // Query events from Stellar network using RPC
+      const eventsPromise = this.server.getEvents({
+        startLedger: fromBlock,
+        endLedger: toBlock,
+        filters: [
+          {
+            type: 'contract',
+            contractIds: [contractId],
+          },
+        ],
+        limit: 100, // Process in batches
+      });
+
+      const eventsResponse = (await Promise.race([
+        eventsPromise,
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Event query timeout')), 30000)
+        ),
+      ])) as { events?: unknown[] };
+
+      const events = eventsResponse?.events || [];
+
+      // Transform Stellar events into our format
+      return events.map((event: unknown) => {
+        const stellarEvent = event as {
+          ledger: number;
+          ledgerClosedAt: string;
+          id: string;
+          topic?: string[];
+          value?: Record<string, unknown>;
+          txHash: string;
+          contractId: string;
+        };
+
+        return {
+          id: `${stellarEvent.ledger}-${stellarEvent.ledgerClosedAt}-${stellarEvent.id}`,
+          type: this.mapStellarEventType(stellarEvent.topic?.[0] || 'unknown'),
+          blockNumber: stellarEvent.ledger,
+          timestamp: new Date(stellarEvent.ledgerClosedAt),
+          data: this.parseStellarEventData(stellarEvent),
+          txHash: stellarEvent.txHash,
+          contractId: stellarEvent.contractId,
+        };
+      });
     } catch (error) {
       console.error('Failed to get contract events:', error);
+
+      // Log the error but don't throw to prevent sync service from stopping
+      await supabase.from('sync_logs').insert({
+        operation: 'get_contract_events',
+        status: 'error',
+        message: 'Failed to query blockchain events',
+        error_details: {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          from_block: fromBlock,
+          to_block: toBlock,
+        },
+      });
+
       return [];
+    }
+  }
+
+  /**
+   * Map Stellar event topic to our event types
+   */
+  private mapStellarEventType(topic: string): string {
+    const eventMap: Record<string, string> = {
+      booking_created: 'booking_created',
+      booking_updated: 'booking_updated',
+      booking_cancelled: 'booking_cancelled',
+      payment_confirmed: 'payment_confirmed',
+      property_created: 'property_created',
+      property_updated: 'property_updated',
+      escrow_created: 'escrow_created',
+      escrow_released: 'escrow_released',
+    };
+
+    return eventMap[topic] || 'unknown';
+  }
+
+  /**
+   * Parse Stellar event data into our format
+   */
+  private parseStellarEventData(event: {
+    value?: Record<string, unknown>;
+  }): BlockchainEventData {
+    try {
+      // Parse event data based on contract event structure
+      const eventData = event.value || {};
+
+      return {
+        escrow_id: eventData.escrow_id as string,
+        property_id: eventData.property_id as string,
+        user_id: eventData.user_id as string,
+        start_date: eventData.start_date ? Number(eventData.start_date) : undefined,
+        end_date: eventData.end_date ? Number(eventData.end_date) : undefined,
+        total_price: eventData.total_price ? Number(eventData.total_price) : undefined,
+        deposit: eventData.deposit ? Number(eventData.deposit) : undefined,
+        status: eventData.status as string,
+        guests: eventData.guests ? Number(eventData.guests) : undefined,
+      };
+    } catch (error) {
+      console.error('Failed to parse event data:', error);
+      return {};
     }
   }
 
@@ -405,6 +524,18 @@ export class SyncService {
         case 'payment_confirmed':
           await this.handlePaymentConfirmed(event);
           break;
+        case 'property_created':
+          await this.handlePropertyCreated(event);
+          break;
+        case 'property_updated':
+          await this.handlePropertyUpdated(event);
+          break;
+        case 'escrow_created':
+          await this.handleEscrowCreated(event);
+          break;
+        case 'escrow_released':
+          await this.handleEscrowReleased(event);
+          break;
         default:
           console.warn(`Unknown event type: ${event.type as string}`);
       }
@@ -412,7 +543,9 @@ export class SyncService {
       // Mark event as processed
       await this.markEventProcessed(event.id as string);
 
-      await loggingService.logBlockchainSuccess(logId, { eventId: event.id as string });
+      await loggingService.logBlockchainSuccess(logId, {
+        eventId: event.id as string,
+      });
     } catch (error) {
       console.error(`Error processing event ${event.id as string}:`, error);
       await this.markEventFailed(event.id as string, error as Error);
@@ -463,13 +596,27 @@ export class SyncService {
    */
   private async handleBookingUpdated(event: Record<string, unknown>): Promise<void> {
     const eventData = event.data as BlockchainEventData;
-    await supabase
-      .from('bookings')
-      .update({
-        status: this.mapBlockchainStatus(eventData.status || ''),
-        updated_at: new Date().toISOString(),
-      })
-      .eq('escrow_address', eventData.escrow_id || '');
+
+    if (eventData.escrow_id && eventData.status) {
+      // Use the enhanced booking service sync function
+      try {
+        await bookingService.syncBookingFromBlockchain(
+          eventData.escrow_id,
+          this.mapBlockchainStatus(eventData.status),
+          eventData
+        );
+      } catch (error) {
+        console.error('Failed to sync booking from blockchain event:', error);
+        // Fallback to direct database update
+        await supabase
+          .from('bookings')
+          .update({
+            status: this.mapBlockchainStatus(eventData.status),
+            updated_at: new Date().toISOString(),
+          })
+          .eq('escrow_address', eventData.escrow_id);
+      }
+    }
   }
 
   /**
@@ -501,6 +648,107 @@ export class SyncService {
   }
 
   /**
+   * Handle property creation event
+   */
+  private async handlePropertyCreated(event: Record<string, unknown>): Promise<void> {
+    const eventData = event.data as BlockchainEventData;
+
+    // Log the event for audit purposes
+    await supabase.from('sync_logs').insert({
+      operation: 'handle_property_created',
+      status: 'success',
+      message: 'Property creation event processed from blockchain',
+      data: {
+        property_id: eventData.property_id,
+        user_id: eventData.user_id,
+        event_id: event.id,
+      },
+    });
+
+    // Property should already exist in database from API call
+    // This event confirms blockchain sync was successful
+    console.log(`Property creation confirmed on blockchain: ${eventData.property_id}`);
+  }
+
+  /**
+   * Handle property update event
+   */
+  private async handlePropertyUpdated(event: Record<string, unknown>): Promise<void> {
+    const eventData = event.data as BlockchainEventData;
+
+    // Log the event for audit purposes
+    await supabase.from('sync_logs').insert({
+      operation: 'handle_property_updated',
+      status: 'success',
+      message: 'Property update event processed from blockchain',
+      data: {
+        property_id: eventData.property_id,
+        user_id: eventData.user_id,
+        event_id: event.id,
+      },
+    });
+
+    console.log(`Property update confirmed on blockchain: ${eventData.property_id}`);
+  }
+
+  /**
+   * Handle escrow creation event
+   */
+  private async handleEscrowCreated(event: Record<string, unknown>): Promise<void> {
+    const eventData = event.data as BlockchainEventData;
+
+    // Update booking with escrow creation confirmation
+    await supabase
+      .from('bookings')
+      .update({
+        status: 'pending',
+        updated_at: new Date().toISOString(),
+      })
+      .eq('escrow_address', eventData.escrow_id || '');
+
+    // Log the event
+    await supabase.from('sync_logs').insert({
+      operation: 'handle_escrow_created',
+      status: 'success',
+      message: 'Escrow creation event processed from blockchain',
+      data: {
+        escrow_id: eventData.escrow_id,
+        property_id: eventData.property_id,
+        user_id: eventData.user_id,
+        total_price: eventData.total_price,
+      },
+    });
+  }
+
+  /**
+   * Handle escrow release event
+   */
+  private async handleEscrowReleased(event: Record<string, unknown>): Promise<void> {
+    const eventData = event.data as BlockchainEventData;
+
+    // Update booking to completed status when escrow is released
+    await supabase
+      .from('bookings')
+      .update({
+        status: 'completed',
+        updated_at: new Date().toISOString(),
+      })
+      .eq('escrow_address', eventData.escrow_id || '');
+
+    // Log the event
+    await supabase.from('sync_logs').insert({
+      operation: 'handle_escrow_released',
+      status: 'success',
+      message: 'Escrow release event processed from blockchain',
+      data: {
+        escrow_id: eventData.escrow_id,
+        property_id: eventData.property_id,
+        user_id: eventData.user_id,
+      },
+    });
+  }
+
+  /**
    * Map blockchain status to database status
    */
   private mapBlockchainStatus(blockchainStatus: string): string {
@@ -517,12 +765,13 @@ export class SyncService {
    * Store sync event in database
    */
   private async storeSyncEvent(event: Record<string, unknown>): Promise<void> {
+    const eventData = event.data as BlockchainEventData;
     await supabase.from('sync_events').insert({
       event_id: event.id as string,
       event_type: event.type as string,
-      booking_id: event.bookingId as string,
-      property_id: event.propertyId as string,
-      user_id: event.userId as string,
+      booking_id: eventData.escrow_id || (event.bookingId as string) || null,
+      property_id: eventData.property_id || (event.propertyId as string) || null,
+      user_id: eventData.user_id || (event.userId as string),
       event_data: event.data,
       processed: false,
       created_at: new Date().toISOString(),

@@ -18,7 +18,10 @@ import type { Booking, ConflictingBooking, CreateBookingInput } from '../types/b
 import { BookingError } from '../types/common.types';
 
 export interface BlockchainServices {
-  checkAvailability: (request: { propertyId: string; dates: { from: Date; to: Date } }) => Promise<{
+  checkAvailability: (request: {
+    propertyId: string;
+    dates: { from: Date; to: Date };
+  }) => Promise<{
     isAvailable: boolean;
     conflictingBookings?: Array<ConflictingBooking>;
   }>;
@@ -180,7 +183,10 @@ export class BookingService {
       }
 
       // Log successful operation
-      await loggingService.logBlockchainSuccess(log, { booking, escrowAddress });
+      await loggingService.logBlockchainSuccess(log, {
+        booking,
+        escrowAddress,
+      });
 
       return {
         bookingId: booking.id,
@@ -202,7 +208,10 @@ export class BookingService {
     bookingId: string,
     userId: string
   ): Promise<{ success: boolean; message: string }> {
-    const log = await loggingService.logBlockchainOperation('cancelBooking', { bookingId, userId });
+    const log = await loggingService.logBlockchainOperation('cancelBooking', {
+      bookingId,
+      userId,
+    });
 
     try {
       // Get booking details from database
@@ -271,7 +280,9 @@ export class BookingService {
         throw new BookingError('Failed to update booking status', 'DB_UPDATE_FAIL', updateError);
       }
 
-      await loggingService.logBlockchainSuccess(log, { booking: updatedBooking });
+      await loggingService.logBlockchainSuccess(log, {
+        booking: updatedBooking,
+      });
 
       return {
         success: true,
@@ -343,7 +354,9 @@ export class BookingService {
         throw new BookingError('Failed to update booking status', 'DB_UPDATE_FAIL', updateError);
       }
 
-      await loggingService.logBlockchainSuccess(log, { booking: updatedBooking });
+      await loggingService.logBlockchainSuccess(log, {
+        booking: updatedBooking,
+      });
 
       return {
         success: true,
@@ -358,11 +371,101 @@ export class BookingService {
       throw new BookingError('Failed to update booking status', 'STATUS_UPDATE_FAIL', error);
     }
   }
+
+  /**
+   * Sync booking status from blockchain event
+   */
+  async syncBookingFromBlockchain(
+    blockchainBookingId: string,
+    newStatus: string,
+    eventData?: Record<string, unknown>
+  ): Promise<{ success: boolean; booking?: Booking }> {
+    const log = await loggingService.logBlockchainOperation('syncBookingFromBlockchain', {
+      blockchainBookingId,
+      newStatus,
+      eventData,
+    });
+
+    try {
+      // Find booking by blockchain ID
+      const { data: booking, error: fetchError } = await supabase
+        .from('bookings')
+        .select('*')
+        .eq('blockchain_booking_id', blockchainBookingId)
+        .single();
+
+      if (fetchError || !booking) {
+        await loggingService.logBlockchainError(log, {
+          error: new Error('Booking not found for blockchain ID'),
+          context: { blockchainBookingId },
+        });
+        return { success: false };
+      }
+
+      // Only update if status actually changed
+      if (booking.status === newStatus) {
+        await loggingService.logBlockchainSuccess(log, {
+          message: 'Status already up to date',
+          booking: booking.id,
+        });
+        return { success: true, booking };
+      }
+
+      // Update booking status
+      const { data: updatedBooking, error: updateError } = await supabase
+        .from('bookings')
+        .update({
+          status: newStatus,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', booking.id)
+        .select()
+        .single();
+
+      if (updateError) {
+        throw new BookingError(
+          'Failed to update booking from blockchain event',
+          'DB_UPDATE_FAIL',
+          updateError
+        );
+      }
+
+      // Log successful sync
+      await supabase.from('sync_logs').insert({
+        operation: 'booking_status_synced',
+        status: 'success',
+        message: 'Booking status synced from blockchain event',
+        data: {
+          booking_id: booking.id,
+          blockchain_booking_id: blockchainBookingId,
+          old_status: booking.status,
+          new_status: newStatus,
+          event_data: eventData,
+        },
+      });
+
+      await loggingService.logBlockchainSuccess(log, {
+        booking: updatedBooking,
+      });
+
+      return { success: true, booking: updatedBooking };
+    } catch (error) {
+      if (error instanceof BookingError) {
+        throw error;
+      }
+
+      await loggingService.logBlockchainError(log, error);
+      throw new BookingError('Failed to sync booking from blockchain', 'SYNC_FAIL', error);
+    }
+  }
 }
 
 // Implementation of BlockchainServices following codebase patterns
 const blockchainServices: BlockchainServices = {
-  async checkAvailability(request: { propertyId: string; dates: { from: Date; to: Date } }) {
+  async checkAvailability(request: {
+    propertyId: string;
+    dates: { from: Date; to: Date };
+  }) {
     try {
       // Use existing availability check utility
       const availabilityResult = await checkAvailability({
