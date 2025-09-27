@@ -50,7 +50,7 @@ export async function uploadToSupabaseStorage(
       fileName = `${propertyId}/image-${imageIndex}.${fileExt}`;
     }
 
-    const { data, error } = await supabase.storage.from('property-images').upload(fileName, file, {
+    const { error } = await supabase.storage.from('property-images').upload(fileName, file, {
       cacheControl: '3600',
       upsert: true,
     });

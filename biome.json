@@ -37,7 +37,9 @@
       },
       "suspicious": {
         "noDebugger": "warn",
-        "noConsoleLog": "off"
+        "noConsoleLog": "off",
+        "noExplicitAny": "warn",
+        "noThenProperty": "warn"
       }
     }
   },

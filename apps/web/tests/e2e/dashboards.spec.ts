@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
 // Define the URLs for the dashboard and login pages
 const DASHBOARD_URL = '/';
