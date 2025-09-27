@@ -200,8 +200,9 @@ if (!process.env.SUPABASE_URL) {
 
 // Mock Supabase for tests
 const createMockSupabase = () => {
-  // Store mock data
-  const mockData: any = {
+  // Store mock data with proper typing
+  type MockData = Record<string, Map<string, unknown> | unknown[]>;
+  const mockData: MockData = {
     wallet_challenges: new Map(),
     wallet_users: new Map(),
     users: new Map(),
@@ -242,7 +243,8 @@ const createMockSupabase = () => {
   };
 
   const createMockChain = (tableName: string) => {
-    const filters: Array<{ column: string; value: any; operator: string }> = [];
+    type FilterValue = string | number | boolean | null | undefined;
+    const filters: Array<{ column: string; value: FilterValue; operator: string }> = [];
 
     const chain = {
       _tableName: tableName,
@@ -250,11 +252,11 @@ const createMockSupabase = () => {
 
       // Query methods
       select: () => chain,
-      eq: (column: string, value: any) => {
+      eq: (column: string, value: FilterValue) => {
         filters.push({ column, value, operator: 'eq' });
         return chain;
       },
-      gt: (column: string, value: any) => {
+      gt: (column: string, value: FilterValue) => {
         filters.push({ column, value, operator: 'gt' });
         return chain;
       },
