@@ -237,11 +237,28 @@ export async function createProperty(
 
     // Create blockchain listing
     try {
+      // Get owner's stellar address from profile
+      const { data: ownerProfile, error: profileError } = await supabase
+        .from('profiles')
+        .select('stellar_address')
+        .eq('user_id', input.ownerId)
+        .single();
+
+      if (profileError || !ownerProfile?.stellar_address) {
+        console.warn('Owner stellar address not found, skipping blockchain sync');
+        await cacheService.invalidateSearchCaches();
+        return {
+          success: true,
+          data: property as Property,
+          warning: 'Property created but owner wallet address not found for blockchain sync',
+        };
+      }
+
       const propertyHashData = propertyToHashData(property as Property);
       const blockchainListing = await createPropertyListing(
         property.id,
         propertyHashData,
-        input.ownerId // Use owner ID as blockchain address for now
+        ownerProfile.stellar_address
       );
 
       // Update property with blockchain hash
@@ -257,15 +274,26 @@ export async function createProperty(
 
       if (updateError) {
         console.error('Failed to update property with blockchain hash:', updateError);
-        // Property was created but blockchain integration failed
+        await cacheService.invalidateSearchCaches();
         return {
           success: true,
           data: property as Property,
-          warning: 'Property created but blockchain integration failed',
+          warning: 'Property created but blockchain hash update failed',
         };
       }
 
-      // Invalidate search caches when property is created
+      // Record sync event for monitoring
+      await supabase.from('sync_logs').insert({
+        operation: 'property_created',
+        status: 'success',
+        message: 'Property successfully created and synced with blockchain',
+        data: {
+          property_id: property.id,
+          blockchain_hash: blockchainListing.data_hash,
+          owner_address: ownerProfile.stellar_address,
+        },
+      });
+
       await cacheService.invalidateSearchCaches();
 
       return {
@@ -274,14 +302,24 @@ export async function createProperty(
       };
     } catch (blockchainError) {
       console.error('Blockchain listing creation failed:', blockchainError);
-      // Property was created but blockchain integration failed
-      // Still invalidate caches since property was created
+
+      // Record sync error for monitoring
+      await supabase.from('sync_logs').insert({
+        operation: 'property_created',
+        status: 'error',
+        message: 'Property created but blockchain sync failed',
+        error_details: {
+          error: blockchainError instanceof Error ? blockchainError.message : 'Unknown error',
+          property_id: property.id,
+        },
+      });
+
       await cacheService.invalidateSearchCaches();
 
       return {
         success: true,
         data: property as Property,
-        warning: 'Property created but blockchain integration failed',
+        warning: 'Property created but blockchain sync failed',
       };
     }
   } catch (error) {
@@ -483,6 +521,24 @@ export async function updateProperty(
     // Update blockchain listing if property data changed
     try {
       const updatedProperty = property as Property;
+
+      // Get owner's stellar address from profile
+      const { data: ownerProfile, error: profileError } = await supabase
+        .from('profiles')
+        .select('stellar_address')
+        .eq('user_id', updatedProperty.ownerId)
+        .single();
+
+      if (profileError || !ownerProfile?.stellar_address) {
+        console.warn('Owner stellar address not found, skipping blockchain sync');
+        await cacheService.invalidateSearchCaches();
+        return {
+          success: true,
+          data: updatedProperty,
+          warning: 'Property updated but owner wallet address not found for blockchain sync',
+        };
+      }
+
       const propertyHashData = propertyToHashData(updatedProperty);
 
       // Check if this is a status-only update
@@ -491,14 +547,26 @@ export async function updateProperty(
         await updatePropertyStatus(
           id,
           input.status as 'Available' | 'Booked' | 'Maintenance' | 'Inactive',
-          updatedProperty.ownerId
+          ownerProfile.stellar_address
         );
+
+        // Record sync event
+        await supabase.from('sync_logs').insert({
+          operation: 'property_status_updated',
+          status: 'success',
+          message: 'Property status successfully updated on blockchain',
+          data: {
+            property_id: id,
+            new_status: input.status,
+            owner_address: ownerProfile.stellar_address,
+          },
+        });
       } else {
         // Full property update
         const blockchainListing = await updatePropertyListing(
           id,
           propertyHashData,
-          updatedProperty.ownerId
+          ownerProfile.stellar_address
         );
 
         // Update property with new blockchain hash
@@ -513,9 +581,33 @@ export async function updateProperty(
         if (hashUpdateError) {
           console.error('Failed to update property hash:', hashUpdateError);
         }
+
+        // Record sync event
+        await supabase.from('sync_logs').insert({
+          operation: 'property_updated',
+          status: 'success',
+          message: 'Property successfully updated and synced with blockchain',
+          data: {
+            property_id: id,
+            blockchain_hash: blockchainListing.data_hash,
+            owner_address: ownerProfile.stellar_address,
+          },
+        });
       }
     } catch (blockchainError) {
       console.error('Blockchain update failed:', blockchainError);
+
+      // Record sync error for monitoring
+      await supabase.from('sync_logs').insert({
+        operation: 'property_updated',
+        status: 'error',
+        message: 'Property updated but blockchain sync failed',
+        error_details: {
+          error: blockchainError instanceof Error ? blockchainError.message : 'Unknown error',
+          property_id: id,
+        },
+      });
+
       // Continue with database update even if blockchain fails
     }
 

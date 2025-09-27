@@ -35,7 +35,7 @@ describe('SyncService', () => {
     // Stop sync service after each test
     try {
       await syncService.stop();
-    } catch (error) {
+    } catch (_error) {
       // Ignore errors when stopping
     }
   });
@@ -317,7 +317,7 @@ describe('SyncService', () => {
 
       // Capture initial state
       const initialStatus = syncService.getStatus();
-      const initialLastProcessedBlock = initialStatus.lastProcessedBlock;
+      const _initialLastProcessedBlock = initialStatus.lastProcessedBlock;
 
       // Trigger manual sync (this will call the real pollForEvents method)
       await syncService.triggerManualSync();

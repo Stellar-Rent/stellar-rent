@@ -391,6 +391,9 @@ router.get(
   syncController.getDashboard.bind(syncController)
 );
 
+// Blockchain verification
+router.get('/verify', requireAdmin, syncController.verifyBlockchainState.bind(syncController));
+
 // Sync operations
 router.post('/retry-failed', requireAdmin, syncController.retryFailedEvents.bind(syncController));
 router.delete('/clear-old', requireAdmin, syncController.clearOldData.bind(syncController));

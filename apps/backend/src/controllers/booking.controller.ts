@@ -112,7 +112,7 @@ export const getBooking = async (req: AuthRequest, res: Response) => {
     // Handle generic errors from mocks or other sources
     if (error instanceof Error) {
       const errorMessage = error.message;
-      
+
       // Map common error messages to appropriate status codes
       if (errorMessage === 'Access denied') {
         return res.status(403).json({
@@ -124,7 +124,7 @@ export const getBooking = async (req: AuthRequest, res: Response) => {
           },
         });
       }
-      
+
       if (errorMessage === 'Booking not found') {
         return res.status(404).json({
           success: false,
@@ -135,7 +135,7 @@ export const getBooking = async (req: AuthRequest, res: Response) => {
           },
         });
       }
-      
+
       if (errorMessage === 'Property not found') {
         return res.status(404).json({
           success: false,
@@ -146,7 +146,7 @@ export const getBooking = async (req: AuthRequest, res: Response) => {
           },
         });
       }
-      
+
       if (errorMessage === 'Host user not found') {
         return res.status(404).json({
           success: false,
