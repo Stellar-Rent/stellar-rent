@@ -33,4 +33,7 @@ router.post(
   confirmPayment
 );
 
+// Accept PUT per task.md while retaining POST for compatibility
+router.put('/:bookingId/confirm', authenticateToken, validateConfirmPayment, confirmPayment);
+
 export default router;

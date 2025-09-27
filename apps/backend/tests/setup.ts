@@ -3,6 +3,9 @@ import { config } from 'dotenv';
 // Load environment variables for testing
 config({ path: '.env.test' });
 
+// Load blockchain mocks before any SUT imports
+import './mocks/blockchain.mocks';
+
 // Set test environment variables
 Object.defineProperty(process.env, 'NODE_ENV', { value: 'test', writable: true });
 Object.defineProperty(process.env, 'JWT_SECRET', { value: 'test-secret-key', writable: true });

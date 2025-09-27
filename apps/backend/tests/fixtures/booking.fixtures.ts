@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
+import { supabase } from '../../src/config/supabase';
 import type { CreateBookingInput } from '../../src/types/booking.types';
 
 export interface TestProperty {
@@ -360,4 +361,95 @@ export const testEscrowAddressFormat = (): void => {
       throw new Error(`Invalid escrow address in payment fixture: ${payment.escrowAddress}`);
     }
   }
+};
+
+//===================
+// Dynamic test data creators
+//===================
+
+export type CreateTestUserOverrides = Partial<{
+  id: string;
+  email: string;
+  name: string;
+  password_hash: string;
+  created_at: string;
+  updated_at: string;
+}>;
+
+export const createTestUser = async (
+  overrides: CreateTestUserOverrides = {}
+): Promise<TestUser> => {
+  const nowIso = new Date().toISOString();
+  const baseUser: TestUser = {
+    id: overrides.id || uuidv4(),
+    email: overrides.email || `testuser_${Date.now()}@example.com`,
+    name: overrides.name || 'Test User',
+    password_hash: overrides.password_hash || '$2b$10$hashedpassword_test_fixture',
+    created_at: overrides.created_at || nowIso,
+    updated_at: overrides.updated_at || nowIso,
+  };
+
+  const { data, error } = await supabase.from('users').insert(baseUser).select().single();
+
+  if (error) {
+    throw new Error(`Failed to create test user: ${error.message || error}`);
+  }
+
+  // Best-effort profile creation (not critical for most tests)
+  try {
+    await supabase.from('profiles').upsert({
+      user_id: data.id,
+      name: baseUser.name,
+      verification_status: 'unverified',
+      last_active: nowIso,
+    });
+  } catch {}
+
+  return data as TestUser;
+};
+
+export type CreateTestPropertyOverrides = Partial<
+  Omit<TestProperty, 'owner_id'> & { availability: Array<{ from: string; to: string }> }
+>;
+
+export const createTestProperty = async (
+  userId: string,
+  overrides: CreateTestPropertyOverrides = {}
+): Promise<TestProperty> => {
+  const nowIso = new Date().toISOString();
+  const baseProperty: Omit<TestProperty, 'owner_id'> & { owner_id: string } = {
+    id: overrides.id || uuidv4(),
+    title: overrides.title || 'Test Property',
+    description: overrides.description || 'A lovely place for tests.',
+    price: overrides.price ?? 120.0,
+    address: overrides.address || '100 Test Lane',
+    city: overrides.city || 'Testville',
+    country: overrides.country || 'Testland',
+    latitude: overrides.latitude ?? 10.0,
+    longitude: overrides.longitude ?? 10.0,
+    amenities: overrides.amenities || ['wifi', 'kitchen'],
+    images: overrides.images || ['https://example.com/image.jpg'],
+    bedrooms: overrides.bedrooms ?? 2,
+    bathrooms: overrides.bathrooms ?? 1,
+    max_guests: overrides.max_guests ?? 4,
+    owner_id: userId,
+    status: (overrides.status as 'available' | 'booked' | 'maintenance') || 'available',
+    security_deposit: overrides.security_deposit ?? 100.0,
+    created_at: overrides.created_at || nowIso,
+    updated_at: overrides.updated_at || nowIso,
+  };
+
+  const { data, error } = await supabase.from('properties').insert(baseProperty).select().single();
+
+  if (error) {
+    throw new Error(`Failed to create test property: ${error.message || error}`);
+  }
+
+  return data as TestProperty;
+};
+
+export const generateAuthToken = (user: { id: string; email: string }): string => {
+  const jwt = require('jsonwebtoken');
+  const secret = process.env.JWT_SECRET || 'test-secret-key';
+  return jwt.sign({ id: user.id, email: user.email }, secret, { expiresIn: '1h' });
 };
