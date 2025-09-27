@@ -1,10 +1,10 @@
 'use client';
 
-import PropertyGrid from '@/components/search/PropertyGrid';
+import { type Property, PropertyGrid } from '@/components/search/PropertyGrid';
 import type { LatLngTuple } from 'leaflet';
 import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
-import { MOCK_PROPERTIES } from 'public/mock-data';
+import { type FullPropertyProps, MOCK_PROPERTIES } from 'public/mock-data';
 import { useCallback, useMemo, useState } from 'react';
 import FilterSidebar from '~/components/search/FilterSidebar';
 import SearchBar from '~/components/search/SearchBar';
@@ -12,6 +12,23 @@ import { SortOptions } from '~/components/search/SortOptions';
 
 const PropertyMap = dynamic(() => import('@/components/search/Map'), {
   ssr: false,
+});
+
+// Transform FullPropertyProps to Property interface
+const transformToProperty = (prop: FullPropertyProps): Property => ({
+  id: Number.parseInt(prop.id, 10),
+  title: prop.title,
+  address: prop.location,
+  image: prop.images[0] || '/images/house1.webp', // Use first image or fallback
+  maxPeople: prop.maxGuests,
+  distance: Number.parseFloat(prop.distance.replace('km', '')),
+  rating: prop.rating,
+  reviews: Math.floor(Math.random() * 100) + 10, // Generate random reviews count
+  area: prop.bedrooms * 30 + Math.floor(Math.random() * 20), // Estimate area based on bedrooms
+  price: prop.price,
+  currency: 'USD',
+  period: 'per month',
+  verified: prop.rating >= 4.0, // Mark as verified if rating is 4.0 or higher
 });
 
 export default function SearchPage() {
@@ -33,7 +50,7 @@ export default function SearchPage() {
   ];
 
   // Filter & sort properties with memoization
-  const filteredSortedProperties = useMemo(() => {
+  const filteredSortedProperties: Property[] = useMemo(() => {
     let result = [...MOCK_PROPERTIES];
 
     const location = searchParams.get('location')?.toLowerCase() || '';
@@ -68,10 +85,10 @@ export default function SearchPage() {
       });
     }
 
-    return result;
+    return result.map(transformToProperty);
   }, [filters, sort, searchParams]);
 
-  const visibleProperties = useMemo(() => {
+  const visibleProperties: Property[] = useMemo(() => {
     return filteredSortedProperties.slice(0, page * pageSize);
   }, [filteredSortedProperties, page]);
 

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { bookingAPI, dashboardAPI, handleAPIError, profileAPI, walletAPI } from '../services/api';
-import type { DashboardBooking, Transaction, UserProfile } from '../types';
+import type { BookingFilters, DashboardBooking, Transaction, UserProfile } from '../types';
+import { useApiWithRetry } from './useApiWithRetry';
 
 interface UseDashboardProps {
   userId: string;
@@ -28,6 +29,12 @@ interface UseDashboardReturn {
   isLoadingStats: boolean;
 
   error: string | null;
+  errors: {
+    bookings: string | null;
+    profile: string | null;
+    transactions: string | null;
+    stats: string | null;
+  };
 
   refreshBookings: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -48,78 +55,125 @@ export const useDashboard = ({ userId, userType }: UseDashboardProps): UseDashbo
   const [isLoadingStats, setIsLoadingStats] = useState(false);
 
   const [error, setError] = useState<string | null>(null);
+  const [errors, setErrors] = useState({
+    bookings: null as string | null,
+    profile: null as string | null,
+    transactions: null as string | null,
+    stats: null as string | null,
+  });
+
+  // Use retry-enabled API hook
+  const getBookings = useCallback(
+    (...args: unknown[]) =>
+      bookingAPI.getBookings(args[0] as string, args[1] as BookingFilters | undefined),
+    []
+  );
+  const getProfile = useCallback(
+    (...args: unknown[]) => profileAPI.getUserProfile(args[0] as string),
+    []
+  );
+  const getTransactions = useCallback(
+    (...args: unknown[]) => walletAPI.getTransactionHistory(args[0] as string),
+    []
+  );
+  const getStats = useCallback(
+    (...args: unknown[]) =>
+      dashboardAPI.getDashboardStats(args[0] as string, args[1] as 'host' | 'tenant'),
+    []
+  );
+
+  const bookingsApi = useApiWithRetry(getBookings);
+  const profileApi = useApiWithRetry(getProfile);
+  const transactionsApi = useApiWithRetry(getTransactions);
+  const statsApi = useApiWithRetry(getStats);
 
   const fetchBookings = useCallback(async () => {
     if (!userId) return;
 
     setIsLoadingBookings(true);
     setError(null);
+    setErrors((prev) => ({ ...prev, bookings: null }));
 
     try {
-      const response = await bookingAPI.getBookings(userId, { userType });
-      setBookings(response.data || []);
+      const result = await bookingsApi.execute(userId, { userType });
+      if (result) {
+        setBookings((result.data || []) as unknown as DashboardBooking[]);
+      }
     } catch (err) {
       const errorMessage = handleAPIError(err);
       setError(errorMessage);
+      setErrors((prev) => ({ ...prev, bookings: errorMessage }));
       console.error('Failed to fetch bookings:', err);
     } finally {
       setIsLoadingBookings(false);
     }
-  }, [userId, userType]);
+  }, [userId, userType, bookingsApi]);
 
   const fetchProfile = useCallback(async () => {
     if (!userId) return;
 
     setIsLoadingProfile(true);
     setError(null);
+    setErrors((prev) => ({ ...prev, profile: null }));
 
     try {
-      const response = await profileAPI.getUserProfile(userId);
-      setProfile(response.data);
+      const result = await profileApi.execute(userId);
+      if (result && typeof result === 'object' && result !== null && 'data' in result) {
+        setProfile((result as { data: UserProfile }).data);
+      }
     } catch (err) {
       const errorMessage = handleAPIError(err);
       setError(errorMessage);
+      setErrors((prev) => ({ ...prev, profile: errorMessage }));
       console.error('Failed to fetch profile:', err);
     } finally {
       setIsLoadingProfile(false);
     }
-  }, [userId]);
+  }, [userId, profileApi]);
 
   const fetchTransactions = useCallback(async () => {
     if (!userId) return;
 
     setIsLoadingTransactions(true);
     setError(null);
+    setErrors((prev) => ({ ...prev, transactions: null }));
 
     try {
-      const response = await walletAPI.getTransactionHistory(userId);
-      setTransactions(response.data || []);
+      const result = await transactionsApi.execute(userId);
+      if (result && typeof result === 'object' && result !== null && 'data' in result) {
+        setTransactions((result as { data: Transaction[] }).data || []);
+      }
     } catch (err) {
       const errorMessage = handleAPIError(err);
       setError(errorMessage);
+      setErrors((prev) => ({ ...prev, transactions: errorMessage }));
       console.error('Failed to fetch transactions:', err);
     } finally {
       setIsLoadingTransactions(false);
     }
-  }, [userId]);
+  }, [userId, transactionsApi]);
 
   const fetchStats = useCallback(async () => {
     if (!userId) return;
 
     setIsLoadingStats(true);
     setError(null);
+    setErrors((prev) => ({ ...prev, stats: null }));
 
     try {
-      const response = await dashboardAPI.getDashboardStats(userId, userType);
-      setStats(response.data);
+      const result = await statsApi.execute(userId, userType);
+      if (result && typeof result === 'object' && result !== null && 'data' in result) {
+        setStats((result as { data: DashboardStats }).data);
+      }
     } catch (err) {
       const errorMessage = handleAPIError(err);
       setError(errorMessage);
+      setErrors((prev) => ({ ...prev, stats: errorMessage }));
       console.error('Failed to fetch dashboard stats:', err);
     } finally {
       setIsLoadingStats(false);
     }
-  }, [userId, userType]);
+  }, [userId, userType, statsApi]);
 
   const refreshBookings = useCallback(() => fetchBookings(), [fetchBookings]);
   const refreshProfile = useCallback(() => fetchProfile(), [fetchProfile]);
@@ -134,7 +188,7 @@ export const useDashboard = ({ userId, userType }: UseDashboardProps): UseDashbo
     if (userId) {
       refreshAll();
     }
-  }, [userId, userType, refreshAll]);
+  }, [userId, refreshAll]);
 
   return {
     bookings,
@@ -146,6 +200,7 @@ export const useDashboard = ({ userId, userType }: UseDashboardProps): UseDashbo
     isLoadingTransactions,
     isLoadingStats,
     error,
+    errors,
     refreshBookings,
     refreshProfile,
     refreshTransactions,

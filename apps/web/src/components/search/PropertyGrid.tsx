@@ -1,5 +1,8 @@
 'use client';
 
+import { useState } from 'react';
+import { ErrorDisplay } from '~/components/ui/error-display';
+import { PropertyCardSkeleton } from '~/components/ui/skeleton';
 import { PropertyCard } from './PropertyCard';
 
 // Mock data for properties
@@ -126,12 +129,83 @@ const mockProperties = [
   },
 ];
 
-export const PropertyGrid = () => {
+export interface Property {
+  id: number;
+  title: string;
+  address: string;
+  image: string;
+  maxPeople: number;
+  distance: number;
+  rating: number;
+  reviews: number;
+  area: number;
+  price: number;
+  currency: string;
+  period: string;
+  verified: boolean;
+}
+
+interface PropertyGridProps {
+  isLoading?: boolean;
+  error?: string | null;
+  onRetry?: () => void;
+  properties?: Property[];
+  onLoadMore?: () => void;
+}
+
+export const PropertyGrid = ({
+  isLoading = false,
+  error = null,
+  onRetry,
+  properties: externalProperties,
+  onLoadMore,
+}: PropertyGridProps) => {
+  const [internalProperties] = useState(mockProperties);
+  const properties = externalProperties || internalProperties;
+
+  const handleRetry = async () => {
+    onRetry?.();
+  };
+
+  if (error) {
+    return (
+      <ErrorDisplay
+        error={error}
+        onRetry={handleRetry}
+        title="Failed to load properties"
+        variant="default"
+      />
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="grid w-full grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 2xl:gap-8">
+        {Array.from({ length: 8 }, (_, index) => (
+          <PropertyCardSkeleton key={`property-skeleton-${Math.random()}-${index}`} />
+        ))}
+      </div>
+    );
+  }
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-      {mockProperties.map((property) => (
-        <PropertyCard key={property.id} property={property} />
-      ))}
+    <div>
+      <div className="grid w-full grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 2xl:gap-8">
+        {properties.map((property) => (
+          <PropertyCard key={property.id} property={property} />
+        ))}
+      </div>
+      {onLoadMore && (
+        <div className="text-center mt-8">
+          <button
+            type="button"
+            onClick={onLoadMore}
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Load More Properties
+          </button>
+        </div>
+      )}
     </div>
   );
 };

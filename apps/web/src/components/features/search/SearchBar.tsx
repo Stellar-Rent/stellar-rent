@@ -6,6 +6,8 @@ import { useSearchParams } from 'next/navigation';
 import { useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
 import { z } from 'zod';
+import { ErrorDisplay } from '~/components/ui/error-display';
+import { SearchBarSkeleton } from '~/components/ui/skeleton';
 
 // Schema for form validation
 const searchSchema = z.object({
@@ -25,7 +27,7 @@ const searchSchema = z.object({
 type SearchFormData = z.infer<typeof searchSchema>;
 
 export const SearchBar = () => {
-  const [formData] = useState<SearchFormData>({
+  const [formData, setFormData] = useState<SearchFormData>({
     location: '',
     date: '',
     guests: 2,
@@ -33,6 +35,7 @@ export const SearchBar = () => {
 
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const searchParams = useSearchParams();
   const router = useRouter();
   const searchBarRef = useRef<HTMLDivElement>(null);
@@ -51,9 +54,10 @@ export const SearchBar = () => {
     e.preventDefault();
 
     // Prevent double submission
-    if (isSubmitting) return;
+    if (isSubmitting || isLoading) return;
 
     setIsSubmitting(true);
+    setIsLoading(true);
     setError(null);
 
     try {
@@ -61,6 +65,7 @@ export const SearchBar = () => {
       if (!formData.location || formData.location.length < 2) {
         setError('Please enter a valid location');
         setIsSubmitting(false);
+        setIsLoading(false);
         return;
       }
 
@@ -78,8 +83,13 @@ export const SearchBar = () => {
       }
     } finally {
       setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
+
+  if (isLoading) {
+    return <SearchBarSkeleton className="w-full" />;
+  }
 
   return (
     <div className="w-full" ref={searchBarRef}>
@@ -87,7 +97,7 @@ export const SearchBar = () => {
         <form onSubmit={handleSubmit} className="flex flex-col lg:flex-row justify-start gap-4">
           {/* Location Field */}
           <div className="flex relative group">
-            <div className="flex items-center rounded-2xl p-4 gap-3">
+            <div className="flex items-center rounded-2xl p-4 gap-3 w-full">
               <IconContainer
                 icon={
                   <Image
@@ -99,9 +109,21 @@ export const SearchBar = () => {
                   />
                 }
               />
-              <div className="flex flex-col">
-                <p className="text-white font-semibold text-base block">Location</p>
-                <p className="text-xs text-gray-400 mt-1">Search by country or city</p>
+              <div className="flex flex-col flex-1">
+                <label
+                  htmlFor="location-input"
+                  className="text-white font-semibold text-base block"
+                >
+                  Location
+                </label>
+                <input
+                  id="location-input"
+                  type="text"
+                  placeholder="Search by country or city"
+                  value={formData.location}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, location: e.target.value }))}
+                  className="text-xs text-gray-400 mt-1 bg-transparent border-none outline-none placeholder-gray-400 w-full"
+                />
               </div>
             </div>
           </div>
@@ -110,7 +132,7 @@ export const SearchBar = () => {
 
           {/* Date Field */}
           <div className="flex relative group">
-            <div className="flex items-center rounded-2xl p-4 gap-3">
+            <div className="flex items-center rounded-2xl p-4 gap-3 w-full">
               <IconContainer
                 icon={
                   <Image
@@ -122,9 +144,17 @@ export const SearchBar = () => {
                   />
                 }
               />
-              <div className="flex flex-col">
-                <p className="text-white font-semibold text-base block">Date</p>
-                <p className="text-xs text-gray-400 mt-1">Select a date</p>
+              <div className="flex flex-col flex-1">
+                <label htmlFor="date-input" className="text-white font-semibold text-base block">
+                  Date
+                </label>
+                <input
+                  id="date-input"
+                  type="date"
+                  value={formData.date || ''}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, date: e.target.value }))}
+                  className="text-xs text-gray-400 mt-1 bg-transparent border-none outline-none placeholder-gray-400 w-full"
+                />
               </div>
             </div>
           </div>
@@ -133,7 +163,7 @@ export const SearchBar = () => {
 
           {/* Guests Field */}
           <div className="flex relative group">
-            <div className="flex items-center rounded-2xl p-4 gap-3">
+            <div className="flex items-center rounded-2xl p-4 gap-3 w-full">
               <IconContainer
                 icon={
                   <Image
@@ -145,26 +175,43 @@ export const SearchBar = () => {
                   />
                 }
               />
-              <div className="flex flex-col">
-                <p className="text-white font-semibold text-base block">Guests</p>
-                <p className="text-xs text-gray-400 mt-1">2 Guests (1 Adult - 1 Kid)</p>
+              <div className="flex flex-col flex-1">
+                <label htmlFor="guests-select" className="text-white font-semibold text-base block">
+                  Guests
+                </label>
+                <select
+                  id="guests-select"
+                  value={formData.guests || 2}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, guests: Number.parseInt(e.target.value) }))
+                  }
+                  className="text-xs text-gray-400 mt-1 bg-transparent border-none outline-none w-full"
+                >
+                  {Array.from({ length: 16 }, (_, i) => i + 1).map((num) => (
+                    <option key={num} value={num} className="bg-gray-800 text-white">
+                      {num} Guest{num !== 1 ? 's' : ''}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
           </div>
+
+          <div className="w-px h-16 bg-gray-600/30 self-center" />
+
+          {/* Search Button */}
+          <div className="flex items-center">
+            <button
+              type="submit"
+              disabled={isSubmitting || isLoading}
+              className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white px-8 py-4 rounded-2xl font-semibold transition-colors flex items-center gap-2"
+            >
+              {isSubmitting || isLoading ? 'Searching...' : 'Search'}
+            </button>
+          </div>
         </form>
 
-        {error && (
-          <div
-            id="search-error"
-            className="text-red-400 text-sm mt-4 px-6 py-3 bg-red-500/10 border border-red-500/20 rounded-xl animate-in slide-in-from-top-2 duration-200"
-            role="alert"
-          >
-            <div className="flex items-center">
-              <div className="w-2 h-2 bg-red-400 rounded-full mr-2 animate-pulse" />
-              {error}
-            </div>
-          </div>
-        )}
+        {error && <ErrorDisplay error={error} variant="inline" className="mt-4" />}
       </div>
     </div>
   );
