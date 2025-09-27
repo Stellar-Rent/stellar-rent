@@ -69,11 +69,16 @@ describe('SyncService', () => {
     process.env.SOROBAN_RPC_URL = 'https://test-rpc.stellar.org';
     process.env.SOROBAN_CONTRACT_ID = 'TEST_CONTRACT';
 <<<<<<< HEAD
+<<<<<<< HEAD
     process.env.SOROBAN_NETWORK_PASSPHRASE =
       'Test SDF Network ; September 2015';
 =======
     process.env.SOROBAN_NETWORK_PASSPHRASE = 'Test SDF Network ; September 2015';
 >>>>>>> f4a72f1 (feat: connect smart contracts to backend APIs)
+=======
+    process.env.SOROBAN_NETWORK_PASSPHRASE =
+      'Test SDF Network ; September 2015';
+>>>>>>> dac9586 (fix: biome issues)
     process.env.SYNC_POLL_INTERVAL = '1000';
 
     syncService = new SyncService();
@@ -97,12 +102,18 @@ describe('SyncService', () => {
       process.env.SOROBAN_RPC_URL = undefined;
 
 <<<<<<< HEAD
+<<<<<<< HEAD
       expect(() => new SyncService()).toThrow(
         'Missing required environment variables'
       );
 =======
       expect(() => new SyncService()).toThrow('Missing required environment variables');
 >>>>>>> f4a72f1 (feat: connect smart contracts to backend APIs)
+=======
+      expect(() => new SyncService()).toThrow(
+        'Missing required environment variables'
+      );
+>>>>>>> dac9586 (fix: biome issues)
 
       // Restore for other tests
       process.env.SOROBAN_RPC_URL = 'https://test-rpc.stellar.org';
@@ -115,11 +126,16 @@ describe('SyncService', () => {
 
       // Restore
 <<<<<<< HEAD
+<<<<<<< HEAD
       process.env.SOROBAN_NETWORK_PASSPHRASE =
         'Test SDF Network ; September 2015';
 =======
       process.env.SOROBAN_NETWORK_PASSPHRASE = 'Test SDF Network ; September 2015';
 >>>>>>> f4a72f1 (feat: connect smart contracts to backend APIs)
+=======
+      process.env.SOROBAN_NETWORK_PASSPHRASE =
+        'Test SDF Network ; September 2015';
+>>>>>>> dac9586 (fix: biome issues)
     });
 
     it('should use default polling interval if not set', () => {
