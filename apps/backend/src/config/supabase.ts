@@ -204,13 +204,18 @@ if (!process.env.SUPABASE_URL) {
 // Mock Supabase for tests
 const createMockSupabase = () => {
   // Store mock data with proper typing
+<<<<<<< HEAD
   type MockData = Record<string, Map<string, unknown>>;
+=======
+  type MockData = Record<string, Map<string, unknown> | unknown[]>;
+>>>>>>> f4a72f1 (feat: connect smart contracts to backend APIs)
   const mockData: MockData = {
     wallet_challenges: new Map(),
     wallet_users: new Map(),
     users: new Map(),
     properties: new Map(),
     bookings: new Map(),
+<<<<<<< HEAD
     sync_events: new Map(),
     sync_state: new Map([
       [
@@ -226,6 +231,8 @@ const createMockSupabase = () => {
       ],
     ]),
     sync_logs: new Map(),
+=======
+>>>>>>> f4a72f1 (feat: connect smart contracts to backend APIs)
   };
 
   // Helper function to get mock data for each table
@@ -262,11 +269,15 @@ const createMockSupabase = () => {
 
   const createMockChain = (tableName: string) => {
     type FilterValue = string | number | boolean | null | undefined;
+<<<<<<< HEAD
     const filters: Array<{
       column: string;
       value: FilterValue;
       operator: string;
     }> = [];
+=======
+    const filters: Array<{ column: string; value: FilterValue; operator: string }> = [];
+>>>>>>> f4a72f1 (feat: connect smart contracts to backend APIs)
 
     const chain = {
       _tableName: tableName,
@@ -313,8 +324,12 @@ const createMockSupabase = () => {
         // Handle special filter cases
         if (filters.length > 0) {
           const hasNonExistentChallenge = filters.some(
+<<<<<<< HEAD
             (f) =>
               f.column === 'challenge' && f.value === 'non-existent-challenge'
+=======
+            (f) => f.column === 'challenge' && f.value === 'non-existent-challenge'
+>>>>>>> f4a72f1 (feat: connect smart contracts to backend APIs)
           );
           if (hasNonExistentChallenge) {
             return Promise.resolve({ data: null, error: null });
@@ -322,10 +337,14 @@ const createMockSupabase = () => {
 
           const hasExpiredChallenge = filters.some(
             (f) =>
+<<<<<<< HEAD
               f.column === 'expires_at' &&
               f.operator === 'gt' &&
               f.value &&
               new Date(f.value as string | number | Date) < new Date()
+=======
+              f.column === 'expires_at' && f.operator === 'gt' && new Date(f.value) < new Date()
+>>>>>>> f4a72f1 (feat: connect smart contracts to backend APIs)
           );
           if (hasExpiredChallenge) {
             return Promise.resolve({ data: null, error: null });
@@ -343,8 +362,12 @@ const createMockSupabase = () => {
         // Handle special filter cases
         if (filters.length > 0) {
           const hasNonExistentChallenge = filters.some(
+<<<<<<< HEAD
             (f) =>
               f.column === 'challenge' && f.value === 'non-existent-challenge'
+=======
+            (f) => f.column === 'challenge' && f.value === 'non-existent-challenge'
+>>>>>>> f4a72f1 (feat: connect smart contracts to backend APIs)
           );
           if (hasNonExistentChallenge) {
             return callback({ data: [], error: null });
@@ -352,10 +375,14 @@ const createMockSupabase = () => {
 
           const hasExpiredChallenge = filters.some(
             (f) =>
+<<<<<<< HEAD
               f.column === 'expires_at' &&
               f.operator === 'gt' &&
               f.value &&
               new Date(f.value as string | number | Date) < new Date()
+=======
+              f.column === 'expires_at' && f.operator === 'gt' && new Date(f.value) < new Date()
+>>>>>>> f4a72f1 (feat: connect smart contracts to backend APIs)
           );
           if (hasExpiredChallenge) {
             return callback({ data: [], error: null });
@@ -444,18 +471,26 @@ const createMockSupabase = () => {
       },
       signInWithPassword: () =>
         Promise.resolve({
+<<<<<<< HEAD
           data: {
             user: { id: 'test-user-id', email: 'test@example.com' },
             session: null,
           },
+=======
+          data: { user: { id: 'test-user-id', email: 'test@example.com' }, session: null },
+>>>>>>> f4a72f1 (feat: connect smart contracts to backend APIs)
           error: null,
         }),
       signUp: () =>
         Promise.resolve({
+<<<<<<< HEAD
           data: {
             user: { id: 'test-user-id', email: 'test@example.com' },
             session: null,
           },
+=======
+          data: { user: { id: 'test-user-id', email: 'test@example.com' }, session: null },
+>>>>>>> f4a72f1 (feat: connect smart contracts to backend APIs)
           error: null,
         }),
     },
@@ -468,9 +503,13 @@ export const supabase =
     ? (createMockSupabase() as any)
     : (() => {
         if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+<<<<<<< HEAD
           throw new Error(
             'Missing SUPABASE_SERVICE_ROLE_KEY environment variable'
           );
+=======
+          throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY environment variable');
+>>>>>>> f4a72f1 (feat: connect smart contracts to backend APIs)
         }
 
         return createClient<Database>(

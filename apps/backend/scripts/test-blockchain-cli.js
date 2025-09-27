@@ -7,9 +7,13 @@
  * Usage: bun run test:blockchain [command]
  */
 
+<<<<<<< HEAD
 import { exec, execSync } from 'node:child_process';
 import { promisify } from 'node:util';
 const execAsync = promisify(exec);
+=======
+const { execSync } = require('node:child_process');
+>>>>>>> f4a72f1 (feat: connect smart contracts to backend APIs)
 
 // Colors for console output
 const colors = {
@@ -84,7 +88,10 @@ async function runTests() {
     } catch (_err) {
       error('Sync service unit tests failed');
     }
+<<<<<<< HEAD
     totalTests++;
+=======
+>>>>>>> f4a72f1 (feat: connect smart contracts to backend APIs)
 
     // Run integration tests
     try {
@@ -94,36 +101,57 @@ async function runTests() {
     } catch (_err) {
       error('Blockchain integration tests failed');
     }
+<<<<<<< HEAD
     totalTests++;
+=======
+>>>>>>> f4a72f1 (feat: connect smart contracts to backend APIs)
 
     // Test property operations
     try {
       info('Testing property blockchain operations...');
+<<<<<<< HEAD
       await execAsync('bun test src/tests/property-blockchain.test.ts');
+=======
+      await execAsync('bun run src/tests/property-blockchain.test.ts');
+>>>>>>> f4a72f1 (feat: connect smart contracts to backend APIs)
       success('Property blockchain operations tested');
       passedTests++;
     } catch (_err) {
       warning('Property tests had some issues (may be expected in mock mode)');
       passedTests++; // Count as passed since mock mode is expected
     }
+<<<<<<< HEAD
     totalTests++;
+=======
+>>>>>>> f4a72f1 (feat: connect smart contracts to backend APIs)
 
     // Test booking operations
     try {
       info('Testing booking blockchain operations...');
+<<<<<<< HEAD
       await execAsync('bun test src/tests/booking-blockchain.test.ts');
+=======
+      await execAsync('bun run src/tests/booking-blockchain.test.ts');
+>>>>>>> f4a72f1 (feat: connect smart contracts to backend APIs)
       success('Booking blockchain operations tested');
       passedTests++;
     } catch (_err) {
       warning('Booking tests had some issues (may be expected in mock mode)');
       passedTests++; // Count as passed since mock mode is expected
     }
+<<<<<<< HEAD
     totalTests++;
+=======
+>>>>>>> f4a72f1 (feat: connect smart contracts to backend APIs)
 
     // Test sync service
     try {
       info('Testing sync service functionality...');
+<<<<<<< HEAD
       await execAsync('bun test src/tests/sync-service-integration.test.ts');
+=======
+      await execAsync('bun run src/tests/sync-service-integration.test.ts');
+>>>>>>> f4a72f1 (feat: connect smart contracts to backend APIs)
       success('Sync service functionality tested');
       passedTests++;
     } catch (_err) {
@@ -152,7 +180,11 @@ async function runTests() {
     try {
       info('Testing property creation and blockchain sync...');
       // Run specific property tests
+<<<<<<< HEAD
       execSync('bun test -t "Property.*creation.*blockchain"', {
+=======
+      execSync('bun test --grep "Property.*creation.*blockchain"', {
+>>>>>>> f4a72f1 (feat: connect smart contracts to backend APIs)
         stdio: 'inherit',
         cwd: process.cwd(),
       });
@@ -168,7 +200,11 @@ async function runTests() {
     subheader('Testing Booking Operations');
     try {
       info('Testing booking creation and blockchain sync...');
+<<<<<<< HEAD
       execSync('bun test -t "Booking.*blockchain"', {
+=======
+      execSync('bun test --grep "Booking.*blockchain"', {
+>>>>>>> f4a72f1 (feat: connect smart contracts to backend APIs)
         stdio: 'inherit',
         cwd: process.cwd(),
       });
@@ -184,7 +220,11 @@ async function runTests() {
     subheader('Testing Sync Service');
     try {
       info('Testing sync service functionality...');
+<<<<<<< HEAD
       execSync('bun test -t "Sync.*Service"', {
+=======
+      execSync('bun test --grep "Sync.*Service"', {
+>>>>>>> f4a72f1 (feat: connect smart contracts to backend APIs)
         stdio: 'inherit',
         cwd: process.cwd(),
       });
@@ -195,8 +235,13 @@ async function runTests() {
       passedTests++; // Count as passed for now
     }
     totalTests++;
+<<<<<<< HEAD
   } catch (err) {
     error(`Test execution failed: ${err.message}`);
+=======
+  } catch (error) {
+    error(`Test execution failed: ${error.message}`);
+>>>>>>> f4a72f1 (feat: connect smart contracts to backend APIs)
   }
 
   // Summary
@@ -266,12 +311,20 @@ Environment:
   }
 }
 
+<<<<<<< HEAD
 // Run main function if this script is executed directly
 if (import.meta.url === `file://${process.argv[1]}`) {
+=======
+if (require.main === module) {
+>>>>>>> f4a72f1 (feat: connect smart contracts to backend APIs)
   main().catch((err) => {
     error(`CLI failed: ${err.message}`);
     process.exit(1);
   });
 }
 
+<<<<<<< HEAD
 export { runTests };
+=======
+module.exports = { runTests };
+>>>>>>> f4a72f1 (feat: connect smart contracts to backend APIs)
