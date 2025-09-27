@@ -5,6 +5,7 @@ import type {
   LocationServiceResponse,
   LocationSuggestion,
 } from '../types/location.types';
+import { cacheService } from './cache.service';
 
 export class LocationService {
   private supabase: SupabaseClient;
@@ -24,6 +25,8 @@ export class LocationService {
     limit = 20
   ): Promise<LocationServiceResponse<LocationAutocompleteResponse>> {
     try {
+      console.time('location-suggestions-query');
+
       // Sanitize query for database search
       const sanitizedQuery = this.sanitizeQuery(query);
 
@@ -38,7 +41,24 @@ export class LocationService {
         };
       }
 
-      // Query database for distinct city/country combinations
+      // Check cache first
+      console.time('location-cache-check');
+      const cachedResult = await cacheService.getCachedLocationSuggestions(sanitizedQuery, limit);
+      console.timeEnd('location-cache-check');
+
+      if (cachedResult) {
+        console.timeEnd('location-suggestions-query');
+        return {
+          success: true,
+          data: cachedResult,
+        };
+      }
+
+      // TODO: PERFORMANCE ISSUE - This query scans all properties without proper indexing
+      // TODO: Missing composite index on (status, city, country) for optimal performance
+      // TODO: Consider using full-text search with GIN indexes for better ILIKE performance
+      // TODO: The OR condition with ILIKE is expensive - consider separate queries or FTS
+      console.time('location-db-query');
       const { data, error } = await this.supabase
         .from('properties')
         .select('city, country')
@@ -46,6 +66,7 @@ export class LocationService {
         .eq('status', 'available') // Only include available properties
         .order('city', { ascending: true })
         .limit(limit * 2); // Get more results to account for deduplication
+      console.timeEnd('location-db-query');
 
       if (error) {
         console.error('Database error in location service:', error);
@@ -67,19 +88,31 @@ export class LocationService {
         };
       }
 
-      // Process and deduplicate results
+      // TODO: PERFORMANCE ISSUE - Client-side deduplication is inefficient
+      // TODO: Consider using DISTINCT in SQL query or GROUP BY for better performance
+      console.time('location-processing');
       const suggestions = this.processLocationResults(data, sanitizedQuery, limit);
+      console.timeEnd('location-processing');
 
+      const result = {
+        suggestions,
+        total: suggestions.length,
+        query,
+      };
+
+      // Cache the result
+      console.time('location-cache-set');
+      await cacheService.cacheLocationSuggestions(sanitizedQuery, limit, result, 60);
+      console.timeEnd('location-cache-set');
+
+      console.timeEnd('location-suggestions-query');
       return {
         success: true,
-        data: {
-          suggestions,
-          total: suggestions.length,
-          query,
-        },
+        data: result,
       };
     } catch (error) {
       console.error('Location service error:', error);
+      console.timeEnd('location-suggestions-query');
       return {
         success: false,
         error: 'Internal server error',
@@ -202,6 +235,24 @@ export class LocationService {
     limit = 10
   ): Promise<LocationServiceResponse<LocationAutocompleteResponse>> {
     try {
+      console.time('popular-locations-query');
+
+      // Check cache first
+      console.time('popular-cache-check');
+      const cachedResult = await cacheService.getCachedPopularLocations(limit);
+      console.timeEnd('popular-cache-check');
+
+      if (cachedResult) {
+        console.timeEnd('popular-locations-query');
+        return {
+          success: true,
+          data: cachedResult,
+        };
+      }
+
+      // TODO: PERFORMANCE ISSUE - This query fetches ALL properties then counts client-side
+      // TODO: Use SQL aggregation (COUNT, GROUP BY) instead of client-side counting
+      // TODO: Consider materialized view for popular locations with refresh schedule
       const { data, error } = await this.supabase
         .from('properties')
         .select('city, country')
@@ -228,7 +279,9 @@ export class LocationService {
         };
       }
 
-      // Count frequency of each location
+      // TODO: PERFORMANCE ISSUE - Client-side aggregation is very inefficient
+      // TODO: This should be done in SQL with GROUP BY and COUNT
+      console.time('popular-locations-processing');
       const locationCounts = new Map<
         string,
         { location: { city: string; country: string }; count: number }
@@ -259,22 +312,46 @@ export class LocationService {
             match_type: 'city' as const,
           })
         );
+      console.timeEnd('popular-locations-processing');
+
+      const result = {
+        suggestions,
+        total: suggestions.length,
+        query: '',
+      };
+
+      // Cache the result
+      console.time('popular-cache-set');
+      await cacheService.cachePopularLocations(limit, result, 300); // 5 minutes TTL
+      console.timeEnd('popular-cache-set');
+
+      console.timeEnd('popular-locations-query');
 
       return {
         success: true,
-        data: {
-          suggestions,
-          total: suggestions.length,
-          query: '',
-        },
+        data: result,
       };
     } catch (error) {
       console.error('Popular locations service error:', error);
+      console.timeEnd('popular-locations-query');
       return {
         success: false,
         error: 'Internal server error',
         details: error,
       };
+    }
+  }
+
+  /**
+   * Invalidate location caches when properties are updated
+   * Call this method when properties are created, updated, or deleted
+   */
+  async invalidateLocationCaches(): Promise<void> {
+    try {
+      await cacheService.invalidateLocationCaches();
+      console.log('Location caches invalidated successfully');
+    } catch (error) {
+      console.error('Failed to invalidate location caches:', error);
     }
   }
 }

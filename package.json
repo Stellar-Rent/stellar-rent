@@ -29,7 +29,7 @@
     "standard-version": "^9.5.0"
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx}": ["biome check --apply", "biome format --write"]
+    "*.{js,jsx,ts,tsx}": ["biome check --write", "biome format --write"]
   },
   "dependencies": {
     "@stellar/stellar-sdk": "^13.3.0",
