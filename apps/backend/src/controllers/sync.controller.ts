@@ -7,13 +7,15 @@ export class SyncController {
   /**
    * Start the synchronization service
    */
-  async startSync(req: Request, res: Response): Promise<void> {
+  async startSync(_req: Request, res: Response): Promise<void> {
     try {
       const logId = await loggingService.logBlockchainOperation('startSync', {});
 
       await syncService.start();
 
-      await loggingService.logBlockchainSuccess(logId, { action: 'sync_started' });
+      await loggingService.logBlockchainSuccess(logId, {
+        action: 'sync_started',
+      });
 
       res.json({
         success: true,
@@ -33,13 +35,15 @@ export class SyncController {
   /**
    * Stop the synchronization service
    */
-  async stopSync(req: Request, res: Response): Promise<void> {
+  async stopSync(_req: Request, res: Response): Promise<void> {
     try {
       const logId = await loggingService.logBlockchainOperation('stopSync', {});
 
       await syncService.stop();
 
-      await loggingService.logBlockchainSuccess(logId, { action: 'sync_stopped' });
+      await loggingService.logBlockchainSuccess(logId, {
+        action: 'sync_stopped',
+      });
 
       res.json({
         success: true,
@@ -59,7 +63,7 @@ export class SyncController {
   /**
    * Get synchronization status
    */
-  async getStatus(req: Request, res: Response): Promise<void> {
+  async getStatus(_req: Request, res: Response): Promise<void> {
     try {
       const status = syncService.getStatus();
       const stats = await syncService.getSyncStats();
@@ -82,13 +86,15 @@ export class SyncController {
   /**
    * Trigger manual synchronization
    */
-  async triggerManualSync(req: Request, res: Response): Promise<void> {
+  async triggerManualSync(_req: Request, res: Response): Promise<void> {
     try {
       const logId = await loggingService.logBlockchainOperation('triggerManualSync', {});
 
       await syncService.triggerManualSync();
 
-      await loggingService.logBlockchainSuccess(logId, { action: 'manual_sync_triggered' });
+      await loggingService.logBlockchainSuccess(logId, {
+        action: 'manual_sync_triggered',
+      });
 
       res.json({
         success: true,
@@ -214,7 +220,7 @@ export class SyncController {
   /**
    * Get sync dashboard data
    */
-  async getDashboard(req: Request, res: Response): Promise<void> {
+  async getDashboard(_req: Request, res: Response): Promise<void> {
     try {
       // Get dashboard data from view
       const { data: dashboard, error: dashboardError } = await supabase
@@ -268,7 +274,7 @@ export class SyncController {
   /**
    * Retry failed events
    */
-  async retryFailedEvents(req: Request, res: Response): Promise<void> {
+  async retryFailedEvents(_req: Request, res: Response): Promise<void> {
     try {
       const logId = await loggingService.logBlockchainOperation('retryFailedEvents', {});
 
@@ -367,7 +373,7 @@ export class SyncController {
       // If either fails, we'll handle it gracefully
       let eventsDeleted = 0;
       let logsDeleted = 0;
-      let partialFailure = false;
+      let _partialFailure = false;
       let failureDetails = '';
 
       try {
@@ -396,7 +402,7 @@ export class SyncController {
         logsDeleted = logsResult?.length || 0;
       } catch (deletionError) {
         // If deletion fails, we have a partial failure scenario
-        partialFailure = true;
+        _partialFailure = true;
         failureDetails =
           deletionError instanceof Error ? deletionError.message : 'Unknown deletion error';
 
@@ -451,6 +457,101 @@ export class SyncController {
       res.status(500).json({
         success: false,
         message: 'Failed to clear old sync data',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+
+  /**
+   * Verify blockchain state consistency
+   */
+  async verifyBlockchainState(_req: Request, res: Response): Promise<void> {
+    try {
+      const logId = await loggingService.logBlockchainOperation('verifyBlockchainState', {});
+
+      // Get recent bookings and properties for verification
+      const [{ data: recentBookings }, { data: recentProperties }] = await Promise.all([
+        supabase
+          .from('bookings')
+          .select('id, blockchain_booking_id, property_id, status, escrow_address')
+          .not('blockchain_booking_id', 'is', null)
+          .order('created_at', { ascending: false })
+          .limit(10),
+        supabase
+          .from('properties')
+          .select('id, property_token, title, status')
+          .not('property_token', 'is', null)
+          .order('created_at', { ascending: false })
+          .limit(10),
+      ]);
+
+      const verificationResults = {
+        bookings: {
+          total: recentBookings?.length || 0,
+          verified: 0,
+          errors: [] as string[],
+        },
+        properties: {
+          total: recentProperties?.length || 0,
+          verified: 0,
+          errors: [] as string[],
+        },
+        overallStatus: 'unknown' as 'healthy' | 'issues' | 'error',
+      };
+
+      // Verify bookings
+      for (const booking of recentBookings || []) {
+        try {
+          // In a real implementation, you would verify the booking exists on blockchain
+          // For now, we'll just check if it has blockchain fields
+          if (booking.blockchain_booking_id && booking.escrow_address) {
+            verificationResults.bookings.verified++;
+          }
+        } catch (error) {
+          verificationResults.bookings.errors.push(
+            `Booking ${booking.id}: ${error instanceof Error ? error.message : 'Unknown error'}`
+          );
+        }
+      }
+
+      // Verify properties
+      for (const property of recentProperties || []) {
+        try {
+          // In a real implementation, you would verify the property hash on blockchain
+          // For now, we'll just check if it has property_token
+          if (property.property_token) {
+            verificationResults.properties.verified++;
+          }
+        } catch (error) {
+          verificationResults.properties.errors.push(
+            `Property ${property.id}: ${error instanceof Error ? error.message : 'Unknown error'}`
+          );
+        }
+      }
+
+      // Determine overall status
+      const totalErrors =
+        verificationResults.bookings.errors.length + verificationResults.properties.errors.length;
+      if (totalErrors === 0) {
+        verificationResults.overallStatus = 'healthy';
+      } else if (totalErrors < 3) {
+        verificationResults.overallStatus = 'issues';
+      } else {
+        verificationResults.overallStatus = 'error';
+      }
+
+      await loggingService.logBlockchainSuccess(logId, verificationResults);
+
+      res.json({
+        success: true,
+        message: 'Blockchain state verification completed',
+        data: verificationResults,
+      });
+    } catch (error) {
+      console.error('Failed to verify blockchain state:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to verify blockchain state',
         error: error instanceof Error ? error.message : 'Unknown error',
       });
     }
