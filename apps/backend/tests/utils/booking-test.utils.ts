@@ -1,4 +1,8 @@
-import type { TestBooking, TestProperty, TestUser } from '../fixtures/booking.fixtures';
+import type {
+  TestBooking,
+  TestProperty,
+  TestUser,
+} from '../fixtures/booking.fixtures';
 import {
   generateExpiredJWT,
   generateInvalidJWT,
@@ -71,7 +75,11 @@ export class BookingTestUtils {
   }
 
   async setupTestEnvironment(options: TestSetupOptions = {}): Promise<void> {
-    const { mockBlockchain = true, setupDatabase = true, cleanupAfterEach = true } = options;
+    const {
+      mockBlockchain = true,
+      setupDatabase = true,
+      cleanupAfterEach = true,
+    } = options;
 
     if (mockBlockchain) {
       this.setupBlockchainMocks();
@@ -110,7 +118,9 @@ export class BookingTestUtils {
   private async setupTestDatabase(): Promise<void> {
     // Insert test properties
     for (const property of this.testData.properties) {
-      const { error } = await supabase.from('properties').upsert(property, { onConflict: 'id' });
+      const { error } = await supabase
+        .from('properties')
+        .upsert(property, { onConflict: 'id' });
 
       if (error) {
         throw new Error(`Failed to insert test property: ${error.message}`);
@@ -119,7 +129,9 @@ export class BookingTestUtils {
 
     // Insert test users
     for (const user of this.testData.users) {
-      const { error } = await supabase.from('users').upsert(user, { onConflict: 'id' });
+      const { error } = await supabase
+        .from('users')
+        .upsert(user, { onConflict: 'id' });
 
       if (error) {
         throw new Error(`Failed to insert test user: ${error.message}`);
@@ -128,7 +140,9 @@ export class BookingTestUtils {
 
     // Insert test bookings
     for (const booking of this.testData.bookings) {
-      const { error } = await supabase.from('bookings').upsert(booking, { onConflict: 'id' });
+      const { error } = await supabase
+        .from('bookings')
+        .upsert(booking, { onConflict: 'id' });
 
       if (error) {
         throw new Error(`Failed to insert test booking: ${error.message}`);
@@ -197,12 +211,18 @@ export class BookingTestUtils {
     return generateInvalidJWT();
   }
 
-  async simulateConcurrentRequests<T>(requestFn: () => Promise<T>, count = 2): Promise<T[]> {
+  async simulateConcurrentRequests<T>(
+    requestFn: () => Promise<T>,
+    count = 2
+  ): Promise<T[]> {
     const requests = Array.from({ length: count }, () => requestFn());
     return Promise.all(requests);
   }
 
-  async simulateRaceCondition<T>(requestFn: () => Promise<T>, delayMs = 100): Promise<T[]> {
+  async simulateRaceCondition<T>(
+    requestFn: () => Promise<T>,
+    delayMs = 100
+  ): Promise<T[]> {
     const delayedRequest = async (): Promise<T> => {
       await new Promise((resolve) => setTimeout(resolve, delayMs));
       return requestFn();
@@ -219,7 +239,11 @@ export class BookingTestUtils {
     const startTime = Date.now();
 
     while (Date.now() - startTime < timeoutMs) {
-      const { data, error } = await supabase.from(table).select('*').match(condition).single();
+      const { data, error } = await supabase
+        .from(table)
+        .select('*')
+        .match(condition)
+        .single();
 
       if (data && !error) {
         return true;
@@ -243,7 +267,10 @@ export class BookingTestUtils {
     );
   }
 
-  async verifyEscrowAddress(bookingId: string, expectedEscrowAddress: string): Promise<boolean> {
+  async verifyEscrowAddress(
+    bookingId: string,
+    expectedEscrowAddress: string
+  ): Promise<boolean> {
     const { data, error } = await supabase
       .from('bookings')
       .select('escrow_address')
@@ -271,7 +298,9 @@ export class BookingTestUtils {
     return data;
   }
 
-  async createTestBooking(bookingData: Partial<TestBooking>): Promise<TestBooking> {
+  async createTestBooking(
+    bookingData: Partial<TestBooking>
+  ): Promise<TestBooking> {
     const defaultBooking: TestBooking = {
       id: `test-booking-${Date.now()}`,
       property_id: '550e8400-e29b-41d4-a716-446655440001',
@@ -284,14 +313,19 @@ export class BookingTestUtils {
       total: 1000.0,
       deposit: 200.0,
       status: 'pending',
-      escrow_address: 'GABC123456789012345678901234567890123456789012345678901234567890',
+      escrow_address:
+        'GABC123456789012345678901234567890123456789012345678901234567890',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
 
     const booking = { ...defaultBooking, ...bookingData };
 
-    const { data, error } = await supabase.from('bookings').insert(booking).select().single();
+    const { data, error } = await supabase
+      .from('bookings')
+      .insert(booking)
+      .select()
+      .single();
 
     if (error) {
       throw new Error(`Failed to create test booking: ${error.message}`);
@@ -302,16 +336,23 @@ export class BookingTestUtils {
   }
 
   async deleteTestBooking(bookingId: string): Promise<void> {
-    const { error } = await supabase.from('bookings').delete().eq('id', bookingId);
+    const { error } = await supabase
+      .from('bookings')
+      .delete()
+      .eq('id', bookingId);
 
     if (error) {
       console.error('Failed to delete test booking:', error);
     }
 
-    this.testData.bookings = this.testData.bookings.filter((b) => b.id !== bookingId);
+    this.testData.bookings = this.testData.bookings.filter(
+      (b) => b.id !== bookingId
+    );
   }
 
-  setupMockBlockchainFailure(failureType: 'availability' | 'escrow' | 'network'): void {
+  setupMockBlockchainFailure(
+    failureType: 'availability' | 'escrow' | 'network'
+  ): void {
     const mockServices = createMockBlockchainServices({
       networkDelay: 100,
       failureRate: 1.0, // Always fail
