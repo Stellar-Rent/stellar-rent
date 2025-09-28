@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 interface Property {
-  id: string;
+  id: number;
   title: string;
   address: string;
   image: string;
