@@ -1,0 +1,15 @@
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+soroban-sdk = "21.0.0"
+
+[dev-dependencies]
+soroban-sdk = { version = "21.0.0", features = ["testutils"] }
+
+[features]
+testutils = ["soroban-sdk/testutils"]
+
+[[bin]]
+name = "stellar-rent-contract"
+path = "src/lib.rs"
