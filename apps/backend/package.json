@@ -28,7 +28,6 @@
     "node-fetch": "^3.3.2",
     "redis": "^4.6.12",
     "soroban-client": "^1.0.1",
-    "stellar-cli": "^1.0.3",
     "stellar-sdk": "^13.3.0",
     "supertest": "^7.1.2",
     "uuid": "^11.1.0",
