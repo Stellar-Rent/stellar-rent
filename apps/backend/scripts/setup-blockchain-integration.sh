@@ -304,9 +304,9 @@ ${YELLOW}Important Files:${NC}
 - Database: temp_blockchain_migration.sql
 
 ${YELLOW}API Endpoints:${NC}
-- Property verification: GET /api/properties/:id/verify
+- Property verification: GET /api/sync/verify-property/:id
 - Sync management: /api/sync/* (admin only)
-- Blockchain state verification: GET /api/sync/verify
+- Booking verification: GET /api/sync/verify-booking/:id
 
 For detailed documentation, see: BLOCKCHAIN_INTEGRATION.md
 EOF
