@@ -14,7 +14,9 @@
       "./apps/*/build",
       "node_modules",
       "*.lock",
-      "coverage"
+      "coverage",
+      "apps/backend/src/config/supabase.ts",
+      "apps/backend/tests/**/*.ts"
     ]
   },
   "formatter": {

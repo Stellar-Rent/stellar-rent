@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS public.sync_state (
 CREATE TABLE IF NOT EXISTS public.sync_events (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     event_id TEXT NOT NULL UNIQUE,
-    event_type TEXT NOT NULL CHECK (event_type IN ('booking_created', 'booking_updated', 'booking_cancelled', 'payment_confirmed')),
+    event_type TEXT NOT NULL CHECK (event_type IN ('booking_created', 'booking_updated', 'booking_cancelled', 'payment_confirmed', 'property_created', 'property_updated', 'escrow_created', 'escrow_released')),
     booking_id TEXT,
     property_id TEXT,
     user_id TEXT,
@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS public.sync_events (
     created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
     processed_at TIMESTAMPTZ,
     
-    CONSTRAINT valid_event_type CHECK (event_type IN ('booking_created', 'booking_updated', 'booking_cancelled', 'payment_confirmed'))
+    CONSTRAINT valid_event_type CHECK (event_type IN ('booking_created', 'booking_updated', 'booking_cancelled', 'payment_confirmed', 'property_created', 'property_updated', 'escrow_created', 'escrow_released'))
 );
 
 -- Create sync_logs table for detailed logging

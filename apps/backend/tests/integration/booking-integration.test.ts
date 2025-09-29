@@ -1,7 +1,7 @@
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'bun:test';
 import express from 'express';
 import request from 'supertest';
 import type { Response } from 'supertest';
-import { describe, it, expect, beforeEach, afterEach, beforeAll } from 'bun:test';
 import {
   createConflictBookingInput,
   createInvalidBookingInput,
@@ -22,33 +22,35 @@ mock.module('../../src/config/supabase', () => ({
       select: mock(() => ({
         eq: mock(() => ({
           single: mock(() => Promise.resolve({ data: null, error: null })),
-          then: mock((callback: any) => callback({ data: [], error: null }))
+          then: mock((callback: any) => callback({ data: [], error: null })),
         })),
-        then: mock((callback: any) => callback({ data: [], error: null }))
+        then: mock((callback: any) => callback({ data: [], error: null })),
       })),
       insert: mock(() => ({
         select: mock(() => Promise.resolve({ data: [], error: null })),
-        then: mock((callback: any) => callback({ data: [], error: null }))
+        then: mock((callback: any) => callback({ data: [], error: null })),
       })),
       update: mock(() => ({
         eq: mock(() => Promise.resolve({ data: [], error: null })),
-        then: mock((callback: any) => callback({ data: [], error: null }))
+        then: mock((callback: any) => callback({ data: [], error: null })),
       })),
       delete: mock(() => ({
         eq: mock(() => Promise.resolve({ data: [], error: null })),
-        then: mock((callback: any) => callback({ data: [], error: null }))
+        then: mock((callback: any) => callback({ data: [], error: null })),
       })),
       upsert: mock(() => ({
         eq: mock(() => Promise.resolve({ data: [], error: null })),
-        then: mock((callback: any) => callback({ data: [], error: null }))
+        then: mock((callback: any) => callback({ data: [], error: null })),
       })),
-      then: mock((callback: any) => callback({ data: [], error: null }))
+      then: mock((callback: any) => callback({ data: [], error: null })),
     })),
     auth: {
-      getUser: mock(() => Promise.resolve({
-        data: { user: { id: 'test-user-id', email: 'test@example.com' } },
-        error: null,
-      })),
+      getUser: mock(() =>
+        Promise.resolve({
+          data: { user: { id: 'test-user-id', email: 'test@example.com' } },
+          error: null,
+        })
+      ),
     },
   },
 }));
@@ -348,8 +350,10 @@ describe('Booking Integration Tests', () => {
       supabase.from.mockReturnValue({
         insert: mock(() => ({
           select: mock(() => ({
-            single: mock(() => Promise.resolve({ data: null, error: { message: 'Database error' } }))
-          }))
+            single: mock(() =>
+              Promise.resolve({ data: null, error: { message: 'Database error' } })
+            ),
+          })),
         })),
       });
 

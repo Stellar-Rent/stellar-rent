@@ -128,7 +128,7 @@ function runTests() {
     'bathrooms',
     'max_guests',
   ];
-  const hasAllFields = expectedFields.every((field) => convertedData.hasOwnProperty(field));
+  const hasAllFields = expectedFields.every((field) => Object.hasOwn(convertedData, field));
   console.log(`✅ Property conversion: ${hasAllFields ? 'PASS' : 'FAIL'}`);
   console.log(`   Converted fields: ${Object.keys(convertedData).join(', ')}\n`);
 

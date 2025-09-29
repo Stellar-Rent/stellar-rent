@@ -17,7 +17,6 @@
     "declarationMap": false,
     "sourceMap": false,
     "outDir": "./dist",
-    "rootDir": "./src",
     "removeComments": true,
     "noImplicitAny": false,
     "strictNullChecks": true,
