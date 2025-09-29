@@ -248,8 +248,11 @@ verify_setup() {
     
     # Test basic functionality
     log_info "Testing basic blockchain functions..."
-    if node -e "
-        const { generatePropertyHash } = require('./src/blockchain/propertyListingContract');
+       if node -e "
+        let mod;
+        try { mod = require('./dist/blockchain/propertyListingContract.js'); }
+        catch { mod = require('./src/blockchain/propertyListingContract'); }
+        const { generatePropertyHash } = mod;
         const testData = { title: 'Test', price: 100, address: 'Test', city: 'Test', country: 'Test', amenities: [], bedrooms: 1, bathrooms: 1, max_guests: 2 };
         const hash = generatePropertyHash(testData);
         console.log('Hash generated successfully:', hash);
