@@ -293,7 +293,6 @@ export async function createProperty(
           owner_address: ownerProfile.stellar_address,
         },
       });
-
       await cacheService.invalidateSearchCaches();
 
       return {
@@ -313,6 +312,7 @@ export async function createProperty(
           property_id: property.id,
         },
       });
+
 
       await cacheService.invalidateSearchCaches();
 
