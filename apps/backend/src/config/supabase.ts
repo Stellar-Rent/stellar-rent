@@ -204,13 +204,16 @@ if (!process.env.SUPABASE_URL) {
 // Mock Supabase for tests
 const createMockSupabase = () => {
   // Store mock data with proper typing
-  type MockData = Record<string, Map<string, unknown> | unknown[]>;
+  type MockData = Record<string, Map<string, unknown>>;
   const mockData: MockData = {
     wallet_challenges: new Map(),
     wallet_users: new Map(),
     users: new Map(),
     properties: new Map(),
     bookings: new Map(),
+    sync_events: new Map(),
+    sync_state: new Map([['1', { id: 1, last_processed_block: 0, total_events_processed: 0, failed_events: 0, last_sync_time: null, updated_at: new Date().toISOString() }]]),
+    sync_logs: new Map(),
   };
 
   // Helper function to get mock data for each table
@@ -309,7 +312,8 @@ const createMockSupabase = () => {
             (f) =>
               f.column === 'expires_at' &&
               f.operator === 'gt' &&
-              new Date(f.value) < new Date()
+              f.value &&
+              new Date(f.value as string | number | Date) < new Date()
           );
           if (hasExpiredChallenge) {
             return Promise.resolve({ data: null, error: null });
@@ -338,7 +342,8 @@ const createMockSupabase = () => {
             (f) =>
               f.column === 'expires_at' &&
               f.operator === 'gt' &&
-              new Date(f.value) < new Date()
+              f.value &&
+              new Date(f.value as string | number | Date) < new Date()
           );
           if (hasExpiredChallenge) {
             return callback({ data: [], error: null });
