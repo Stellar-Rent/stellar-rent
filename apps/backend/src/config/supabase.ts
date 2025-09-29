@@ -204,35 +204,16 @@ if (!process.env.SUPABASE_URL) {
 // Mock Supabase for tests
 const createMockSupabase = () => {
   // Store mock data with proper typing
-<<<<<<< HEAD
   type MockData = Record<string, Map<string, unknown>>;
-=======
-  type MockData = Record<string, Map<string, unknown> | unknown[]>;
->>>>>>> f4a72f1 (feat: connect smart contracts to backend APIs)
   const mockData: MockData = {
     wallet_challenges: new Map(),
     wallet_users: new Map(),
     users: new Map(),
     properties: new Map(),
     bookings: new Map(),
-<<<<<<< HEAD
     sync_events: new Map(),
-    sync_state: new Map([
-      [
-        '1',
-        {
-          id: 1,
-          last_processed_block: 0,
-          total_events_processed: 0,
-          failed_events: 0,
-          last_sync_time: null,
-          updated_at: new Date().toISOString(),
-        },
-      ],
-    ]),
+    sync_state: new Map([['1', { id: 1, last_processed_block: 0, total_events_processed: 0, failed_events: 0, last_sync_time: null, updated_at: new Date().toISOString() }]]),
     sync_logs: new Map(),
-=======
->>>>>>> f4a72f1 (feat: connect smart contracts to backend APIs)
   };
 
   // Helper function to get mock data for each table
@@ -269,21 +250,11 @@ const createMockSupabase = () => {
 
   const createMockChain = (tableName: string) => {
     type FilterValue = string | number | boolean | null | undefined;
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> dac9586 (fix: biome issues)
     const filters: Array<{
       column: string;
       value: FilterValue;
       operator: string;
     }> = [];
-<<<<<<< HEAD
-=======
-    const filters: Array<{ column: string; value: FilterValue; operator: string }> = [];
->>>>>>> f4a72f1 (feat: connect smart contracts to backend APIs)
-=======
->>>>>>> dac9586 (fix: biome issues)
 
     const chain = {
       _tableName: tableName,
@@ -330,17 +301,8 @@ const createMockSupabase = () => {
         // Handle special filter cases
         if (filters.length > 0) {
           const hasNonExistentChallenge = filters.some(
-<<<<<<< HEAD
-<<<<<<< HEAD
             (f) =>
               f.column === 'challenge' && f.value === 'non-existent-challenge'
-=======
-            (f) => f.column === 'challenge' && f.value === 'non-existent-challenge'
->>>>>>> f4a72f1 (feat: connect smart contracts to backend APIs)
-=======
-            (f) =>
-              f.column === 'challenge' && f.value === 'non-existent-challenge'
->>>>>>> dac9586 (fix: biome issues)
           );
           if (hasNonExistentChallenge) {
             return Promise.resolve({ data: null, error: null });
@@ -348,20 +310,10 @@ const createMockSupabase = () => {
 
           const hasExpiredChallenge = filters.some(
             (f) =>
-<<<<<<< HEAD
-<<<<<<< HEAD
               f.column === 'expires_at' &&
               f.operator === 'gt' &&
               f.value &&
               new Date(f.value as string | number | Date) < new Date()
-=======
-              f.column === 'expires_at' && f.operator === 'gt' && new Date(f.value) < new Date()
->>>>>>> f4a72f1 (feat: connect smart contracts to backend APIs)
-=======
-              f.column === 'expires_at' &&
-              f.operator === 'gt' &&
-              new Date(f.value) < new Date()
->>>>>>> dac9586 (fix: biome issues)
           );
           if (hasExpiredChallenge) {
             return Promise.resolve({ data: null, error: null });
@@ -379,17 +331,8 @@ const createMockSupabase = () => {
         // Handle special filter cases
         if (filters.length > 0) {
           const hasNonExistentChallenge = filters.some(
-<<<<<<< HEAD
-<<<<<<< HEAD
             (f) =>
               f.column === 'challenge' && f.value === 'non-existent-challenge'
-=======
-            (f) => f.column === 'challenge' && f.value === 'non-existent-challenge'
->>>>>>> f4a72f1 (feat: connect smart contracts to backend APIs)
-=======
-            (f) =>
-              f.column === 'challenge' && f.value === 'non-existent-challenge'
->>>>>>> dac9586 (fix: biome issues)
           );
           if (hasNonExistentChallenge) {
             return callback({ data: [], error: null });
@@ -397,20 +340,10 @@ const createMockSupabase = () => {
 
           const hasExpiredChallenge = filters.some(
             (f) =>
-<<<<<<< HEAD
-<<<<<<< HEAD
               f.column === 'expires_at' &&
               f.operator === 'gt' &&
               f.value &&
               new Date(f.value as string | number | Date) < new Date()
-=======
-              f.column === 'expires_at' && f.operator === 'gt' && new Date(f.value) < new Date()
->>>>>>> f4a72f1 (feat: connect smart contracts to backend APIs)
-=======
-              f.column === 'expires_at' &&
-              f.operator === 'gt' &&
-              new Date(f.value) < new Date()
->>>>>>> dac9586 (fix: biome issues)
           );
           if (hasExpiredChallenge) {
             return callback({ data: [], error: null });
@@ -499,38 +432,18 @@ const createMockSupabase = () => {
       },
       signInWithPassword: () =>
         Promise.resolve({
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> dac9586 (fix: biome issues)
           data: {
             user: { id: 'test-user-id', email: 'test@example.com' },
             session: null,
           },
-<<<<<<< HEAD
-=======
-          data: { user: { id: 'test-user-id', email: 'test@example.com' }, session: null },
->>>>>>> f4a72f1 (feat: connect smart contracts to backend APIs)
-=======
->>>>>>> dac9586 (fix: biome issues)
           error: null,
         }),
       signUp: () =>
         Promise.resolve({
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> dac9586 (fix: biome issues)
           data: {
             user: { id: 'test-user-id', email: 'test@example.com' },
             session: null,
           },
-<<<<<<< HEAD
-=======
-          data: { user: { id: 'test-user-id', email: 'test@example.com' }, session: null },
->>>>>>> f4a72f1 (feat: connect smart contracts to backend APIs)
-=======
->>>>>>> dac9586 (fix: biome issues)
           error: null,
         }),
     },
@@ -543,19 +456,9 @@ export const supabase =
     ? (createMockSupabase() as any)
     : (() => {
         if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-<<<<<<< HEAD
-<<<<<<< HEAD
           throw new Error(
             'Missing SUPABASE_SERVICE_ROLE_KEY environment variable'
           );
-=======
-          throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY environment variable');
->>>>>>> f4a72f1 (feat: connect smart contracts to backend APIs)
-=======
-          throw new Error(
-            'Missing SUPABASE_SERVICE_ROLE_KEY environment variable'
-          );
->>>>>>> dac9586 (fix: biome issues)
         }
 
         return createClient<Database>(

@@ -248,16 +248,11 @@ verify_setup() {
     
     # Test basic functionality
     log_info "Testing basic blockchain functions..."
-<<<<<<< HEAD
        if node -e "
         let mod;
         try { mod = require('./dist/blockchain/propertyListingContract.js'); }
         catch { mod = require('./src/blockchain/propertyListingContract'); }
         const { generatePropertyHash } = mod;
-=======
-    if node -e "
-        const { generatePropertyHash } = require('./src/blockchain/propertyListingContract');
->>>>>>> f4a72f1 (feat: connect smart contracts to backend APIs)
         const testData = { title: 'Test', price: 100, address: 'Test', city: 'Test', country: 'Test', amenities: [], bedrooms: 1, bathrooms: 1, max_guests: 2 };
         const hash = generatePropertyHash(testData);
         console.log('Hash generated successfully:', hash);
@@ -309,15 +304,9 @@ ${YELLOW}Important Files:${NC}
 - Database: temp_blockchain_migration.sql
 
 ${YELLOW}API Endpoints:${NC}
-<<<<<<< HEAD
-- Property verification: GET /api/sync/verify-property/:id
-- Sync management: /api/sync/* (admin only)
-- Booking verification: GET /api/sync/verify-booking/:id
-=======
 - Property verification: GET /api/properties/:id/verify
 - Sync management: /api/sync/* (admin only)
 - Blockchain state verification: GET /api/sync/verify
->>>>>>> f4a72f1 (feat: connect smart contracts to backend APIs)
 
 For detailed documentation, see: BLOCKCHAIN_INTEGRATION.md
 EOF
