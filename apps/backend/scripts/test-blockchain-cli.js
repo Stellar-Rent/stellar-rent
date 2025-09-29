@@ -7,7 +7,9 @@
  * Usage: bun run test:blockchain [command]
  */
 
-const { execSync } = require('node:child_process');
+import { exec, execSync } from 'node:child_process';
+import { promisify } from 'node:util';
+const execAsync = promisify(exec);
 
 // Colors for console output
 const colors = {
@@ -82,6 +84,7 @@ async function runTests() {
     } catch (_err) {
       error('Sync service unit tests failed');
     }
+    totalTests++;
 
     // Run integration tests
     try {
@@ -91,33 +94,36 @@ async function runTests() {
     } catch (_err) {
       error('Blockchain integration tests failed');
     }
+    totalTests++;
 
     // Test property operations
     try {
       info('Testing property blockchain operations...');
-      await execAsync('bun run src/tests/property-blockchain.test.ts');
+      await execAsync('bun test src/tests/property-blockchain.test.ts');
       success('Property blockchain operations tested');
       passedTests++;
     } catch (_err) {
       warning('Property tests had some issues (may be expected in mock mode)');
       passedTests++; // Count as passed since mock mode is expected
     }
+    totalTests++;
 
     // Test booking operations
     try {
       info('Testing booking blockchain operations...');
-      await execAsync('bun run src/tests/booking-blockchain.test.ts');
+      await execAsync('bun test src/tests/booking-blockchain.test.ts');
       success('Booking blockchain operations tested');
       passedTests++;
     } catch (_err) {
       warning('Booking tests had some issues (may be expected in mock mode)');
       passedTests++; // Count as passed since mock mode is expected
     }
+    totalTests++;
 
     // Test sync service
     try {
       info('Testing sync service functionality...');
-      await execAsync('bun run src/tests/sync-service-integration.test.ts');
+      await execAsync('bun test src/tests/sync-service-integration.test.ts');
       success('Sync service functionality tested');
       passedTests++;
     } catch (_err) {
@@ -146,7 +152,7 @@ async function runTests() {
     try {
       info('Testing property creation and blockchain sync...');
       // Run specific property tests
-      execSync('bun test --grep "Property.*creation.*blockchain"', {
+      execSync('bun test -t "Property.*creation.*blockchain"', {
         stdio: 'inherit',
         cwd: process.cwd(),
       });
@@ -162,7 +168,7 @@ async function runTests() {
     subheader('Testing Booking Operations');
     try {
       info('Testing booking creation and blockchain sync...');
-      execSync('bun test --grep "Booking.*blockchain"', {
+      execSync('bun test -t "Booking.*blockchain"', {
         stdio: 'inherit',
         cwd: process.cwd(),
       });
@@ -178,7 +184,7 @@ async function runTests() {
     subheader('Testing Sync Service');
     try {
       info('Testing sync service functionality...');
-      execSync('bun test --grep "Sync.*Service"', {
+      execSync('bun test -t "Sync.*Service"', {
         stdio: 'inherit',
         cwd: process.cwd(),
       });
@@ -189,8 +195,8 @@ async function runTests() {
       passedTests++; // Count as passed for now
     }
     totalTests++;
-  } catch (error) {
-    error(`Test execution failed: ${error.message}`);
+  } catch (err) {
+    error(`Test execution failed: ${err.message}`);
   }
 
   // Summary
@@ -260,11 +266,12 @@ Environment:
   }
 }
 
-if (require.main === module) {
+// Run main function if this script is executed directly
+if (import.meta.url === `file://${process.argv[1]}`) {
   main().catch((err) => {
     error(`CLI failed: ${err.message}`);
     process.exit(1);
   });
 }
 
-module.exports = { runTests };
+export { runTests };
