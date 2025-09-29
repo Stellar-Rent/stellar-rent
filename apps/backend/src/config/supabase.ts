@@ -212,7 +212,19 @@ const createMockSupabase = () => {
     properties: new Map(),
     bookings: new Map(),
     sync_events: new Map(),
-    sync_state: new Map([['1', { id: 1, last_processed_block: 0, total_events_processed: 0, failed_events: 0, last_sync_time: null, updated_at: new Date().toISOString() }]]),
+    sync_state: new Map([
+      [
+        '1',
+        {
+          id: 1,
+          last_processed_block: 0,
+          total_events_processed: 0,
+          failed_events: 0,
+          last_sync_time: null,
+          updated_at: new Date().toISOString(),
+        },
+      ],
+    ]),
     sync_logs: new Map(),
   };
 
