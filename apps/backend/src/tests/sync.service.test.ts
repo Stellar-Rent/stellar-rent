@@ -1,31 +1,30 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
-import { supabase } from '../config/supabase';
-import { syncService } from '../services/sync.service';
-import { SyncService } from '../services/sync.service';
+import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test';
 
 // Mock Supabase
-jest.mock('../config/supabase', () => ({
-  supabase: {
-    from: jest.fn(() => ({
-      select: jest.fn(() => ({
-        single: jest.fn(() => Promise.resolve({ data: null, error: null })),
-        eq: jest.fn(() => ({
-          single: jest.fn(() => Promise.resolve({ data: null, error: null })),
-        })),
+const mockSupabase = {
+  from: mock(() => ({
+    select: mock(() => ({
+      single: mock(() => Promise.resolve({ data: null, error: null })),
+      eq: mock(() => ({
+        single: mock(() => Promise.resolve({ data: null, error: null })),
       })),
-      insert: jest.fn(() => Promise.resolve({ data: null, error: null })),
-      update: jest.fn(() => ({
-        eq: jest.fn(() => Promise.resolve({ data: null, error: null })),
-      })),
-      upsert: jest.fn(() => Promise.resolve({ data: null, error: null })),
-      delete: jest.fn(() => Promise.resolve({ data: null, error: null })),
     })),
-  },
+    insert: mock(() => Promise.resolve({ data: null, error: null })),
+    update: mock(() => ({
+      eq: mock(() => Promise.resolve({ data: null, error: null })),
+    })),
+    upsert: mock(() => Promise.resolve({ data: null, error: null })),
+    delete: mock(() => Promise.resolve({ data: null, error: null })),
+  })),
+};
+
+// Mock the supabase module
+mock.module('../config/supabase', () => ({
+  supabase: mockSupabase,
 }));
 
 describe('SyncService', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
     // Reset environment variables
     process.env.SOROBAN_RPC_URL = 'https://test-rpc.stellar.org';
     process.env.SOROBAN_CONTRACT_ID = 'test-contract-id';

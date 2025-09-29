@@ -328,16 +328,23 @@ export class SyncService {
    * Get current block height from Stellar network
    */
   private async getCurrentBlockHeight(): Promise<number> {
-    try {
-      // For now, we'll use a simple approach
-      // In a real implementation, you'd query the Stellar network for current ledger
-      const response = await fetch(`${process.env.SOROBAN_RPC_URL}/getLatestLedger`);
-      const data = await response.json();
-      return data.sequence || 0;
-    } catch (error) {
-      console.error('Failed to get current block height:', error);
-      return this.lastProcessedBlock; // Return last known block if we can't get current
+    const maxRetries = Number.parseInt(process.env.SYNC_MAX_RETRIES || '3', 10);
+    const retryDelay = Number.parseInt(process.env.SYNC_RETRY_DELAY || '1000', 10);
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const currentLedger = await this.server.getLatestLedger();
+        return currentLedger.sequence || 0;
+      } catch (error) {
+        console.error(`Attempt ${attempt} failed to get current block height:`, error);
+        if (attempt < maxRetries) {
+          await new Promise(resolve => setTimeout(resolve, retryDelay));
+        }
+      }
     }
+    
+    console.warn('All retries failed. Returning last known block.');
+    return this.lastProcessedBlock;
   }
 
   /**
