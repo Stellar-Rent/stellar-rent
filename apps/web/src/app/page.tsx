@@ -1,39 +1,84 @@
+'use client';
+
+import { FeaturedProperties } from '@/components/features/properties/FeaturedProperties';
 import { SearchBar } from '@/components/features/search/SearchBar';
-import { RightSidebar } from '@/components/layout/RightSidebar';
-import { PropertyGrid } from '@/components/search/PropertyGrid';
-import { House } from 'lucide-react';
+import { HowItWorks } from '@/components/shared/HowItWorks';
+import { Testimonials } from '@/components/shared/Testimonials';
+import { Footer } from '@/components/shared/layout/Footer';
+import { HeroSection } from '@/components/shared/layout/HeroSection';
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/hooks/auth/use-auth';
 import Image from 'next/image';
-import { Suspense } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 export default function Home() {
+  const { isAuthenticated } = useAuth();
+  const router = useRouter();
+
+  // Optional: redirect authenticated users to /search
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push('/search');
+    }
+  }, [isAuthenticated, router]);
+
+  // If authenticated, show loading state while redirecting
+  if (isAuthenticated) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <p className="text-lg">Redirecting to search...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex w-full min-h-screen">
-      <main className="flex flex-1 flex-col w-full min-h-screen px-5 pr-16">
-        <header className="flex items-center justify-between p-4 border-b border-gray-800">
-          <Image src="/logo.png" alt="StellaRent" width={100} height={100} />
-        </header>
+    <div className="flex flex-col min-h-screen">
+      {/* Header with Login/Register CTAs */}
+      <header className="sticky top-0 z-50 bg-white/90 dark:bg-[#0B1320]/90 backdrop-blur-sm border-b border-gray-200 dark:border-gray-800">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <Link href="/">
+            <Image src="/logo.png" alt="StellaRent" width={120} height={40} priority />
+          </Link>
 
-        <section className="p-4">
-          <SearchBar />
-        </section>
-
-        <section className="flex-1 px-4 pb-4">
-          <div className="flex items-center gap-2 mb-4">
-            <span className="text-white text-sm bg-secondary p-2 px-4 rounded-full flex items-center gap-2">
-              <House className="w-4 h-4" />
-              Showing 23 properties
-            </span>
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" asChild>
+              <Link href="/login">Login</Link>
+            </Button>
+            <Button asChild>
+              <Link href="/register">Register</Link>
+            </Button>
           </div>
+        </div>
+      </header>
 
-          <Suspense
-            fallback={<div className="py-16 text-center text-white">Loading properties...</div>}
-          >
-            <PropertyGrid />
-          </Suspense>
+      {/* Main Content */}
+      <main className="flex-1">
+        {/* Hero Section */}
+        <HeroSection />
+
+        {/* Search Bar Section */}
+        <section className="bg-white dark:bg-[#0B1D39] py-8">
+          <div className="container mx-auto px-4">
+            <SearchBar />
+          </div>
         </section>
+
+        {/* Featured Properties */}
+        <FeaturedProperties />
+
+        {/* How It Works */}
+        <HowItWorks />
+
+        {/* Testimonials */}
+        <Testimonials />
       </main>
 
-      <RightSidebar />
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }
