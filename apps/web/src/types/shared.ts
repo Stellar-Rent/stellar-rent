@@ -1,6 +1,12 @@
 // Shared types for the entire application
 // This file centralizes common interfaces to avoid duplication and improve maintainability
 
+import type {
+  Address,
+  AvailabilityRange,
+  Coordinates,
+} from "~/components/properties/ListingForm/types";
+
 export interface UserProfile {
   id: string;
   name: string;
@@ -28,7 +34,7 @@ export interface Booking {
   checkOut: string;
   guests: number;
   totalAmount: number;
-  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
+  status: "pending" | "confirmed" | "completed" | "cancelled";
   bookingDate: string;
   propertyId: string;
   escrowAddress?: string;
@@ -50,7 +56,7 @@ export interface Property {
   rating: number;
   reviews: number;
   image: string;
-  status: 'active' | 'inactive' | 'maintenance';
+  status: "active" | "inactive" | "maintenance";
   bookings: number;
   earnings: number;
   description?: string;
@@ -65,10 +71,10 @@ export interface Property {
 
 export interface Transaction {
   id: string;
-  type: 'deposit' | 'withdrawal' | 'payment' | 'refund';
+  type: "deposit" | "withdrawal" | "payment" | "refund";
   amount: number;
   currency: string;
-  status: 'pending' | 'completed' | 'failed';
+  status: "pending" | "completed" | "failed";
   date: string;
   description: string;
   transactionHash?: string;
@@ -76,10 +82,10 @@ export interface Transaction {
 
 export interface Notification {
   id: string;
-  type: 'booking' | 'payment' | 'system' | 'property';
+  type: "booking" | "payment" | "system" | "property";
   title: string;
   message: string;
-  priority: 'low' | 'medium' | 'high';
+  priority: "low" | "medium" | "high";
   isRead: boolean;
   createdAt: string;
   userId: string;
@@ -101,7 +107,7 @@ export interface FilterState {
   dateRange: string;
   searchTerm: string;
   sortBy: string;
-  sortOrder: 'asc' | 'desc';
+  sortOrder: "asc" | "desc";
   propertyType?: string;
   priceRange?: string;
 }
@@ -134,16 +140,24 @@ export interface BookingFormData {
 
 export interface PropertyFormData {
   title: string;
-  location: string;
+  latitude: number;
+  longitude: number;
+  address: string;
+  city: string;
+  country: string;
   price: number;
   bedrooms: number;
   bathrooms: number;
-  guests: number;
+  max_guests: number;
   description: string;
-  propertyType: string;
-  status: 'active' | 'inactive' | 'maintenance';
+  propertyType?: string;
+  status?: "available" | "maintenance" | "booked";
   amenities: string[];
   rules?: string;
+  images: string[];
+  owner_id: string;
+  availability: AvailabilityRange[]
+  security_deposit: number
 }
 
 export interface ProfileFormData {
@@ -165,9 +179,9 @@ export interface BookingFilters {
   dateRange?: string;
   searchTerm?: string;
   sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
+  sortOrder?: "asc" | "desc";
   userId: string;
-  userType?: 'host' | 'tenant';
+  userType?: "host" | "tenant";
 }
 
 export interface PropertyFilters {
@@ -176,7 +190,7 @@ export interface PropertyFilters {
   priceRange?: string;
   searchTerm?: string;
   sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
+  sortOrder?: "asc" | "desc";
   userId: string;
 }
 
@@ -190,7 +204,7 @@ export interface NotificationFilters {
 // Real-time update types
 export interface BookingUpdate {
   id: string;
-  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
+  status: "pending" | "confirmed" | "completed" | "cancelled";
   propertyTitle: string;
   checkIn: string;
   checkOut: string;
@@ -202,7 +216,7 @@ export interface BookingUpdate {
 export interface PaymentUpdate {
   id: string;
   amount: number;
-  status: 'pending' | 'completed' | 'failed';
+  status: "pending" | "completed" | "failed";
   bookingId: string;
   currency?: string;
   transactionHash?: string;
@@ -217,8 +231,10 @@ export interface MessageUpdate {
   isRead: boolean;
 }
 
-export interface RealTimeUpdate<T = BookingUpdate | PaymentUpdate | Notification | MessageUpdate> {
-  type: 'booking' | 'payment' | 'notification' | 'message';
+export interface RealTimeUpdate<
+  T = BookingUpdate | PaymentUpdate | Notification | MessageUpdate
+> {
+  type: "booking" | "payment" | "notification" | "message";
   data: T;
   timestamp: Date;
 }
@@ -233,7 +249,7 @@ export interface PropertyUpdateData {
   guests?: number;
   description?: string;
   propertyType?: string;
-  status?: 'active' | 'inactive' | 'maintenance';
+  status?: "active" | "inactive" | "maintenance";
   amenities?: string[];
   rules?: string;
 }
@@ -248,13 +264,13 @@ export interface PropertyAvailabilityData {
 export interface DateRangeFilter {
   startDate?: string;
   endDate?: string;
-  period?: 'week' | 'month' | 'quarter' | 'year';
+  period?: "week" | "month" | "quarter" | "year";
 }
 
 export interface AccountDetails {
   accountNumber: string;
   routingNumber?: string;
-  accountType: 'checking' | 'savings';
+  accountType: "checking" | "savings";
   bankName?: string;
   swiftCode?: string;
   iban?: string;
