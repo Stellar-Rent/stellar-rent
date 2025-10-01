@@ -4,6 +4,7 @@ import { type ReactNode, createContext, useContext, useEffect, useState } from '
 import { signTransactionWithFreighter } from '~/lib/freighter-utils';
 import { getNetworkName, getNetworkPassphrase, logNetworkInfo } from '~/lib/network-utils';
 import { apiUtils, authAPI } from '../../services/api';
+import { login as LoginApi } from '../../services/authService';
 import { useWallet } from '../useWallet';
 
 interface User {
@@ -63,7 +64,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const response = await authAPI.login(email, password);
+      // const response = await authAPI.login(email, password);
+      const response = await LoginApi(email, password);
       const userData: User = {
         id: response.user.id,
         email: response.user.email,

@@ -1,9 +1,16 @@
 export type Address = {
-  street: string;
+  address: string;
   city: string;
   state: string;
   postalCode: string;
   country: string;
+};
+
+export type PropertySpecs = {
+  bedrooms: number;
+  bathrooms: number;
+  guests: number;
+  propertyType: string;
 };
 
 export type Coordinates = {
@@ -15,8 +22,23 @@ export type ListingFormValues = {
   title: string;
   description: string;
   price: number;
-  location: Coordinates;
+  coordinates: Coordinates;
   address: Address;
   amenities: string[];
-  photos: (File | string)[];
+  images: (File | string)[];
+  propertySpecs: {
+    bedrooms: number;
+    bathrooms: number;
+    guests: number;
+    propertyType: string;
+  };
+  availability: AvailabilityRange[];
+  rules?: string;
+  status: "available" | "maintenance" | "booked"
+};
+
+export type AvailabilityRange = {
+  start_date: string;
+  end_date: string;
+  is_available: boolean;
 };
