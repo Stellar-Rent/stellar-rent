@@ -148,7 +148,7 @@ export interface Property {
 interface PropertyGridProps {
   isLoading?: boolean;
   error?: string | null;
-  onRetry?: () => void;
+  onRetry?: () => void | Promise<void>;
   properties?: Property[];
   onLoadMore?: () => void;
 }
@@ -164,7 +164,9 @@ export const PropertyGrid = ({
   const properties = externalProperties || internalProperties;
 
   const handleRetry = async () => {
-    onRetry?.();
+    if (onRetry) {
+      await onRetry();
+    }
   };
 
   if (error) {

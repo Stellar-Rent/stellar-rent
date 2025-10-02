@@ -98,6 +98,12 @@ export const useDashboard = ({ userId, userType }: UseDashboardProps): UseDashbo
       const result = await bookingsApi.execute(userId, { userType });
       if (result) {
         setBookings((result.data || []) as unknown as DashboardBooking[]);
+        return;
+      }
+
+      if (bookingsApi.error) {
+        setError(bookingsApi.error);
+        setErrors((prev) => ({ ...prev, bookings: bookingsApi.error }));
       }
     } catch (err) {
       const errorMessage = handleAPIError(err);
@@ -120,6 +126,12 @@ export const useDashboard = ({ userId, userType }: UseDashboardProps): UseDashbo
       const result = await profileApi.execute(userId);
       if (result && typeof result === 'object' && result !== null && 'data' in result) {
         setProfile((result as { data: UserProfile }).data);
+        return;
+      }
+
+      if (profileApi.error) {
+        setError(profileApi.error);
+        setErrors((prev) => ({ ...prev, profile: profileApi.error }));
       }
     } catch (err) {
       const errorMessage = handleAPIError(err);
@@ -142,6 +154,12 @@ export const useDashboard = ({ userId, userType }: UseDashboardProps): UseDashbo
       const result = await transactionsApi.execute(userId);
       if (result && typeof result === 'object' && result !== null && 'data' in result) {
         setTransactions((result as { data: Transaction[] }).data || []);
+        return;
+      }
+
+      if (transactionsApi.error) {
+        setError(transactionsApi.error);
+        setErrors((prev) => ({ ...prev, transactions: transactionsApi.error }));
       }
     } catch (err) {
       const errorMessage = handleAPIError(err);
@@ -164,6 +182,12 @@ export const useDashboard = ({ userId, userType }: UseDashboardProps): UseDashbo
       const result = await statsApi.execute(userId, userType);
       if (result && typeof result === 'object' && result !== null && 'data' in result) {
         setStats((result as { data: DashboardStats }).data);
+        return;
+      }
+
+      if (statsApi.error) {
+        setError(statsApi.error);
+        setErrors((prev) => ({ ...prev, stats: statsApi.error }));
       }
     } catch (err) {
       const errorMessage = handleAPIError(err);
