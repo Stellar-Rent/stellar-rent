@@ -1,0 +1,42 @@
+{
+  "test_properties": [
+    {
+      "id": "PROP_TEST_001",
+      "data_hash": "hash123456789",
+      "owner": "GALAXY_TEST_OWNER_001"
+    },
+    {
+      "id": "PROP_TEST_002", 
+      "data_hash": "hash987654321",
+      "owner": "GALAXY_TEST_OWNER_002"
+    }
+  ],
+  "test_users": [
+    {
+      "id": "USER_TEST_001",
+      "did": "did:stellar:test:user001"
+    },
+    {
+      "id": "USER_TEST_002",
+      "did": "did:stellar:test:user002"
+    }
+  ],
+  "test_bookings": [
+    {
+      "property_id": "PROP_TEST_001",
+      "user_id": "USER_TEST_001",
+      "start_date": 1704067200,
+      "end_date": 1704153600,
+      "total_price": 1000000000
+    }
+  ],
+  "test_reviews": [
+    {
+      "booking_id": "BOOKING_001",
+      "reviewer_did": "did:stellar:test:user001",
+      "target_did": "did:stellar:test:user002",
+      "rating": 5,
+      "comment": "Excellent property!"
+    }
+  ]
+}

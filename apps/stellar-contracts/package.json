@@ -1,0 +1,33 @@
+{
+  "name": "stellar-rent-contracts",
+  "version": "1.0.0",
+  "description": "Stellar smart contracts for StellarRent platform",
+  "scripts": {
+    "test": "./tests/cli/test.sh",
+    "test:all": "./tests/cli/run-all-tests.sh",
+    "test:setup": "./tests/cli/setup.sh",
+    "test:compile": "./tests/cli/compile.sh",
+    "test:deploy": "./tests/cli/deploy.sh",
+    "test:booking": "./tests/cli/test-booking.sh",
+    "test:property": "./tests/cli/test-property-listing.sh",
+    "test:review": "./tests/cli/test-review.sh",
+    "test:integration": "./tests/cli/integration-test.sh",
+    "test:cleanup": "./tests/cli/cleanup.sh",
+    "build": "stellar contract build",
+    "build:all": "cd contracts/booking && stellar contract build && cd ../property-listing && stellar contract build && cd ../review-contract && stellar contract build"
+  },
+  "keywords": [
+    "stellar",
+    "soroban",
+    "smart-contracts",
+    "rental",
+    "booking",
+    "property"
+  ],
+  "author": "StellarRent Team",
+  "license": "MIT",
+  "devDependencies": {},
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
