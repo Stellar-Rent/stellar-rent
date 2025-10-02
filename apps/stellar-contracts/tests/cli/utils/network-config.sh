@@ -7,11 +7,10 @@ export STELLAR_HORIZON_URL="https://horizon-testnet.stellar.org"
 export STELLAR_NETWORK_PASSPHRASE="Test SDF Network ; September 2015"
 
 # Contract directories
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-export CONTRACTS_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
-export TESTS_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-export UTILS_DIR="$SCRIPT_DIR"
-export FIXTURES_DIR="$TESTS_DIR/fixtures"
+export CONTRACTS_DIR="/Users/ew/month2/stellar-rent/apps/stellar-rent/apps/stellar-contracts"
+export TESTS_DIR="/Users/ew/month2/stellar-rent/apps/stellar-rent/apps/stellar-contracts/tests/cli"
+export UTILS_DIR="/Users/ew/month2/stellar-rent/apps/stellar-rent/apps/stellar-contracts/tests/cli/utils"
+export FIXTURES_DIR="/Users/ew/month2/stellar-rent/apps/stellar-rent/apps/stellar-contracts/tests/cli/fixtures"
 
 # Test configuration
 export DEBUG="false"

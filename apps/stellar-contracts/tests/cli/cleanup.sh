@@ -91,8 +91,8 @@ EOF
 
 # Add each test report to summary
 for i in "${!TEST_REPORTS[@]}"; do
-    report="${TEST_REPORTS[$i]}"
-    report_name=$(basename "$report")
+    local report="${TEST_REPORTS[$i]}"
+    local report_name=$(basename "$report")
     
     cat >> "$SUMMARY_FILE" << EOF
     {
@@ -136,7 +136,7 @@ if [ "$KEEP_LOGS" = "false" ]; then
     if [ -d "$TESTS_DIR/logs" ]; then
         OLD_LOGS=$(find "$TESTS_DIR/logs" -name "*.log" -type f | wc -l)
         if [ $OLD_LOGS -gt 10 ]; then
-            ls -1t "$TESTS_DIR/logs"/*.log | tail -n +11 | xargs rm -f
+            find "$TESTS_DIR/logs" -name "*.log" -type f -printf '%T@ %p\n' | sort -n | head -n -10 | cut -d' ' -f2- | xargs rm -f
             log_success "Cleaned up old log files"
             log_cleanup "Cleaned up old log files"
         else
@@ -204,7 +204,7 @@ if [ -f "$CLEANUP_LOG" ]; then
     
     # Add cleanup actions to report
     while IFS= read -r line; do
-        action="${line#* - }"
+        local action="${line#* - }"
         cat >> "$FINAL_REPORT" << EOF
     {
       "action": "$action",
@@ -249,7 +249,7 @@ echo
 log_info "Test Results:"
 if [ ${#TEST_REPORTS[@]} -gt 0 ]; then
     for report in "${TEST_REPORTS[@]}"; do
-        report_name=$(basename "$report")
+        local report_name=$(basename "$report")
         log_success "✓ $report_name"
     done
 else
@@ -298,7 +298,7 @@ if [ "$VERIFY_CONTRACTS" = "true" ]; then
     log_info "Step 8: Verifying contract status..."
     
     for contract_name in "booking" "property_listing" "review_contract"; do
-        contract_id=$(get_contract_address "$contract_name")
+        local contract_id=$(get_contract_address "$contract_name")
         if [ "$contract_id" != "null" ]; then
             if stellar contract show --global testnet "$contract_id" &> /dev/null; then
                 log_success "✓ $contract_name contract verified on network"
