@@ -1,11 +1,34 @@
+'use client';
+
 import { SearchBar } from '@/components/features/search/SearchBar';
 import { RightSidebar } from '@/components/layout/RightSidebar';
 import { PropertyGrid } from '@/components/search/PropertyGrid';
 import { House } from 'lucide-react';
 import Image from 'next/image';
-import { Suspense } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function Home() {
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleRetry = () => {
+    setError(null);
+    setIsLoading(true);
+    // Simulate retry
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 1000);
+  };
+
+  // Simulate api call
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setIsLoading(false);
+    }, 1000);
+
+    return () => clearTimeout(timeoutId);
+  }, []);
+
   return (
     <div className="flex w-full min-h-screen">
       <main className="flex flex-1 flex-col w-full min-h-screen px-5 pr-16">
@@ -25,11 +48,7 @@ export default function Home() {
             </span>
           </div>
 
-          <Suspense
-            fallback={<div className="py-16 text-center text-white">Loading properties...</div>}
-          >
-            <PropertyGrid />
-          </Suspense>
+          <PropertyGrid isLoading={isLoading} error={error} onRetry={handleRetry} />
         </section>
       </main>
 
