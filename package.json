@@ -17,15 +17,15 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
-    "@commitlint/cli": "^19.6.1",
-    "@commitlint/config-conventional": "^19.6.0",
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
     "@types/bun": "latest",
-    "@types/express": "^4.17.22",
+    "@types/express": "^4.17.23",
     "@types/express-serve-static-core": "^4.19.6",
-    "@types/multer": "^1.4.11",
+    "@types/multer": "^1.4.13",
     "biome": "^0.3.3",
     "husky": "^9.1.7",
-    "lint-staged": "^15.2.0",
+    "lint-staged": "^15.5.2",
     "standard-version": "^9.5.0"
   },
   "lint-staged": {
@@ -33,7 +33,7 @@
   },
   "dependencies": {
     "@stellar/stellar-sdk": "^13.3.0",
-    "multer": "^2.0.0"
+    "multer": "^2.0.2"
   },
   "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }
