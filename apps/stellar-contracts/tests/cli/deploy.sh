@@ -64,7 +64,7 @@ for contract in "${CONTRACTS[@]}"; do
     
     wasm_name=$(echo "$contract" | sed 's/-/_/g')
     wasm_file="$WASM_DIR/${wasm_name}.wasm"
-    contract_name=$(echo "$contract" | sed 's/-/_/g')
+    contract_key="$contract"
     
     # Deploy contract
     log_info "Running: stellar contract deploy --source-account testnet-key --wasm $wasm_file --network testnet --rpc-url https://soroban-testnet.stellar.org:443 --network-passphrase \"Test SDF Network ; September 2015\""
@@ -78,7 +78,7 @@ for contract in "${CONTRACTS[@]}"; do
             log_info "Contract ID: $CONTRACT_ID"
             
             # Store contract address
-            set_contract_address "$contract_name" "$CONTRACT_ID"
+            set_contract_address "$contract_key" "$CONTRACT_ID"
             
             # Log deployment details
             echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") - Deployed $contract: $CONTRACT_ID" >> "$DEPLOYMENT_LOG"
@@ -103,8 +103,8 @@ update_deployment_timestamp
 # Verify all contracts are deployed
 log_info "Verifying contract deployments..."
 for contract in "${CONTRACTS[@]}"; do
-    contract_name=$(echo "$contract" | sed 's/-/_/g')
-    contract_id=$(get_contract_address "$contract_name")
+    contract_key="$contract"
+    contract_id=$(get_contract_address "$contract_key")
     
     if [ "$contract_id" != "null" ] && [ -n "$contract_id" ]; then
         log_success "✓ $contract deployed: $contract_id"
