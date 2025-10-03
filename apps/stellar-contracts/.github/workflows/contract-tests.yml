@@ -1,0 +1,362 @@
+name: Smart Contract Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'apps/stellar-contracts/**'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'apps/stellar-contracts/**'
+  workflow_dispatch:
+
+jobs:
+  test-contracts:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        contract: [booking, property-listing, review-contract]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        components: rustfmt, clippy
+        
+    - name: Install Stellar CLI
+      run: |
+        curl -s https://get.stellar.org | bash
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+        
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y jq bc
+        
+    - name: Verify Stellar CLI installation
+      run: |
+        stellar version
+        
+    - name: Setup testnet account
+      run: |
+        cd apps/stellar-contracts
+        stellar keys generate --global testnet
+        stellar account create --global testnet --source-key $(stellar keys show --global testnet)
+        stellar account fund --global testnet $(stellar keys show --global testnet --public)
+      env:
+        STELLAR_NETWORK: testnet
+        
+    - name: Setup test environment
+      run: |
+        cd apps/stellar-contracts
+        ./tests/cli/setup.sh
+        
+    - name: Compile contracts
+      run: |
+        cd apps/stellar-contracts
+        ./tests/cli/compile.sh
+        
+    - name: Deploy contracts
+      run: |
+        cd apps/stellar-contracts
+        ./tests/cli/deploy.sh
+        
+    - name: Test booking contract
+      if: matrix.contract == 'booking'
+      run: |
+        cd apps/stellar-contracts
+        ./tests/cli/test-booking.sh
+        
+    - name: Test property listing contract
+      if: matrix.contract == 'property-listing'
+      run: |
+        cd apps/stellar-contracts
+        ./tests/cli/test-property-listing.sh
+        
+    - name: Test review contract
+      if: matrix.contract == 'review-contract'
+      run: |
+        cd apps/stellar-contracts
+        ./tests/cli/test-review.sh
+        
+    - name: Upload test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: test-results-${{ matrix.contract }}
+        path: apps/stellar-contracts/tests/cli/logs/
+        
+  integration-tests:
+    runs-on: ubuntu-latest
+    needs: test-contracts
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        
+    - name: Install Stellar CLI
+      run: |
+        curl -s https://get.stellar.org | bash
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+        
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y jq bc
+        
+    - name: Download booking test results
+      uses: actions/download-artifact@v3
+      with:
+        name: test-results-booking
+        
+    - name: Download property listing test results
+      uses: actions/download-artifact@v3
+      with:
+        name: test-results-property-listing
+        
+    - name: Download review test results
+      uses: actions/download-artifact@v3
+      with:
+        name: test-results-review-contract
+        
+    - name: Setup testnet account
+      run: |
+        cd apps/stellar-contracts
+        stellar keys generate --global testnet
+        stellar account create --global testnet --source-key $(stellar keys show --global testnet)
+        stellar account fund --global testnet $(stellar keys show --global testnet --public)
+      env:
+        STELLAR_NETWORK: testnet
+        
+    - name: Setup test environment
+      run: |
+        cd apps/stellar-contracts
+        ./tests/cli/setup.sh
+        
+    - name: Compile contracts
+      run: |
+        cd apps/stellar-contracts
+        ./tests/cli/compile.sh
+        
+    - name: Deploy contracts
+      run: |
+        cd apps/stellar-contracts
+        ./tests/cli/deploy.sh
+        
+    - name: Run integration tests
+      run: |
+        cd apps/stellar-contracts
+        ./tests/cli/integration-test.sh
+        
+    - name: Upload integration test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: integration-test-results
+        path: apps/stellar-contracts/tests/cli/logs/
+        
+  security-tests:
+    runs-on: ubuntu-latest
+    needs: test-contracts
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        
+    - name: Install Stellar CLI
+      run: |
+        curl -s https://get.stellar.org | bash
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+        
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y jq bc
+        
+    - name: Setup testnet account
+      run: |
+        cd apps/stellar-contracts
+        stellar keys generate --global testnet
+        stellar account create --global testnet --source-key $(stellar keys show --global testnet)
+        stellar account fund --global testnet $(stellar keys show --global testnet --public)
+      env:
+        STELLAR_NETWORK: testnet
+        
+    - name: Setup test environment
+      run: |
+        cd apps/stellar-contracts
+        ./tests/cli/setup.sh
+        
+    - name: Compile contracts
+      run: |
+        cd apps/stellar-contracts
+        ./tests/cli/compile.sh
+        
+    - name: Deploy contracts
+      run: |
+        cd apps/stellar-contracts
+        ./tests/cli/deploy.sh
+        
+    - name: Run security tests
+      run: |
+        cd apps/stellar-contracts
+        # Run tests with security focus
+        ./tests/cli/test-booking.sh
+        ./tests/cli/test-property-listing.sh
+        ./tests/cli/test-review.sh
+        ./tests/cli/integration-test.sh
+        
+    - name: Upload security test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: security-test-results
+        path: apps/stellar-contracts/tests/cli/logs/
+        
+  performance-tests:
+    runs-on: ubuntu-latest
+    needs: test-contracts
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        
+    - name: Install Stellar CLI
+      run: |
+        curl -s https://get.stellar.org | bash
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+        
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y jq bc
+        
+    - name: Setup testnet account
+      run: |
+        cd apps/stellar-contracts
+        stellar keys generate --global testnet
+        stellar account create --global testnet --source-key $(stellar keys show --global testnet)
+        stellar account fund --global testnet $(stellar keys show --global testnet --public)
+      env:
+        STELLAR_NETWORK: testnet
+        
+    - name: Setup test environment
+      run: |
+        cd apps/stellar-contracts
+        ./tests/cli/setup.sh
+        
+    - name: Compile contracts
+      run: |
+        cd apps/stellar-contracts
+        ./tests/cli/compile.sh
+        
+    - name: Deploy contracts
+      run: |
+        cd apps/stellar-contracts
+        ./tests/cli/deploy.sh
+        
+    - name: Run performance tests
+      run: |
+        cd apps/stellar-contracts
+        # Run tests with performance focus
+        VERBOSE=true ./tests/cli/run-all-tests.sh
+        
+    - name: Upload performance test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: performance-test-results
+        path: apps/stellar-contracts/tests/cli/logs/
+        
+  generate-report:
+    runs-on: ubuntu-latest
+    needs: [test-contracts, integration-tests, security-tests, performance-tests]
+    if: always()
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Download booking test results
+      uses: actions/download-artifact@v3
+      with:
+        name: test-results-booking
+        
+    - name: Download property listing test results
+      uses: actions/download-artifact@v3
+      with:
+        name: test-results-property-listing
+        
+    - name: Download review test results
+      uses: actions/download-artifact@v3
+      with:
+        name: test-results-review-contract
+        
+    - name: Download integration test results
+      uses: actions/download-artifact@v3
+      with:
+        name: integration-test-results
+        
+    - name: Download security test results
+      uses: actions/download-artifact@v3
+      with:
+        name: security-test-results
+        
+    - name: Download performance test results
+      uses: actions/download-artifact@v3
+      with:
+        name: performance-test-results
+        
+    - name: Generate test report
+      run: |
+        echo "# Smart Contract Test Report" > test-report.md
+        echo "" >> test-report.md
+        echo "## Test Results Summary" >> test-report.md
+        echo "" >> test-report.md
+        
+        # Count test results
+        total_reports=$(find . -name "*-test-report-*.json" | wc -l)
+        echo "Total test reports: $total_reports" >> test-report.md
+        echo "" >> test-report.md
+        
+        # List all reports
+        echo "## Test Reports" >> test-report.md
+        echo "" >> test-report.md
+        find . -name "*-test-report-*.json" -exec basename {} \; | sort >> test-report.md
+        echo "" >> test-report.md
+        
+        # Contract addresses
+        echo "## Contract Addresses" >> test-report.md
+        echo "" >> test-report.md
+        if [ -f "apps/stellar-contracts/tests/cli/contract-addresses.json" ]; then
+          echo "\`\`\`json" >> test-report.md
+          cat apps/stellar-contracts/tests/cli/contract-addresses.json >> test-report.md
+          echo "\`\`\`" >> test-report.md
+        fi
+        
+    - name: Upload test report
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-report
+        path: test-report.md

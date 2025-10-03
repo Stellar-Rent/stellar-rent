@@ -1,0 +1,28 @@
+{
+  "booking_contract": {
+    "initialize": "success",
+    "create_booking": "success",
+    "check_availability": "success",
+    "cancel_booking": "success",
+    "get_booking": "success",
+    "update_status": "success",
+    "invalid_dates": "failure",
+    "invalid_price": "failure",
+    "unauthorized_cancel": "failure"
+  },
+  "property_listing_contract": {
+    "create_listing": "success",
+    "update_listing": "success",
+    "update_status": "success",
+    "get_listing": "success",
+    "duplicate_listing": "failure",
+    "unauthorized_update": "failure"
+  },
+  "review_contract": {
+    "submit_review": "success",
+    "get_reviews": "success",
+    "get_reputation": "success",
+    "invalid_rating": "failure",
+    "duplicate_review": "failure"
+  }
+}
