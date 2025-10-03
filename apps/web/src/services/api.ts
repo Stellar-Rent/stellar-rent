@@ -508,45 +508,6 @@ export const authAPI = {
   },
 };
 
-export const authAPI = {
-  async login(email: string, password: string) {
-    return apiUtils.request('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ email, password }),
-    });
-  },
-
-  async register(email: string, password: string, fullName: string) {
-    return apiUtils.request('/auth/register', {
-      method: 'POST',
-      body: JSON.stringify({ email, password, name: fullName }),
-    });
-  },
-
-  async requestChallenge(publicKey: string): Promise<ChallengeResponse> {
-    return apiUtils.request('/auth/challenge', {
-      method: 'POST',
-      body: JSON.stringify({ publicKey }),
-    });
-  },
-
-  async authenticateWallet(
-    publicKey: string,
-    signedTxXdr: string,
-    challenge: string
-  ): Promise<WalletAuthResponse> {
-    return apiUtils.request('/auth/wallet', {
-      method: 'POST',
-      body: JSON.stringify({ publicKey, signedTxXdr, challenge }),
-    });
-  },
-
-  async logout() {
-    // No logout endpoint found in backend - just clear client-side
-    return Promise.resolve();
-  },
-};
-
 export const handleAPIError = (error: unknown) => {
   const errorMessage = error instanceof Error ? error.message : String(error);
 
