@@ -48,6 +48,35 @@ interface ChallengeResponse {
 const _apiCall = async <T>(endpoint: string, options: RequestInit = {}): Promise<T> => {
   const url = `${API_BASE_URL}${endpoint}`;
   const token = localStorage.getItem('authToken');
+  
+  const headers = new Headers({
+    'Content-Type': 'application/json',
+    ...(token && { 'Authorization': `Bearer ${token}` }),
+    ...(options.headers as Record<string, string> || {})
+  });
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      headers,
+      credentials: 'include'
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'API request failed');
+    }
+
+    // For 204 No Content responses
+    if (response.status === 204) {
+      return {} as T;
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error(`API call failed for ${endpoint}:`, error);
+    throw error;
+  }
 
   const config: RequestInit = {
     headers: {
@@ -260,93 +289,189 @@ export const propertyAPI = {
     return apiUtils.request(`/properties/${propertyId}/availability`, {
       method: 'PUT',
       body: JSON.stringify(availability),
-    });
-  },
-};
-
 export const walletAPI = {
-  async getWalletBalance(userId: string) {
-    return apiUtils.request(`/wallet/${userId}/balance`);
+  getWalletBalance: async (userId: string) => {
+    try {
+      const response = await fetch(`/api/wallets/${userId}/balance`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Failed to fetch wallet balance:', error);
+      return {
+        success: false,
+        data: { balance: 0, currency: 'USD' },
+        message: 'Failed to load wallet balance'
+      };
+    }
   },
-
-  async getTransactionHistory(userId: string, filters?: Record<string, unknown>) {
-    const params = new URLSearchParams({ userId, ...filters });
-    return apiUtils.request(`/wallet/${userId}/transactions?${params}`);
+  
+  getTransactionHistory: async (userId: string, filters?: Record<string, unknown>) => {
+    try {
+      const params = new URLSearchParams({ userId });
+      if (filters) {
+        Object.entries(filters).forEach(([key, value]) => {
+          if (value) params.append(key, String(value));
+        });
+      }
+      const response = await fetch(`/api/wallets/${userId}/transactions?${params}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Failed to fetch transaction history:', error);
+      return {
+        success: false,
+        data: [],
+        message: 'Failed to load transaction history'
+      };
+    }
   },
-
-  async addFunds(userId: string, amount: number, paymentMethod: string) {
-    return apiUtils.request(`/wallet/${userId}/add-funds`, {
-      method: 'POST',
-      body: JSON.stringify({ amount, paymentMethod }),
-    });
+  
+  addFunds: async (userId: string, amount: number, paymentMethod: string) => {
+    try {
+      const response = await fetch(`/api/wallets/${userId}/deposit`, {
+        method: 'POST',
+        body: JSON.stringify({ amount, paymentMethod }),
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Failed to add funds:', error);
+      throw new Error('Failed to process deposit');
+    }
   },
-
-  async withdrawFunds(userId: string, amount: number, accountDetails: Record<string, unknown>) {
-    return apiUtils.request(`/wallet/${userId}/withdraw`, {
-      method: 'POST',
-      body: JSON.stringify({ amount, accountDetails }),
-    });
+  
+  withdrawFunds: async (userId: string, amount: number, accountDetails: Record<string, unknown>) => {
+    try {
+      const response = await fetch(`/api/wallets/${userId}/withdraw`, {
+        method: 'POST',
+        body: JSON.stringify({ amount, accountDetails }),
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Failed to withdraw funds:', error);
+      throw new Error('Failed to process withdrawal');
+    }
   },
 };
 
 export const notificationAPI = {
   async getNotifications(userId: string, filters?: Record<string, unknown>) {
-    const params = new URLSearchParams({ userId, ...filters });
-    return apiUtils.request(`/notifications?${params}`);
-  },
-
-  async markAsRead(notificationId: string) {
-    return apiUtils.request(`/notifications/${notificationId}/read`, {
-      method: 'PUT',
-    });
-  },
-
-  async markAllAsRead(userId: string) {
-    return apiUtils.request(`/notifications/${userId}/read-all`, {
-      method: 'PUT',
-    });
-  },
-
-  async deleteNotification(notificationId: string) {
-    return apiUtils.request(`/notifications/${notificationId}`, {
-      method: 'DELETE',
-    });
-  },
-
-  async deleteAllNotifications(userId: string) {
-    return apiUtils.request(`/notifications/${userId}/delete-all`, {
-      method: 'DELETE',
+{{ ... }}
     });
   },
 };
 
 export const dashboardAPI = {
-  async getDashboardStats(userId: string, userType: 'host' | 'tenant') {
-    return apiUtils.request(`/dashboard/${userType}/${userId}/stats`);
+  getDashboardStats: async (userId: string, userType: 'host' | 'tenant') => {
+    try {
+      const response = await fetch(`/api/analytics/overview?userId=${userId}&userType=${userType}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Failed to fetch dashboard stats:', error);
+      return {
+        success: false,
+        data: {
+          totalBookings: 0,
+          totalEarnings: 0,
+          activeListings: 0,
+          pendingRequests: 0
+        },
+        message: 'Failed to load dashboard stats'
+      };
+    }
   },
-
-  async getRecentActivity(userId: string, userType: 'host' | 'tenant') {
-    return apiUtils.request(`/dashboard/${userType}/${userId}/activity`);
+  
+  getRecentActivity: async (userId: string, userType: 'host' | 'tenant') => {
+    try {
+      const response = await fetch(`/api/activity/recent?userId=${userId}&userType=${userType}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Failed to fetch recent activity:', error);
+      return {
+        success: false,
+        data: [],
+        message: 'Failed to load recent activity'
+      };
+    }
   },
-
-  async getEarningsAnalytics(userId: string, dateRange?: Record<string, unknown>) {
-    const params = new URLSearchParams({ userId, ...dateRange });
-    return apiUtils.request(`/dashboard/host/${userId}/earnings?${params}`);
+  
+  getEarningsAnalytics: async (userId: string, dateRange?: Record<string, unknown>) => {
+    try {
+      const params = new URLSearchParams({ userId });
+      if (dateRange) {
+        Object.entries(dateRange).forEach(([key, value]) => {
+          if (value) params.append(key, String(value));
+        });
+      }
+      const response = await fetch(`/api/analytics/earnings?${params}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Failed to fetch earnings analytics:', error);
+      return {
+        success: false,
+        data: [],
+        message: 'Failed to load earnings analytics'
+      };
+    }
   },
-
-  async getBookingAnalytics(
+  
+  getBookingAnalytics: async (
     userId: string,
     userType: 'host' | 'tenant',
     dateRange?: Record<string, unknown>
-  ) {
-    const params = new URLSearchParams({ userId, ...dateRange });
-    return apiUtils.request(`/dashboard/${userType}/${userId}/bookings/analytics?${params}`);
+  ) => {
+    try {
+      const params = new URLSearchParams({ userId, userType });
+      if (dateRange) {
+        Object.entries(dateRange).forEach(([key, value]) => {
+          if (value) params.append(key, String(value));
+        });
+      }
+      const response = await fetch(`/api/analytics/bookings?${params}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Failed to fetch booking analytics:', error);
+      return {
+        success: false,
+        data: [],
+        message: 'Failed to load booking analytics'
+      };
+    }
   },
 };
 
 export const authAPI = {
   async login(email: string, password: string) {
-    return apiUtils.request('/auth/login', {
+{{ ... }}
       method: 'POST',
       body: JSON.stringify({ email, password }),
     });
