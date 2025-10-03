@@ -56,12 +56,17 @@ export const useDashboard = ({ userId, userType }: UseDashboardProps): UseDashbo
     setError(null);
 
     try {
-      const response = await bookingAPI.getBookings(userId, { userType });
-      setBookings(response.data || []);
+      const response = await fetch(`/api/bookings?userId=${userId}&userType=${userType}`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch bookings: ${response.statusText}`);
+      }
+      const data = await response.json();
+      setBookings(Array.isArray(data) ? data : []);
     } catch (err) {
-      const errorMessage = handleAPIError(err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch bookings';
       setError(errorMessage);
       console.error('Failed to fetch bookings:', err);
+      setBookings([]); // Reset to empty array on error
     } finally {
       setIsLoadingBookings(false);
     }
@@ -74,12 +79,17 @@ export const useDashboard = ({ userId, userType }: UseDashboardProps): UseDashbo
     setError(null);
 
     try {
-      const response = await profileAPI.getUserProfile(userId);
-      setProfile(response.data);
+      const response = await fetch(`/api/profiles/${userId}`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch profile: ${response.statusText}`);
+      }
+      const data = await response.json();
+      setProfile(data || null);
     } catch (err) {
-      const errorMessage = handleAPIError(err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch profile';
       setError(errorMessage);
       console.error('Failed to fetch profile:', err);
+      setProfile(null); // Reset to null on error
     } finally {
       setIsLoadingProfile(false);
     }
@@ -92,12 +102,17 @@ export const useDashboard = ({ userId, userType }: UseDashboardProps): UseDashbo
     setError(null);
 
     try {
-      const response = await walletAPI.getTransactionHistory(userId);
-      setTransactions(response.data || []);
+      const response = await fetch(`/api/wallets/${userId}/transactions`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch transactions: ${response.statusText}`);
+      }
+      const data = await response.json();
+      setTransactions(Array.isArray(data) ? data : []);
     } catch (err) {
-      const errorMessage = handleAPIError(err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch transactions';
       setError(errorMessage);
       console.error('Failed to fetch transactions:', err);
+      setTransactions([]); // Reset to empty array on error
     } finally {
       setIsLoadingTransactions(false);
     }
@@ -110,12 +125,25 @@ export const useDashboard = ({ userId, userType }: UseDashboardProps): UseDashbo
     setError(null);
 
     try {
-      const response = await dashboardAPI.getDashboardStats(userId, userType);
-      setStats(response.data);
+      const response = await fetch(`/api/analytics/overview?userId=${userId}&userType=${userType}`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch dashboard stats: ${response.statusText}`);
+      }
+      const data = await response.json();
+      setStats(data);
     } catch (err) {
-      const errorMessage = handleAPIError(err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch dashboard stats';
       setError(errorMessage);
       console.error('Failed to fetch dashboard stats:', err);
+      // Set default stats on error
+      setStats({
+        totalBookings: 0,
+        totalEarnings: 0,
+        averageRating: 0,
+        activeProperties: 0,
+        pendingBookings: 0,
+        completedBookings: 0
+      });
     } finally {
       setIsLoadingStats(false);
     }
