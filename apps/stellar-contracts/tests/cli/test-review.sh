@@ -292,7 +292,8 @@ run_test "Unicode characters in comment" \
 
 # Create test report
 log_info "Creating test report..."
-cat > "$TESTS_DIR/logs/review-test-report-$(date +%Y%m%d-%H%M%S).json" << EOF
+REPORT_FILE="$TESTS_DIR/logs/review-test-report-$(date +%Y%m%d-%H%M%S).json"
+cat > "$REPORT_FILE" << EOF
 {
   "test_timestamp": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
   "contract_id": "$REVIEW_CONTRACT_ID",
@@ -313,22 +314,22 @@ cat > "$TESTS_DIR/logs/review-test-report-$(date +%Y%m%d-%H%M%S).json" << EOF
 EOF
 
 for i in "${!TEST_RESULTS[@]}"; do
-    local result="${TEST_RESULTS[$i]}"
-    local status="${result%%:*}"
-    local test_name="${result#*:}"
+    result="${TEST_RESULTS[$i]}"
+    status="${result%%:*}"
+    test_name="${result#*:}"
     
-    cat >> "$TESTS_DIR/logs/review-test-report-$(date +%Y%m%d-%H%M%S).json" << EOF
+    cat >> "$REPORT_FILE" << EOF
     {
       "test": "$test_name",
       "status": "$status"
     }EOF
     
     if [ $i -lt $((${#TEST_RESULTS[@]} - 1)) ]; then
-        echo "," >> "$TESTS_DIR/logs/review-test-report-$(date +%Y%m%d-%H%M%S).json"
+        echo "," >> "$REPORT_FILE"
     fi
 done
 
-cat >> "$TESTS_DIR/logs/review-test-report-$(date +%Y%m%d-%H%M%S).json" << EOF
+cat >> "$REPORT_FILE" << EOF
   ]
 }
 EOF
@@ -340,7 +341,7 @@ print_test_summary
 
 if [ $FAILED_COUNT -eq 0 ]; then
     log_success "All review contract tests passed!"
-    log_info "Test report saved to: $TESTS_DIR/logs/review-test-report-$(date +%Y%m%d-%H%M%S).json"
+    log_info "Test report saved to: $REPORT_FILE"
 else
     log_error "Some tests failed. Check the test report for details."
     exit 1
