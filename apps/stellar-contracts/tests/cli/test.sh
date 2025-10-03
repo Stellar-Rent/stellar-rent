@@ -35,8 +35,8 @@ log_header() {
 
 # Configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
-CONTRACTS_DIR="$PROJECT_ROOT/apps/stellar-contracts"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+CONTRACTS_DIR="$PROJECT_ROOT"
 TESTS_DIR="$SCRIPT_DIR"
 
 log_header "🚀 Stellar Smart Contract Testing - Developer Quick Start"
