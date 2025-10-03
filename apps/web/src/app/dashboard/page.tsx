@@ -1,5 +1,6 @@
 'use client';
 
+import { Breadcrumb } from '@/components/ui/breadcrumb';
 import { useAuth } from '@/hooks/auth/use-auth';
 import { ArrowRight, Home, User } from 'lucide-react';
 import Link from 'next/link';
@@ -23,6 +24,7 @@ const DashboardPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white dark:from-[#0B1D39] dark:to-[#071429]">
       <div className="w-full px-4 sm:px-6 lg:px-8 py-12">
+        <Breadcrumb className="mb-8" />
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
             Welcome back, {user?.name}! 👋
