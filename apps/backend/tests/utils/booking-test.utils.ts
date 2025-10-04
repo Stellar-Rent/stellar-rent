@@ -15,33 +15,35 @@ mock.module('../../src/config/supabase', () => ({
       select: mock(() => ({
         eq: mock(() => ({
           single: mock(() => Promise.resolve({ data: null, error: null })),
-          then: mock((callback: any) => callback({ data: [], error: null }))
+          then: mock((callback: any) => callback({ data: [], error: null })),
         })),
-        then: mock((callback: any) => callback({ data: [], error: null }))
+        then: mock((callback: any) => callback({ data: [], error: null })),
       })),
       insert: mock(() => ({
         select: mock(() => Promise.resolve({ data: [], error: null })),
-        then: mock((callback: any) => callback({ data: [], error: null }))
+        then: mock((callback: any) => callback({ data: [], error: null })),
       })),
       update: mock(() => ({
         eq: mock(() => Promise.resolve({ data: [], error: null })),
-        then: mock((callback: any) => callback({ data: [], error: null }))
+        then: mock((callback: any) => callback({ data: [], error: null })),
       })),
       delete: mock(() => ({
         eq: mock(() => Promise.resolve({ data: [], error: null })),
-        then: mock((callback: any) => callback({ data: [], error: null }))
+        then: mock((callback: any) => callback({ data: [], error: null })),
       })),
       upsert: mock(() => ({
         eq: mock(() => Promise.resolve({ data: [], error: null })),
-        then: mock((callback: any) => callback({ data: [], error: null }))
+        then: mock((callback: any) => callback({ data: [], error: null })),
       })),
-      then: mock((callback: any) => callback({ data: [], error: null }))
+      then: mock((callback: any) => callback({ data: [], error: null })),
     })),
     auth: {
-      getUser: mock(() => Promise.resolve({
-        data: { user: { id: 'test-user-id', email: 'test@example.com' } },
-        error: null,
-      })),
+      getUser: mock(() =>
+        Promise.resolve({
+          data: { user: { id: 'test-user-id', email: 'test@example.com' } },
+          error: null,
+        })
+      ),
     },
   },
 }));
