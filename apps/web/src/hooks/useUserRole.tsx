@@ -26,14 +26,21 @@ export function useUserRole(): RoleInfo {
     const storedHostStatus = localStorage.getItem('hostStatus');
     const storedHasProperties = localStorage.getItem('hasProperties') === 'true';
 
+    // Validate hostStatus
+    const validHostStatuses = ['pending', 'verified', 'rejected', 'suspended'];
+    const hostStatus =
+      storedHostStatus && validHostStatuses.includes(storedHostStatus)
+        ? (storedHostStatus as 'pending' | 'verified' | 'rejected' | 'suspended')
+        : undefined;
+
     let role: UserRole = 'guest';
     let canAccessHostDashboard = false;
 
     // User is a host if they have verified host status and properties
-    if (storedHostStatus === 'verified' && storedHasProperties) {
+    if (hostStatus === 'verified' && storedHasProperties) {
       role = 'dual'; // Can be both guest and host
       canAccessHostDashboard = true;
-    } else if (storedHostStatus === 'verified') {
+    } else if (hostStatus === 'verified') {
       // Verified but no properties yet
       role = 'host';
       canAccessHostDashboard = false; // No dashboard access without properties
@@ -41,7 +48,7 @@ export function useUserRole(): RoleInfo {
 
     setRoleInfo({
       role,
-      hostStatus: storedHostStatus as 'pending' | 'verified' | 'rejected' | 'suspended' | undefined,
+      hostStatus,
       canAccessHostDashboard,
       hasProperties: storedHasProperties,
     });
