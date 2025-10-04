@@ -45,6 +45,9 @@ export interface UserProfile {
   verified: boolean;
   memberSince: string;
   publicKey?: string;
+  // Host-related fields
+  hostStatus?: 'pending' | 'verified' | 'rejected' | 'suspended';
+  hasProperties?: boolean;
   preferences?: {
     currency: string;
     language: string;
