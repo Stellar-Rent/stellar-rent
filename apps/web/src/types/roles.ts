@@ -8,4 +8,5 @@ export interface RoleInfo {
   hostStatus?: HostStatus;
   canAccessHostDashboard: boolean;
   hasProperties: boolean;
+  isLoading?: boolean;
 }
