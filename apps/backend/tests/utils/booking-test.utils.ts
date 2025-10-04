@@ -45,7 +45,7 @@ mock.module('../../src/config/supabase', () => ({
       upsert: mock(() => ({
         eq: mock(() => Promise.resolve({ data: [], error: null })),
       })),
-      then: mock((callback: any) => callback({ data: [], error: null }))
+      then: mock((callback: any) => callback({ data: [], error: null })),
     })),
     auth: {
       getUser: mock(() =>
