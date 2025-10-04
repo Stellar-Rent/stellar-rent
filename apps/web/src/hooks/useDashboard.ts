@@ -56,7 +56,7 @@ export const useDashboard = ({ userId, userType }: UseDashboardProps): UseDashbo
     setError(null);
 
     try {
-      const response = await fetch(`/api/bookings?userId=${userId}&userType=${userType}`);
+      const response = await fetch('/api/bookings');
       if (!response.ok) {
         throw new Error(`Failed to fetch bookings: ${response.statusText}`);
       }
@@ -72,7 +72,7 @@ export const useDashboard = ({ userId, userType }: UseDashboardProps): UseDashbo
     } finally {
       setIsLoadingBookings(false);
     }
-  }, [userId, userType]);
+  }, [userId]);
 
   const fetchProfile = useCallback(async () => {
     if (!userId) return;
@@ -81,7 +81,7 @@ export const useDashboard = ({ userId, userType }: UseDashboardProps): UseDashbo
     setError(null);
 
     try {
-      const response = await fetch(`/api/profiles/${userId}`);
+      const response = await fetch('/api/profile');
       if (!response.ok) {
         throw new Error(`Failed to fetch profile: ${response.statusText}`);
       }
@@ -104,12 +104,46 @@ export const useDashboard = ({ userId, userType }: UseDashboardProps): UseDashbo
     setError(null);
 
     try {
-      const response = await fetch(`/api/wallets/${userId}/transactions`);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch transactions: ${response.statusText}`);
-      }
-      const data = await response.json();
-      setTransactions(Array.isArray(data) ? data : []);
+      // Use mock data until wallet transactions endpoint is implemented
+      // TODO: Replace with real API call when /api/wallet/transactions is available
+      const mockTransactions: Transaction[] = [
+        {
+          id: '1',
+          date: '2025-05-28',
+          description: 'Luxury Downtown Apartment',
+          amount: -1250,
+          type: 'booking',
+          status: 'completed',
+        },
+        {
+          id: '2',
+          date: '2025-05-26',
+          description: 'Cozy Beach House',
+          amount: -900,
+          type: 'booking',
+          status: 'pending',
+        },
+        {
+          id: '3',
+          date: '2025-05-20',
+          description: 'Wallet Top-up',
+          amount: 2000,
+          type: 'deposit',
+          status: 'completed',
+        },
+        {
+          id: '4',
+          date: '2025-05-15',
+          description: 'Mountain Cabin Retreat',
+          amount: -1600,
+          type: 'booking',
+          status: 'completed',
+        },
+      ];
+
+      // Simulate API delay
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      setTransactions(mockTransactions);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch transactions';
       setError(errorMessage);
@@ -127,12 +161,40 @@ export const useDashboard = ({ userId, userType }: UseDashboardProps): UseDashbo
     setError(null);
 
     try {
-      const response = await fetch(`/api/analytics/overview?userId=${userId}&userType=${userType}`);
+      // Calculate stats from bookings data instead of calling non-existent analytics endpoint
+      // TODO: Replace with real analytics API when /api/analytics/overview is implemented
+      const response = await fetch('/api/bookings');
       if (!response.ok) {
-        throw new Error(`Failed to fetch dashboard stats: ${response.statusText}`);
+        throw new Error(`Failed to fetch bookings for stats: ${response.statusText}`);
       }
       const data = await response.json();
-      setStats(data);
+      const bookingsData = data.data?.bookings || data.bookings || [];
+
+      // Calculate stats from bookings
+      const totalBookings = bookingsData.length;
+      const totalEarnings = bookingsData.reduce(
+        (sum: number, booking: { total: string | number }) => {
+          return sum + (Number.parseFloat(String(booking.total)) || 0);
+        },
+        0
+      );
+      const pendingBookings = bookingsData.filter(
+        (booking: { status: string }) => booking.status === 'pending'
+      ).length;
+      const completedBookings = bookingsData.filter(
+        (booking: { status: string }) => booking.status === 'completed'
+      ).length;
+
+      const calculatedStats: DashboardStats = {
+        totalBookings,
+        totalEarnings,
+        averageRating: 4.8, // Mock rating until reviews are implemented
+        activeProperties: userType === 'host' ? totalBookings : 0, // Mock for now
+        pendingBookings,
+        completedBookings,
+      };
+
+      setStats(calculatedStats);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch dashboard stats';
       setError(errorMessage);
