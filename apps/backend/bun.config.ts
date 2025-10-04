@@ -14,4 +14,3 @@ const config: BunTestConfig = {
 };
 
 export default config;
-
