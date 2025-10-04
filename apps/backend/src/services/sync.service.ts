@@ -338,11 +338,11 @@ export class SyncService {
       } catch (error) {
         console.error(`Attempt ${attempt} failed to get current block height:`, error);
         if (attempt < maxRetries) {
-          await new Promise(resolve => setTimeout(resolve, retryDelay));
+          await new Promise((resolve) => setTimeout(resolve, retryDelay));
         }
       }
     }
-    
+
     console.warn('All retries failed. Returning last known block.');
     return this.lastProcessedBlock;
   }

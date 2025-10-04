@@ -206,7 +206,7 @@ const createMockSupabase = () => {
     wallet_users: new Map(),
     users: new Map(),
     properties: new Map(),
-    bookings: new Map()
+    bookings: new Map(),
   };
 
   // Helper function to get mock data for each table
@@ -218,9 +218,9 @@ const createMockSupabase = () => {
           public_key: 'test-public-key',
           challenge: 'test-challenge-value',
           expires_at: new Date(Date.now() + 300000).toISOString(), // 5 minutes from now
-          created_at: new Date().toISOString()
+          created_at: new Date().toISOString(),
         };
-      
+
       case 'bookings':
         return {
           id: '123e4567-e89b-12d3-a456-426614174555',
@@ -233,21 +233,21 @@ const createMockSupabase = () => {
           total: 100,
           status: 'pending',
           created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         };
-      
+
       default:
         return null;
     }
   };
 
   const createMockChain = (tableName: string) => {
-    const filters: Array<{column: string, value: any, operator: string}> = [];
-    
+    const filters: Array<{ column: string; value: any; operator: string }> = [];
+
     const chain = {
       _tableName: tableName,
       _filters: filters,
-      
+
       // Query methods
       select: () => chain,
       eq: (column: string, value: any) => {
@@ -258,65 +258,83 @@ const createMockSupabase = () => {
         filters.push({ column, value, operator: 'gt' });
         return chain;
       },
-      
+
       // Unused filter methods - just return chain for compatibility
-      lt: () => chain, gte: () => chain, lte: () => chain, neq: () => chain,
-      like: () => chain, ilike: () => chain, is: () => chain, in: () => chain,
-      contains: () => chain, containedBy: () => chain, rangeGt: () => chain,
-      rangeGte: () => chain, rangeLt: () => chain, rangeLte: () => chain,
-      rangeAdjacent: () => chain, overlaps: () => chain, textSearch: () => chain,
-      match: () => chain, not: () => chain, or: () => chain, filter: () => chain,
-      order: () => chain, limit: () => chain, range: () => chain, abortSignal: () => chain,
+      lt: () => chain,
+      gte: () => chain,
+      lte: () => chain,
+      neq: () => chain,
+      like: () => chain,
+      ilike: () => chain,
+      is: () => chain,
+      in: () => chain,
+      contains: () => chain,
+      containedBy: () => chain,
+      rangeGt: () => chain,
+      rangeGte: () => chain,
+      rangeLt: () => chain,
+      rangeLte: () => chain,
+      rangeAdjacent: () => chain,
+      overlaps: () => chain,
+      textSearch: () => chain,
+      match: () => chain,
+      not: () => chain,
+      or: () => chain,
+      filter: () => chain,
+      order: () => chain,
+      limit: () => chain,
+      range: () => chain,
+      abortSignal: () => chain,
       single: () => {
         // Handle special filter cases
         if (filters.length > 0) {
-          const hasNonExistentChallenge = filters.some(f => 
-            f.column === 'challenge' && f.value === 'non-existent-challenge'
+          const hasNonExistentChallenge = filters.some(
+            (f) => f.column === 'challenge' && f.value === 'non-existent-challenge'
           );
           if (hasNonExistentChallenge) {
             return Promise.resolve({ data: null, error: null });
           }
-          
-          const hasExpiredChallenge = filters.some(f => 
-            f.column === 'expires_at' && f.operator === 'gt' && 
-            new Date(f.value) < new Date()
+
+          const hasExpiredChallenge = filters.some(
+            (f) =>
+              f.column === 'expires_at' && f.operator === 'gt' && new Date(f.value) < new Date()
           );
           if (hasExpiredChallenge) {
             return Promise.resolve({ data: null, error: null });
           }
         }
-        
+
         // Return mock data based on table
-        return Promise.resolve({ 
-          data: getMockDataForTable(tableName), 
-          error: null 
+        return Promise.resolve({
+          data: getMockDataForTable(tableName),
+          error: null,
         });
       },
       maybeSingle: () => Promise.resolve({ data: null, error: null }),
       then: (callback: any) => {
         // Handle special filter cases
         if (filters.length > 0) {
-          const hasNonExistentChallenge = filters.some(f => 
-            f.column === 'challenge' && f.value === 'non-existent-challenge'
+          const hasNonExistentChallenge = filters.some(
+            (f) => f.column === 'challenge' && f.value === 'non-existent-challenge'
           );
           if (hasNonExistentChallenge) {
             return callback({ data: [], error: null });
           }
-          
-          const hasExpiredChallenge = filters.some(f => 
-            f.column === 'expires_at' && f.operator === 'gt' && 
-            new Date(f.value) < new Date()
+
+          const hasExpiredChallenge = filters.some(
+            (f) =>
+              f.column === 'expires_at' && f.operator === 'gt' && new Date(f.value) < new Date()
           );
           if (hasExpiredChallenge) {
             return callback({ data: [], error: null });
           }
         }
-        
+
         // Return mock data as array
         const mockData = getMockDataForTable(tableName);
         const data = mockData ? [mockData] : [];
         return callback({ data, error: null });
-      }
+      },
     };
     return chain;
   };
@@ -341,7 +359,7 @@ const createMockSupabase = () => {
               mockData[tableName].set(id, record);
             }
             return callback({ data: [record], error: null });
-          }
+          },
         }),
         single: () => {
           const id = `mock-${Date.now()}`;
@@ -358,14 +376,14 @@ const createMockSupabase = () => {
             mockData[tableName].set(id, record);
           }
           return callback({ data: [record], error: null });
-        }
+        },
       };
       return insertChain;
     },
     update: () => createMockChain(tableName),
     upsert: () => createMockChain(tableName),
     delete: () => createMockChain(tableName),
-    then: (callback: any) => callback({ data: [], error: null })
+    then: (callback: any) => callback({ data: [], error: null }),
   });
 
   return {
@@ -374,47 +392,50 @@ const createMockSupabase = () => {
       getUser: (token: string) => {
         // Return error for invalid tokens
         if (token === 'invalid.token') {
-          return Promise.resolve({ 
-            data: { user: null }, 
-            error: { message: 'Invalid token' } 
+          return Promise.resolve({
+            data: { user: null },
+            error: { message: 'Invalid token' },
           });
         }
-        return Promise.resolve({ 
-          data: { user: { id: 'test-user-id', email: 'test@example.com' } }, 
-          error: null 
+        return Promise.resolve({
+          data: { user: { id: 'test-user-id', email: 'test@example.com' } },
+          error: null,
         });
       },
-      signInWithPassword: () => Promise.resolve({ 
-        data: { user: { id: 'test-user-id', email: 'test@example.com' }, session: null }, 
-        error: null 
-      }),
-      signUp: () => Promise.resolve({ 
-        data: { user: { id: 'test-user-id', email: 'test@example.com' }, session: null }, 
-        error: null 
-      })
-    }
+      signInWithPassword: () =>
+        Promise.resolve({
+          data: { user: { id: 'test-user-id', email: 'test@example.com' }, session: null },
+          error: null,
+        }),
+      signUp: () =>
+        Promise.resolve({
+          data: { user: { id: 'test-user-id', email: 'test@example.com' }, session: null },
+          error: null,
+        }),
+    },
   };
 };
 
 // Use mock in test environment, real client otherwise
-export const supabase = process.env.NODE_ENV === 'test' 
-  ? createMockSupabase() as any
-  : (() => {
-      if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-        throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY environment variable');
-      }
-
-      return createClient<Database>(
-        process.env.SUPABASE_URL,
-        process.env.SUPABASE_SERVICE_ROLE_KEY,
-        {
-          auth: {
-            autoRefreshToken: false,
-            persistSession: false,
-          },
-          db: {
-            schema: 'public',
-          },
+export const supabase =
+  process.env.NODE_ENV === 'test'
+    ? (createMockSupabase() as any)
+    : (() => {
+        if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+          throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY environment variable');
         }
-      );
-    })();
+
+        return createClient<Database>(
+          process.env.SUPABASE_URL,
+          process.env.SUPABASE_SERVICE_ROLE_KEY,
+          {
+            auth: {
+              autoRefreshToken: false,
+              persistSession: false,
+            },
+            db: {
+              schema: 'public',
+            },
+          }
+        );
+      })();
