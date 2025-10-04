@@ -8,5 +8,8 @@ export interface RoleInfo {
   hostStatus?: HostStatus;
   canAccessHostDashboard: boolean;
   hasProperties: boolean;
+<<<<<<< HEAD
   isLoading?: boolean;
+=======
+>>>>>>> 60310ea (feat: add stellar contract dependencies and integration setup)
 }
