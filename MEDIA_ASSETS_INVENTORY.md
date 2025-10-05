@@ -38,15 +38,11 @@ This document provides a comprehensive inventory of all media files available in
 |------|------|--------|---------|
 | `house.webp` | Property | WebP | Default property placeholder |
 | `house1.webp` | Property | WebP | Sample property image 1 |
-| `house2.webp` | Property | WebP | Sample property image 2 |
-| `house3.webp` | Property | WebP | Sample property image 3 |
-| `house4.webp` | Property | WebP | Sample property image 4 |
-| `house5.webp` | Property | WebP | Sample property image 5 |
 
 #### UI Elements
 | File | Type | Format | Purpose |
 |------|------|--------|---------|
-| `logo.png` | Logo | PNG | Application logo |
+| `stellarrentlogo.png` | Logo | PNG | Application logo |
 | `map-pointer.png` | Icon | PNG | Map location markers |
 | `file.svg` | Icon | SVG | File upload, document features |
 | `globe.svg` | Icon | SVG | Global features, international |
