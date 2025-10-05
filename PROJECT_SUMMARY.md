@@ -96,8 +96,15 @@ StellarRent connects property owners and tenants through a decentralized platfor
 ### Frontend UI Assets
 Located in `apps/web/public/`:
 - **Icons**: 11 WebP icons (agenda, calendar, heart, location, lock, menu, message, search, send, settings, homepage-arrow)
-- **Property Images**: 6 WebP house images for property listings
+- **Property Images**: 2 WebP house images for property listings (consolidated from 6)
 - **UI Elements**: SVG icons for navigation and interface elements
+
+### Media Cleanup Summary
+**Recent Optimization**: Removed redundant media files to reduce repository bloat:
+- ✅ **Eliminated duplicate logo**: Removed redundant `logo.png`, now using `stellarrentlogo.png`
+- ✅ **Consolidated property images**: Reduced from 6 to 2 house images while maintaining functionality
+- ✅ **Updated all references**: Code and documentation updated to reflect new media structure
+- ✅ **Space optimization**: Reduced media file count by 5 files without losing functionality
 
 ---
 
