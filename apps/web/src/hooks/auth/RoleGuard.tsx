@@ -20,7 +20,7 @@ export default function RoleGuard({ children, requiredRole }: RoleGuardProps) {
     }
 
     if (requiredRole === 'host') {
-      if ((role !== 'host' && role !== 'dual') || !canAccessHostDashboard) {
+      if (!(role === 'host' || role === 'dual') || !canAccessHostDashboard) {
         router.replace('/dashboard');
       }
     } else if (requiredRole === 'guest') {
