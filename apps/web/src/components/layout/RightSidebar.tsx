@@ -2,6 +2,7 @@
 
 import { User } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { IconContainer } from '../ui/icon-container';
 
 type SidebarItemProps = {
@@ -14,11 +15,7 @@ type SidebarItemProps = {
 
 const SidebarItem = ({ src, alt, label, size = 24, withContainer = false }: SidebarItemProps) => (
   <div className="relative group">
-    <button
-      type="button"
-      aria-label={label}
-      className="text-primary transition-colors duration-200 p-1"
-    >
+    <div className="text-primary transition-colors duration-200 p-1">
       {withContainer ? (
         <IconContainer
           size="sm"
@@ -27,7 +24,7 @@ const SidebarItem = ({ src, alt, label, size = 24, withContainer = false }: Side
       ) : (
         <Image src={src} alt={alt} width={size} height={size} className="p-0.5" />
       )}
-    </button>
+    </div>
     <span className="pointer-events-none absolute right-full top-1/2 -translate-y-1/2 mr-3 px-3 py-1 rounded-full bg-primary/90 text-black text-xs font-medium opacity-0 translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all whitespace-nowrap shadow">
       {label}
     </span>
@@ -49,7 +46,13 @@ export const RightSidebar = () => {
         <SidebarItem src="/icons/lock.webp" alt="My Calendar" label="My Calendar" />
         <SidebarItem src="/icons/message.webp" alt="Chats" label="Chats" />
         <SidebarItem src="/icons/send.webp" alt="Applications" label="Applications" />
-        <SidebarItem src="/icons/settings.webp" alt="Guest Invitations" label="Guest Invitations" />
+        <Link href="/invitations" aria-label="Guest Invitations">
+          <SidebarItem
+            src="/icons/settings.webp"
+            alt="Guest Invitations"
+            label="Guest Invitations"
+          />
+        </Link>
         <SidebarItem src="/icons/heart.webp" alt="My Bookings" label="My Bookings" />
       </div>
 
