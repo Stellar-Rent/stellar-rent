@@ -24,21 +24,18 @@ type SidebarItemProps = {
 };
 
 const SidebarItem = ({ src, alt, label, size = 24, withContainer = false }: SidebarItemProps) => (
-  <div className="relative group">
-    <button
-      type="button"
-      aria-label={label}
-      className="text-primary transition-colors duration-200 p-1"
-    >
-      {withContainer ? (
-        <IconContainer
-          size="sm"
-          icon={<Image src={src} alt={alt} width={size} height={size} className="p-0.5" />}
-        />
-      ) : (
-        <Image src={src} alt={alt} width={size} height={size} className="p-0.5" />
-      )}
-    </button>
+  <div
+    className="relative group text-primary transition-colors duration-200 p-1"
+    aria-label={label}
+  >
+    {withContainer ? (
+      <IconContainer
+        size="sm"
+        icon={<Image src={src} alt={alt} width={size} height={size} className="p-0.5" />}
+      />
+    ) : (
+      <Image src={src} alt={alt} width={size} height={size} className="p-0.5" />
+    )}
     <span className="pointer-events-none absolute right-full top-1/2 -translate-y-1/2 mr-3 px-3 py-1 rounded-full bg-primary/90 text-black text-xs font-medium opacity-0 translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all whitespace-nowrap shadow">
       {label}
     </span>

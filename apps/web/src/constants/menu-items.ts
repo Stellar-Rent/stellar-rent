@@ -20,6 +20,7 @@ export const GUEST_MENU_ITEMS: MenuItem[] = [
 ];
 
 export const TENANT_MENU_ITEMS: MenuItem[] = [
+  // TODO: Wire menu item to navigation drawer
   { id: 'menu', src: '/icons/menu.webp', alt: 'Menu', label: 'Menu', href: '#' },
   {
     id: 'search',
@@ -67,6 +68,7 @@ export const TENANT_MENU_ITEMS: MenuItem[] = [
 ];
 
 export const HOST_MENU_ITEMS: MenuItem[] = [
+  // TODO: Wire menu item to navigation drawer
   { id: 'menu', src: '/icons/menu.webp', alt: 'Menu', label: 'Menu', href: '#' },
   {
     id: 'properties',
@@ -81,7 +83,7 @@ export const HOST_MENU_ITEMS: MenuItem[] = [
     src: '/icons/lock.webp',
     alt: 'Property Calendar',
     label: 'Property Calendar',
-    href: '/dashboard/host?tab=bookings',
+    href: '/dashboard/host?tab=calendar',
   },
   {
     id: 'messages',
@@ -114,6 +116,7 @@ export const HOST_MENU_ITEMS: MenuItem[] = [
 ];
 
 export const DUAL_MENU_ITEMS: MenuItem[] = [
+  // TODO: Wire menu item to navigation drawer
   { id: 'menu', src: '/icons/menu.webp', alt: 'Menu', label: 'Menu', href: '#' },
   {
     id: 'search',
