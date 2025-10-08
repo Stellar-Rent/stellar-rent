@@ -26,7 +26,6 @@ export default function RoleGuard({ children, requiredRole }: RoleGuardProps) {
     }
 
     if (requiredRole === 'host') {
-      // TODO: Add check for hasProperties when available in useUserRole
       if (!(role === 'host' || role === 'dual') || !canAccessHostDashboard) {
         router.replace('/dashboard');
       }
