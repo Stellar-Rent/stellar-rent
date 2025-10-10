@@ -7,7 +7,7 @@ import {
 import { createMockBlockchainServices } from '../mocks/blockchain-integration.mock';
 
 // Mock Supabase client - Bun style
-import { mock } from 'bun:test';
+import { afterAll, afterEach, mock } from 'bun:test';
 
 mock.module('../../src/config/supabase', () => ({
   supabase: {
@@ -17,10 +17,16 @@ mock.module('../../src/config/supabase', () => ({
           single: mock(() => Promise.resolve({ data: null, error: null })),
           then: mock((callback: any) => callback({ data: [], error: null })),
         })),
+        in: mock(() => Promise.resolve({ data: [], error: null })),
+        match: mock(() => ({
+          single: mock(() => Promise.resolve({ data: null, error: null })),
+        })),
         then: mock((callback: any) => callback({ data: [], error: null })),
       })),
       insert: mock(() => ({
-        select: mock(() => Promise.resolve({ data: [], error: null })),
+        select: mock(() => ({
+          single: mock(() => Promise.resolve({ data: [], error: null })),
+        })),
         then: mock((callback: any) => callback({ data: [], error: null })),
       })),
       update: mock(() => ({
@@ -29,13 +35,11 @@ mock.module('../../src/config/supabase', () => ({
       })),
       delete: mock(() => ({
         eq: mock(() => Promise.resolve({ data: [], error: null })),
+        in: mock(() => Promise.resolve({ data: [], error: null })),
         then: mock((callback: any) => callback({ data: [], error: null })),
       })),
-      upsert: mock(() => ({
-        eq: mock(() => Promise.resolve({ data: [], error: null })),
-        then: mock((callback: any) => callback({ data: [], error: null })),
-      })),
-      then: mock((callback: any) => callback({ data: [], error: null })),
+      upsert: mock(() => Promise.resolve({ data: [], error: null })),
+      then: mock((callback: any) => callback({ data: [], error: null }))
     })),
     auth: {
       getUser: mock(() =>
