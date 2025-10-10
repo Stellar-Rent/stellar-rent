@@ -61,6 +61,10 @@
         "typescript": "^5.3.3",
       },
     },
+    "apps/stellar-contracts": {
+      "name": "stellar-rent-contracts",
+      "version": "1.0.0",
+    },
     "apps/web": {
       "name": "web",
       "version": "0.1.0",
@@ -2237,6 +2241,8 @@
     "stellar-cli": ["stellar-cli@1.0.3", "", { "dependencies": { "babel": "^6.23.0", "babel-core": "^6.26.0", "commander": "^2.12.2", "coveralls": "^3.0.0", "dotenv": "^4.0.0", "request": "^2.83.0", "snyk": "^1.69.7", "stellar-sdk": "^0.8.0" }, "bin": { "stellar-cli": "./dist/index.js" } }, "sha512-sLuuF2YyzjiLZ4HTQGJWAVAkRdCzhlQvGRiV/68KKlU+rRjHVCDfB3alj/PzaWmq9Y5viTG+G5Ssg8ncVmc/vg=="],
 
     "stellar-rent-backend": ["stellar-rent-backend@workspace:apps/backend"],
+
+    "stellar-rent-contracts": ["stellar-rent-contracts@workspace:apps/stellar-contracts"],
 
     "stellar-sdk": ["stellar-sdk@13.3.0", "", { "dependencies": { "@stellar/stellar-base": "^13.1.0", "axios": "^1.8.4", "bignumber.js": "^9.3.0", "eventsource": "^2.0.2", "feaxios": "^0.0.23", "randombytes": "^2.1.0", "toml": "^3.0.0", "urijs": "^1.19.1" } }, "sha512-jAA3+U7oAUueldoS4kuEhcym+DigElWq9isPxt7tjMrE7kTJ2vvY29waavUb2FSfQIWwGbuwAJTYddy2BeyJsw=="],
 
