@@ -73,6 +73,10 @@ export const BookingResponseSchema = z.object({
 
 export const confirmPaymentSchema = z.object({
   transactionHash: z.string().min(10, 'Transaction hash is required and must be valid'),
+  sourcePublicKey: z
+    .string()
+    .min(56, 'Source public key is required')
+    .refine((v) => v.startsWith('G') && v.length === 56, 'Invalid Stellar public key'),
 });
 
 export interface ConflictingBooking {

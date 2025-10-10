@@ -173,7 +173,14 @@ export const getBooking = async (req: AuthRequest, res: Response) => {
 
 export const confirmPayment = async (req: AuthRequest, res: Response) => {
   try {
-    const { bookingId, transactionHash, sourcePublicKey } = req.body;
+    const { transactionHash, sourcePublicKey } = req.body;
+    const paramsValidation = BookingParamsSchema.safeParse(req.params);
+    if (!paramsValidation.success) {
+      return res
+        .status(400)
+        .json(formatErrorResponse('Invalid booking ID', paramsValidation.error.errors));
+    }
+    const { bookingId } = paramsValidation.data;
     const userId = req.user?.id;
 
     if (!userId) {

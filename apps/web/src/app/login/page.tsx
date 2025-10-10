@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/auth/use-auth';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 
 export default function LoginPage() {
@@ -14,6 +14,18 @@ export default function LoginPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const searchParams = useSearchParams();
+  const redirect = searchParams.get('redirect');
+
+  const validateRedirect = (redirectParam: string | null): string => {
+    if (!redirectParam) return '/dashboard';
+
+    if (redirectParam.startsWith('/') && !redirectParam.startsWith('//')) {
+      return redirectParam;
+    }
+
+    return '/dashboard';
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -23,10 +35,11 @@ export default function LoginPage() {
     const formData = new FormData(e.currentTarget);
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
+    const safeRedirect = validateRedirect(redirect);
 
     try {
       await login(email, password);
-      router.push('/dashboard'); // Redirect to dashboard after login
+      router.replace(safeRedirect);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to login');
     } finally {
@@ -77,7 +90,7 @@ export default function LoginPage() {
         </form>
 
         <p className="mt-4 text-center text-sm text-gray-600">
-          Don't have an account?{' '}
+          {"Don't"} have an account?{' '}
           <Link href="/register" className="text-blue-600 hover:text-blue-800">
             Register here
           </Link>

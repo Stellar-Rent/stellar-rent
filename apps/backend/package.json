@@ -10,6 +10,7 @@
     "dev": "bun run --watch src/index.ts",
     "build": "bun build ./src/index.ts --outdir ./dist",
     "test": "bun test",
+    "test:int": "bun test tests/integration --timeout=60000",
     "test:watch": "bun test --watch",
     "test:coverage": "bun test --coverage"
   },

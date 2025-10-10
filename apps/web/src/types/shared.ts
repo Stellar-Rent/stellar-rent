@@ -12,6 +12,9 @@ export interface UserProfile {
   memberSince: string;
   totalBookings: number;
   totalSpent: number;
+  // Host-related fields
+  hostStatus?: 'pending' | 'verified' | 'rejected' | 'suspended';
+  hasProperties?: boolean;
   preferences: {
     notifications: boolean;
     emailUpdates: boolean;

@@ -146,6 +146,22 @@ bun test tests/api
 bun test tests/unit/location.test.ts
 ```
 
+## Integration Tests
+
+Integration tests exercise end-to-end flows across routing, controllers, services, and the database to verify real-world scenarios (e.g., booking creation, payment confirmation, concurrency handling).
+
+Run integration tests:
+
+```bash
+npm run test:int
+```
+
+**Test Environment Configuration:**
+- Tests use mocked blockchain services (TrustlessWork, Soroban) to avoid real network calls
+- When `NODE_ENV=test`, the Supabase configuration automatically switches to mocks instead of real database connections
+- To use a real test database, set `USE_REAL_DB=true` in your `.env.test` file
+- Make sure you have a `.env.test` file configured with valid test database credentials and any required API keys
+
 ## Environment Variables
 
 All environment variables should be in the `.env` file:
