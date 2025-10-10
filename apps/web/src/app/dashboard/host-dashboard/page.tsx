@@ -4,6 +4,7 @@ import BookingHistory from '@/components/dashboard/BookingHistory';
 import NotificationSystem from '@/components/dashboard/NotificationSystem';
 import ProfileManagement from '@/components/dashboard/ProfileManagement';
 import PropertyManagement from '@/components/dashboard/PropertyManagement';
+import RoleGuard from '@/hooks/auth/RoleGuard';
 import { useRealTimeNotifications } from '@/hooks/useRealTimeUpdates';
 import { Calendar, DollarSign, Settings, User, Wallet } from 'lucide-react';
 import Image from 'next/image';
@@ -22,7 +23,7 @@ import type { Property, UserProfile } from './types';
 const HostDashboard = () => {
   const [activeTab, setActiveTab] = useState('properties');
   const [properties, setProperties] = useState(mockProperties);
-  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
+  const [selectedProperty, _setSelectedProperty] = useState<Property | null>(null);
   const [showCalendarModal, setShowCalendarModal] = useState(false);
   const [showAddPropertyModal, setShowAddPropertyModal] = useState(false);
   const [selectedDates, setSelectedDates] = useState<Set<string>>(new Set());
@@ -195,211 +196,213 @@ const HostDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 bg-gradient-to-b from-white to-blue-50 dark:from-[#0B1D39] dark:to-[#071429] dark:text-white">
-      {/* Header */}
-      <header className="bg-white dark:bg-card/90 dark:text-foreground shadow-sm border-b">
-        <div className="w-full px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Host Dashboard</h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <NetworkStatus isConnected={true} />
-              <NotificationSystem
-                notifications={notifications.map((notification) => ({
-                  id: notification.id,
-                  type: notification.type === 'property' ? 'booking' : notification.type,
-                  title: notification.title,
-                  message: notification.message,
-                  timestamp: new Date(notification.createdAt),
-                  read: notification.isRead,
-                  priority: notification.priority,
-                }))}
-                onMarkAsRead={handleMarkAsRead}
-                onMarkAllAsRead={handleMarkAllAsRead}
-                onDeleteNotification={handleDeleteNotification}
-                onDeleteAllNotifications={handleDeleteAllNotifications}
-                unreadCount={unreadNotifications}
-              />
-              <button type="button" className="text-gray-500 dark:text-white">
-                <Settings className="w-6 h-6" />
-              </button>
-              <div className="flex items-center space-x-3">
-                <Image
-                  src={user.avatar}
-                  alt={user.name}
-                  width={32}
-                  height={32}
-                  className="rounded-full"
+    <RoleGuard requiredRole="host">
+      <div className="min-h-screen bg-gray-50 bg-gradient-to-b from-white to-blue-50 dark:from-[#0B1D39] dark:to-[#071429] dark:text-white">
+        {/* Header */}
+        <header className="bg-white dark:bg-card/90 dark:text-foreground shadow-sm border-b">
+          <div className="w-full px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <div className="flex items-center">
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Host Dashboard</h1>
+              </div>
+              <div className="flex items-center space-x-4">
+                <NetworkStatus isConnected={true} />
+                <NotificationSystem
+                  notifications={notifications.map((notification) => ({
+                    id: notification.id,
+                    type: notification.type === 'property' ? 'booking' : notification.type,
+                    title: notification.title,
+                    message: notification.message,
+                    timestamp: new Date(notification.createdAt),
+                    read: notification.isRead,
+                    priority: notification.priority,
+                  }))}
+                  onMarkAsRead={handleMarkAsRead}
+                  onMarkAllAsRead={handleMarkAllAsRead}
+                  onDeleteNotification={handleDeleteNotification}
+                  onDeleteAllNotifications={handleDeleteAllNotifications}
+                  unreadCount={unreadNotifications}
                 />
-                <span className="text-sm font-medium text-gray-700 dark:text-white">
-                  {user.name}
-                </span>
+                <button type="button" className="text-gray-500 dark:text-white">
+                  <Settings className="w-6 h-6" />
+                </button>
+                <div className="flex items-center space-x-3">
+                  <Image
+                    src={user.avatar}
+                    alt={user.name}
+                    width={32}
+                    height={32}
+                    className="rounded-full"
+                  />
+                  <span className="text-sm font-medium text-gray-700 dark:text-white">
+                    {user.name}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
+        </header>
+
+        {/* Navigation Tabs */}
+        <div className="w-full px-4 sm:px-6 lg:px-8 mt-6">
+          <div className="border-b border-gray-200">
+            <nav className="flex space-x-8">
+              {[
+                { id: 'properties', label: 'My Properties', icon: User },
+                { id: 'bookings', label: 'Bookings', icon: Calendar },
+                { id: 'earnings', label: 'Earnings', icon: DollarSign },
+                { id: 'profile', label: 'Profile', icon: User },
+                { id: 'wallet', label: 'Wallet', icon: Wallet },
+              ].map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <button
+                    type="button"
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm ${
+                      activeTab === tab.id
+                        ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                        : 'border-transparent text-gray-500 dark:text-white  hover:border-gray-300'
+                    }`}
+                  >
+                    <Icon className="w-5 h-5" />
+                    <span>{tab.label}</span>
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
         </div>
-      </header>
 
-      {/* Navigation Tabs */}
-      <div className="w-full px-4 sm:px-6 lg:px-8 mt-6">
-        <div className="border-b border-gray-200">
-          <nav className="flex space-x-8">
-            {[
-              { id: 'properties', label: 'My Properties', icon: User },
-              { id: 'bookings', label: 'Bookings', icon: Calendar },
-              { id: 'earnings', label: 'Earnings', icon: DollarSign },
-              { id: 'profile', label: 'Profile', icon: User },
-              { id: 'wallet', label: 'Wallet', icon: Wallet },
-            ].map((tab) => {
-              const Icon = tab.icon;
-              return (
-                <button
-                  type="button"
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm ${
-                    activeTab === tab.id
-                      ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                      : 'border-transparent text-gray-500 dark:text-white  hover:border-gray-300'
-                  }`}
-                >
-                  <Icon className="w-5 h-5" />
-                  <span>{tab.label}</span>
-                </button>
-              );
-            })}
-          </nav>
-        </div>
-      </div>
+        {/* Main Content */}
+        <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
+          {activeTab === 'properties' && (
+            <PropertyManagement
+              properties={properties}
+              isLoading={false}
+              onAddProperty={(property) => {
+                const newPropertyWithId = {
+                  ...property,
+                  id: Date.now(),
+                  rating: 0,
+                  reviews: 0,
+                  bookings: 0,
+                  earnings: 0,
+                };
+                setProperties([...properties, newPropertyWithId]);
+              }}
+              onUpdateProperty={(id, updates) => {
+                setProperties(properties.map((p) => (p.id === id ? { ...p, ...updates } : p)));
+              }}
+              onDeleteProperty={(id) => {
+                setProperties(properties.filter((p) => p.id !== id));
+              }}
+              onToggleStatus={(id, status) => {
+                setProperties(properties.map((p) => (p.id === id ? { ...p, status } : p)));
+              }}
+            />
+          )}
 
-      {/* Main Content */}
-      <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
-        {activeTab === 'properties' && (
-          <PropertyManagement
-            properties={properties}
-            isLoading={false}
-            onAddProperty={(property) => {
-              const newPropertyWithId = {
-                ...property,
-                id: Date.now(),
-                rating: 0,
-                reviews: 0,
-                bookings: 0,
-                earnings: 0,
-              };
-              setProperties([...properties, newPropertyWithId]);
-            }}
-            onUpdateProperty={(id, updates) => {
-              setProperties(properties.map((p) => (p.id === id ? { ...p, ...updates } : p)));
-            }}
-            onDeleteProperty={(id) => {
-              setProperties(properties.filter((p) => p.id !== id));
-            }}
-            onToggleStatus={(id, status) => {
-              setProperties(properties.map((p) => (p.id === id ? { ...p, status } : p)));
-            }}
-          />
-        )}
+          {activeTab === 'bookings' && (
+            <div>
+              <div className="mb-8">
+                <h2 className="text-3xl font-bold dark:text-white text-gray-900">
+                  Property Bookings
+                </h2>
+                <p className="text-gray-600 dark:text-white mt-1">
+                  Manage bookings for your properties
+                </p>
+              </div>
 
-        {activeTab === 'bookings' && (
-          <div>
-            <div className="mb-8">
-              <h2 className="text-3xl font-bold dark:text-white text-gray-900">
-                Property Bookings
-              </h2>
-              <p className="text-gray-600 dark:text-white mt-1">
-                Manage bookings for your properties
-              </p>
+              {/* Statistics Cards */}
+              <BookingStats bookings={bookings} />
+
+              <BookingHistory
+                bookings={bookings}
+                onCancelBooking={handleCancelBooking}
+                isLoading={false}
+              />
             </div>
+          )}
 
-            {/* Statistics Cards */}
-            <BookingStats bookings={bookings} />
+          {activeTab === 'earnings' && (
+            <div>
+              <div className="mb-8">
+                <h2 className="text-3xl font-bold dark:text-white text-gray-900">
+                  Earnings Overview
+                </h2>
+                <p className="text-gray-600 mt-1 dark:text-white">Track your income and payouts</p>
+              </div>
 
-            <BookingHistory
-              bookings={bookings}
-              onCancelBooking={handleCancelBooking}
+              {/* Earnings Stats */}
+              <EarningsStats
+                totalEarnings={mockEarnings.totalEarnings}
+                monthlyEarnings={mockEarnings.monthlyEarnings}
+                pendingPayouts={mockEarnings.pendingPayouts}
+              />
+
+              {/* Recent Transactions */}
+              <RecentTransactions transactions={mockEarnings.transactions} />
+            </div>
+          )}
+
+          {activeTab === 'profile' && (
+            <ProfileManagement
+              user={user}
+              onUpdateProfile={handleUpdateProfile}
+              onUploadAvatar={handleUploadAvatar}
               isLoading={false}
             />
-          </div>
-        )}
+          )}
 
-        {activeTab === 'earnings' && (
-          <div>
-            <div className="mb-8">
-              <h2 className="text-3xl font-bold dark:text-white text-gray-900">
-                Earnings Overview
-              </h2>
-              <p className="text-gray-600 mt-1 dark:text-white">Track your income and payouts</p>
+          {activeTab === 'wallet' && (
+            <div>
+              <div className="mb-8">
+                <h2 className="text-3xl font-bold dark:text-white text-gray-900">
+                  Wallet & Payments
+                </h2>
+                <p className="text-gray-600 dark:text-white mt-1">
+                  Manage your payment methods and payouts
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Balance */}
+                <AvailableBalance balance={mockEarnings.pendingPayouts} />
+
+                {/* Payment Methods */}
+                <PaymentMethods />
+              </div>
+
+              {/* Payout History */}
+              <PayoutHistory />
             </div>
+          )}
+        </div>
 
-            {/* Earnings Stats */}
-            <EarningsStats
-              totalEarnings={mockEarnings.totalEarnings}
-              monthlyEarnings={mockEarnings.monthlyEarnings}
-              pendingPayouts={mockEarnings.pendingPayouts}
-            />
+        {/* Calendar Modal */}
+        <CalendarModal
+          open={showCalendarModal}
+          selectedProperty={selectedProperty}
+          selectedDates={selectedDates}
+          onToggleDate={toggleDateSelection}
+          onClearAll={() => setSelectedDates(new Set())}
+          onClose={() => setShowCalendarModal(false)}
+          onSave={() => setShowCalendarModal(false)}
+        />
 
-            {/* Recent Transactions */}
-            <RecentTransactions transactions={mockEarnings.transactions} />
-          </div>
-        )}
-
-        {activeTab === 'profile' && (
-          <ProfileManagement
-            user={user}
-            onUpdateProfile={handleUpdateProfile}
-            onUploadAvatar={handleUploadAvatar}
-            isLoading={false}
-          />
-        )}
-
-        {activeTab === 'wallet' && (
-          <div>
-            <div className="mb-8">
-              <h2 className="text-3xl font-bold dark:text-white text-gray-900">
-                Wallet & Payments
-              </h2>
-              <p className="text-gray-600 dark:text-white mt-1">
-                Manage your payment methods and payouts
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Balance */}
-              <AvailableBalance balance={mockEarnings.pendingPayouts} />
-
-              {/* Payment Methods */}
-              <PaymentMethods />
-            </div>
-
-            {/* Payout History */}
-            <PayoutHistory />
-          </div>
-        )}
+        {/* Add Property Modal */}
+        <AddPropertyModal
+          open={showAddPropertyModal}
+          onClose={() => setShowAddPropertyModal(false)}
+          newProperty={newProperty}
+          setNewProperty={(updated) => setNewProperty(updated)}
+          onAmenityToggle={handleAmenityToggle}
+          onSubmit={handleAddProperty}
+        />
       </div>
-
-      {/* Calendar Modal */}
-      <CalendarModal
-        open={showCalendarModal}
-        selectedProperty={selectedProperty}
-        selectedDates={selectedDates}
-        onToggleDate={toggleDateSelection}
-        onClearAll={() => setSelectedDates(new Set())}
-        onClose={() => setShowCalendarModal(false)}
-        onSave={() => setShowCalendarModal(false)}
-      />
-
-      {/* Add Property Modal */}
-      <AddPropertyModal
-        open={showAddPropertyModal}
-        onClose={() => setShowAddPropertyModal(false)}
-        newProperty={newProperty}
-        setNewProperty={(updated) => setNewProperty(updated)}
-        onAmenityToggle={handleAmenityToggle}
-        onSubmit={handleAddProperty}
-      />
-    </div>
+    </RoleGuard>
   );
 };
 

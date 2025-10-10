@@ -6,28 +6,68 @@ import { ArrowRight, Home, User } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { DashboardSelector } from '~/components/dashboard/DashboardSelector';
+import { useUserRole } from '~/hooks/useUserRole';
 
-const DashboardPage = () => {
-  const { user, isAuthenticated } = useAuth();
+export default function DashboardPage() {
+  const { role, canAccessHostDashboard, isLoading } = useUserRole();
+  const { isAuthenticated, isLoading: isAuthLoading, user } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.push('/login');
+    if (isAuthLoading || isLoading) {
+      return;
     }
-  }, [isAuthenticated, router]);
+
+    if (!isAuthenticated) {
+      router.replace('/login');
+      return;
+    }
+
+    if (role === 'host' && canAccessHostDashboard) {
+      router.replace('/dashboard/host-dashboard');
+    } else if (role === 'guest') {
+      router.replace('/dashboard/tenant-dashboard');
+    }
+  }, [role, canAccessHostDashboard, router, isLoading, isAuthenticated, isAuthLoading]);
+
+  if (isLoading || isAuthLoading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
 
   if (!isAuthenticated) {
     return <div>Loading...</div>;
   }
 
+  if (role === 'host' && !canAccessHostDashboard) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen text-center">
+        <h1 className="text-2xl font-bold mb-4">Welcome, Host!</h1>
+        <p className="mb-4">
+          You don't have any properties yet. Please create a property to access the host dashboard.
+        </p>
+        <Link
+          href="/add-property"
+          className="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700"
+        >
+          Create Property
+        </Link>
+      </div>
+    );
+  }
+
+  if (role === 'dual') {
+    return <DashboardSelector />;
+  }
+
+  // Default dashboard selection UI (from main)
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white dark:from-[#0B1D39] dark:to-[#071429]">
       <div className="w-full px-4 sm:px-6 lg:px-8 py-12">
         <Breadcrumb className="mb-8" />
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-            Welcome back, {user?.name}! 👋
+            Welcome back, {user?.name || 'User'}! 👋
           </h1>
           <p className="text-xl text-gray-600 dark:text-gray-300">
             Choose your dashboard to get started
@@ -84,36 +124,27 @@ const DashboardPage = () => {
               </h3>
 
               <p className="text-gray-600 dark:text-gray-300 mb-6">
-                View your bookings, manage your profile, track payments, and explore travel
-                analytics.
+                Browse properties, manage bookings, and track your stays seamlessly.
               </p>
 
               <div className="space-y-2">
                 <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
                   <div className="w-2 h-2 bg-blue-500 rounded-full mr-3" />
-                  My Bookings
+                  Explore Listings
                 </div>
                 <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
                   <div className="w-2 h-2 bg-green-500 rounded-full mr-3" />
-                  Wallet & Payments
+                  Booking Management
                 </div>
                 <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
                   <div className="w-2 h-2 bg-purple-500 rounded-full mr-3" />
-                  Travel Analytics
+                  Payment History
                 </div>
               </div>
             </div>
           </Link>
         </div>
-
-        <div className="mt-12 text-center">
-          <p className="text-gray-500 dark:text-gray-400 text-sm">
-            Need help? Contact our support team
-          </p>
-        </div>
       </div>
     </div>
   );
-};
-
-export default DashboardPage;
+}

@@ -19,6 +19,7 @@ mock.module('../../src/config/supabase', () => ({
       select: mock(() => ({
         eq: mock(() => ({
           single: mock(() => Promise.resolve({ data: null, error: null })),
+<<<<<<< HEAD
           then: mock((callback: any) => callback({ data: [], error: null })),
         })),
         in: mock(() => Promise.resolve({ data: [], error: null })),
@@ -41,11 +42,26 @@ mock.module('../../src/config/supabase', () => ({
         eq: mock(() => Promise.resolve({ data: [], error: null })),
         in: mock(() => Promise.resolve({ data: [], error: null })),
         then: mock((callback: any) => callback({ data: [], error: null })),
+=======
+        })),
+      })),
+      insert: mock(() => ({
+        select: mock(() => Promise.resolve({ data: [], error: null })),
+      })),
+      update: mock(() => ({
+        eq: mock(() => Promise.resolve({ data: [], error: null })),
+      })),
+      delete: mock(() => ({
+        eq: mock(() => Promise.resolve({ data: [], error: null })),
+>>>>>>> f4a72f1 (feat: connect smart contracts to backend APIs)
       })),
       upsert: mock(() => ({
         eq: mock(() => Promise.resolve({ data: [], error: null })),
       })),
+<<<<<<< HEAD
       then: mock((callback: any) => callback({ data: [], error: null })),
+=======
+>>>>>>> f4a72f1 (feat: connect smart contracts to backend APIs)
     })),
     auth: {
       getUser: mock(() =>
