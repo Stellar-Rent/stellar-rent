@@ -48,7 +48,6 @@ console.log('Loaded environment variables:', {
 });
 
 export const app = express();
-const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(express.json());
@@ -81,14 +80,36 @@ app.get('/', (_req, res) => {
 app.use(errorMiddleware);
 
 // Start server
-app.listen(PORT, async () => {
-  console.log(`Running on port http://localhost:${PORT}`);
+async function start() {
+  const requested = Number(process.env.PORT ?? 3001);
 
-  try {
-    await initializeServices();
-    console.log('✅ All services initialized successfully');
-  } catch (error) {
-    console.error('❌ Failed to initialize services:', error);
-    console.error('⚠️  Server is running but some services may not be fully functional');
-  }
+  const server = app.listen(requested, async () => {
+    const { port } = server.address() as { port: number };
+    console.log(`Running on http://localhost:${port}`);
+    try {
+      await initializeServices();
+      console.log('✅ All services initialized successfully');
+    } catch (error) {
+      console.error('❌ Failed to initialize services:', error);
+      console.error('⚠️  Server is running but some services may not be fully functional');
+    }
+  });
+
+  server.on('error', (err: NodeJS.ErrnoException) => {
+    if (err.code === 'EADDRINUSE' && requested !== 0) {
+      console.warn(`⚠️  Port ${requested} in use; retrying with a random free port...`);
+      app.listen(0, () => {
+        const { port } = (server.address() || { port: requested }) as { port: number };
+        console.log(`Running on http://localhost:${port}`);
+      });
+    } else {
+      console.error('❌ Server error:', err);
+      process.exit(1);
+    }
+  });
+}
+
+start().catch((e) => {
+  console.error('❌ Failed to start server:', e);
+  process.exit(1);
 });
