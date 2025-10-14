@@ -1,4 +1,4 @@
-
+import Link from 'next/link';
 export default function BecomeHostPage() {
   
   return (
@@ -52,12 +52,12 @@ export default function BecomeHostPage() {
         </div>
 
         <div className="mt-8">
-          <a
-            href="/tenant-dashboard"
+          <Link
+              to="/dashboard"
             className="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition-colors"
           >
             Back to Dashboard
-          </a>
+          </Link>
         </div>
       </div>
     </div>
