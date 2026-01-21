@@ -6,6 +6,7 @@ export interface RouteInfo {
 }
 
 export const ROUTES: Record<string, RouteInfo> = {
+  // Public routes
   HOME: { path: '/', name: 'Home', requiresAuth: false },
   SEARCH: { path: '/search', name: 'Search Properties', requiresAuth: false },
   PROPERTY: {
@@ -17,6 +18,7 @@ export const ROUTES: Record<string, RouteInfo> = {
   REGISTER: { path: '/register', name: 'Register', requiresAuth: false },
   HELP: { path: '/help', name: 'Help Center', requiresAuth: false },
 
+  // Protected routes
   DASHBOARD: { path: '/dashboard', name: 'Dashboard', requiresAuth: true },
   TENANT_DASHBOARD: {
     path: '/dashboard/tenant-dashboard',
@@ -28,17 +30,29 @@ export const ROUTES: Record<string, RouteInfo> = {
     name: 'Host Dashboard',
     requiresAuth: true,
   },
-  BOOKINGS: {
-    path: '/dashboard/bookings',
-    name: 'My Bookings',
+  LIST_PROPERTY: {
+    path: '/list',
+    name: 'List Property',
     requiresAuth: true,
   },
-
+  INVITATIONS: {
+    path: '/invitations',
+    name: 'Guest Invitations',
+    requiresAuth: true,
+  },
   BOOKING_CONFIRMATION: {
     path: '/booking/confirmation',
     name: 'Booking Confirmation',
     requiresAuth: true,
   },
+
+  // Static pages (public)
+  FAQ: { path: '/faq', name: 'FAQs', requiresAuth: false },
+  CRYPTO_GUIDE: { path: '/crypto-guide', name: 'Crypto Guide', requiresAuth: false },
+  CONTACT: { path: '/contact', name: 'Contact', requiresAuth: false },
+  PRIVACY: { path: '/privacy', name: 'Privacy Policy', requiresAuth: false },
+  TERMS: { path: '/terms', name: 'Terms of Service', requiresAuth: false },
+  COOKIES: { path: '/cookies', name: 'Cookie Policy', requiresAuth: false },
 } as const;
 
 export const navigationHelpers = {
