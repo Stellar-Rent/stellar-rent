@@ -74,7 +74,7 @@ export const Footer = () => {
               </li>
               <li>
                 <Link
-                  href="/list/create"
+                  href="/list"
                   className="text-blue-200 hover:text-white dark:text-blue-300 dark:hover:text-white"
                 >
                   List Property
