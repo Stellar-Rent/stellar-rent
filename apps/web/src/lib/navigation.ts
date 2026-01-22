@@ -45,22 +45,14 @@ export const ROUTES: Record<string, RouteInfo> = {
     name: 'Booking Confirmation',
     requiresAuth: true,
   },
-
-  // Static pages (public)
-  FAQ: { path: '/faq', name: 'FAQs', requiresAuth: false },
-  CRYPTO_GUIDE: { path: '/crypto-guide', name: 'Crypto Guide', requiresAuth: false },
-  CONTACT: { path: '/contact', name: 'Contact', requiresAuth: false },
-  PRIVACY: { path: '/privacy', name: 'Privacy Policy', requiresAuth: false },
-  TERMS: { path: '/terms', name: 'Terms of Service', requiresAuth: false },
-  COOKIES: { path: '/cookies', name: 'Cookie Policy', requiresAuth: false },
 } as const;
 
 export const navigationHelpers = {
   getBookingsUrl: (isAuthenticated: boolean) =>
-    isAuthenticated ? '/dashboard/tenant-dashboard' : '/login?redirect=/tenant-dashboard',
+    isAuthenticated ? '/dashboard/tenant-dashboard' : '/login?redirect=/dashboard/tenant-dashboard',
 
   getDashboardUrl: (isAuthenticated: boolean) =>
-    isAuthenticated ? '/dashboard/tenant-dashboard' : '/login?redirect=/tenant-dashboard',
+    isAuthenticated ? '/dashboard/tenant-dashboard' : '/login?redirect=/dashboard/tenant-dashboard',
 
   goToHome: () => '/',
 
