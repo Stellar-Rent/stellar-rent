@@ -1,4 +1,7 @@
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'bun:test';
+// Import test setup first to configure environment variables
+import '../setup';
+
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, mock } from 'bun:test';
 import { randomBytes } from 'node:crypto';
 import {
   Account,
@@ -9,6 +12,13 @@ import {
   TransactionBuilder,
 } from '@stellar/stellar-sdk';
 import request from 'supertest';
+import { setupSupabaseMock } from '../mocks/supabase.mock';
+
+// Setup Supabase mock with auth support BEFORE importing app
+// This ensures the mock is in place when the app initializes
+const mockSupabase = setupSupabaseMock();
+
+// Import app after mock is set up
 import { app } from '../../src/';
 import { supabase } from '../../src/config/supabase';
 import { authenticateWallet } from '../../src/services/wallet-auth.service';

@@ -19,7 +19,7 @@
  */
 
 import { Contract, Networks, nativeToScVal, scValToNative } from '@stellar/stellar-sdk';
-import { Server as SorobanRpcServer } from '@stellar/stellar-sdk/lib/rpc';
+import { Server as SorobanRpcServer } from '@stellar/stellar-sdk/rpc';
 import { supabase } from '../config/supabase';
 import { bookingService } from './booking.service';
 import { loggingService } from './logging.service';
