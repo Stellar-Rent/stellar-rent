@@ -10,6 +10,9 @@ import {
   rpc,
   scValToNative,
 } from '@stellar/stellar-sdk';
+import { getSorobanConfig } from './config';
+import { buildTransaction, simulateTransaction, retryOperation } from './transactionUtils';
+import { classifyError } from './errors';
 
 const USDC_ISSUER = process.env.USDC_ISSUER || 'native';
 const USDC_ASSET = USDC_ISSUER === 'native' ? new Asset('XLM') : new Asset('USDC', USDC_ISSUER);
@@ -33,6 +36,8 @@ interface AvailabilityResponse {
 }
 
 async function checkAvailability(request: AvailabilityRequest): Promise<AvailabilityResponse> {
+  const config = getSorobanConfig();
+
   try {
     const now = new Date();
     if (request.dates.from < now) {
@@ -41,64 +46,56 @@ async function checkAvailability(request: AvailabilityRequest): Promise<Availabi
     if (request.dates.to <= request.dates.from) {
       throw new Error('End date must be after start date');
     }
-    const rpcServer = new rpc.Server(
-      process.env.STELLAR_RPC_URL || 'https://soroban-testnet.stellar.org'
+
+    return await retryOperation(
+      async () => {
+        const bookingContract = new Contract(config.contractIds.booking);
+        const fromTimestamp = Math.floor(request.dates.from.getTime() / 1000);
+        const toTimestamp = Math.floor(request.dates.to.getTime() / 1000);
+
+        const propertyAddress = Address.fromString(request.propertyId);
+        const propertyScVal = nativeToScVal(propertyAddress);
+        const fromScVal = nativeToScVal(fromTimestamp, { type: 'u64' });
+        const toScVal = nativeToScVal(toTimestamp, { type: 'u64' });
+        const operation = bookingContract.call(
+          'check_availability',
+          propertyScVal,
+          fromScVal,
+          toScVal
+        );
+
+        const tx = await buildTransaction(operation, config, {
+          fee: config.fees.default,
+        });
+
+        const availabilityData = await simulateTransaction(tx, config.rpcServer);
+
+        if (availabilityData.is_available) {
+          return {
+            isAvailable: true,
+          };
+        }
+
+        const conflictingBookings =
+          // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+          availabilityData.conflicting_bookings?.map((booking: any) => ({
+            bookingId: booking.id,
+            dates: {
+              from: new Date(booking.from_timestamp * 1000),
+              to: new Date(booking.to_timestamp * 1000),
+            },
+          })) || [];
+
+        return {
+          isAvailable: false,
+          conflictingBookings,
+        };
+      },
+      config
     );
-    const bookingContract = new Contract(process.env.BOOKING_CONTRACT_ADDRESS || '');
-    const fromTimestamp = Math.floor(request.dates.from.getTime() / 1000);
-    const toTimestamp = Math.floor(request.dates.to.getTime() / 1000);
-
-    const propertyAddress = Address.fromString(request.propertyId);
-    const propertyScVal = nativeToScVal(propertyAddress);
-    const fromScVal = nativeToScVal(fromTimestamp, { type: 'u64' });
-    const toScVal = nativeToScVal(toTimestamp, { type: 'u64' });
-    const operation = bookingContract.call('check_availability', propertyScVal, fromScVal, toScVal);
-
-    const account = await rpcServer.getAccount(process.env.STELLAR_SOURCE_ACCOUNT || '');
-    const transaction = new TransactionBuilder(account, {
-      fee: '100',
-      networkPassphrase: process.env.STELLAR_NETWORK_PASSPHRASE || Networks.TESTNET,
-    })
-      .addOperation(operation)
-      .setTimeout(30)
-      .build();
-
-    const simulationResult = await rpcServer.simulateTransaction(transaction);
-
-    if (!rpc.Api.isSimulationSuccess(simulationResult)) {
-      throw new Error(`Contract simulation failed: ${JSON.stringify(simulationResult)}`);
-    }
-
-    const contractResult = simulationResult.result?.retval;
-    if (!contractResult) {
-      throw new Error('No result returned from contract');
-    }
-
-    const availabilityData = scValToNative(contractResult);
-    if (availabilityData.is_available) {
-      return {
-        isAvailable: true,
-      };
-    }
-    const conflictingBookings =
-      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-      availabilityData.conflicting_bookings?.map((booking: any) => ({
-        bookingId: booking.id,
-        dates: {
-          from: new Date(booking.from_timestamp * 1000),
-          to: new Date(booking.to_timestamp * 1000),
-        },
-      })) || [];
-
-    return {
-      isAvailable: false,
-      conflictingBookings,
-    };
   } catch (error) {
     console.error('Availability check failed:', error);
-    throw new Error(
-      `Failed to check availability: ${error instanceof Error ? error.message : 'Unknown error'}`
-    );
+    throw classifyError(error);
   }
 }
 
@@ -106,22 +103,32 @@ async function checkAvailability(request: AvailabilityRequest): Promise<Availabi
 //Fetches the USDC balance for a given Stellar public key.
 ////////////////////////////////////////
 async function getAccountUSDCBalance(publicKey: string): Promise<string> {
+  const config = getSorobanConfig();
+
   try {
-    const server = new Horizon.Server(
-      process.env.STELLAR_HORIZON_URL || 'https://horizon-testnet.stellar.org'
+    return await retryOperation(
+      async () => {
+        const account = await config.horizonServer.loadAccount(publicKey);
+
+        // Filter for asset balances and then find USDC
+        const usdcBalance = account.balances.find((balance) => {
+          if (
+            balance.asset_type === 'credit_alphanum4' ||
+            balance.asset_type === 'credit_alphanum12'
+          ) {
+            // TypeScript should correctly narrow the type here, no explicit assertion needed
+            return (
+              balance.asset_code === USDC_ASSET.code &&
+              balance.asset_issuer === USDC_ASSET.issuer
+            );
+          }
+          return false;
+        });
+
+        return usdcBalance ? usdcBalance.balance : '0';
+      },
+      config
     );
-    const account = await server.loadAccount(publicKey);
-
-    // Filter for asset balances and then find USDC
-    const usdcBalance = account.balances.find((balance) => {
-      if (balance.asset_type === 'credit_alphanum4' || balance.asset_type === 'credit_alphanum12') {
-        // TypeScript should correctly narrow the type here, no explicit assertion needed
-        return balance.asset_code === USDC_ASSET.code && balance.asset_issuer === USDC_ASSET.issuer;
-      }
-      return false;
-    });
-
-    return usdcBalance ? usdcBalance.balance : '0';
   } catch (error) {
     console.error(`Error fetching USDC balance for ${publicKey}:`, error);
     // If account not found or other error, assume 0 balance for payment purposes
@@ -140,66 +147,74 @@ async function verifyStellarTransaction(
   expectedAmount: string,
   expectedAssetCode: string
 ): Promise<boolean> {
+  const config = getSorobanConfig();
+
   try {
-    const server = new Horizon.Server(
-      process.env.STELLAR_HORIZON_URL || 'https://horizon-testnet.stellar.org'
+    return await retryOperation(
+      async () => {
+        const transaction = await config.horizonServer
+          .transactions()
+          .transaction(transactionHash)
+          .call();
+
+        if (transaction.successful !== true) {
+          throw new Error(`Stellar transaction ${transactionHash} was not successful.`);
+        }
+
+        if (transaction.source_account !== expectedSource) {
+          throw new Error(
+            `Transaction source account mismatch. Expected ${expectedSource}, got ${transaction.source_account}`
+          );
+        }
+
+        const operationsResponse = await config.horizonServer
+          .operations()
+          .forTransaction(transactionHash)
+          .call();
+        const paymentOperation = operationsResponse.records.find((op) => op.type === 'payment');
+
+        if (!paymentOperation) {
+          throw new Error(`No payment operation found in transaction ${transactionHash}.`);
+        }
+
+        const paymentDetails = paymentOperation as unknown as Operation.Payment;
+
+        if (paymentDetails.destination !== expectedDestination) {
+          throw new Error(
+            `Payment destination mismatch. Expected ${expectedDestination}, got ${paymentDetails.destination}`
+          );
+        }
+
+        // Check asset details directly from paymentDetails.asset
+        if (paymentDetails.asset.isNative()) {
+          throw new Error(`Native (XLM) asset used in payment. Expected ${expectedAssetCode}.`);
+        }
+
+        const paymentAsset = paymentDetails.asset as Asset; // Cast to Asset to access code and issuer
+        if (paymentAsset.code !== expectedAssetCode) {
+          throw new Error(
+            `Payment asset code mismatch. Expected ${expectedAssetCode}, got ${paymentAsset.code}`
+          );
+        }
+        if (paymentAsset.issuer !== USDC_ISSUER) {
+          throw new Error(
+            `Payment asset issuer mismatch. Expected ${USDC_ISSUER}, got ${paymentAsset.issuer}`
+          );
+        }
+
+        if (Number.parseFloat(paymentDetails.amount) < Number.parseFloat(expectedAmount)) {
+          throw new Error(
+            `Payment amount too low. Expected at least ${expectedAmount}, got ${paymentDetails.amount}`
+          );
+        }
+
+        return true;
+      },
+      config
     );
-    const transaction = await server.transactions().transaction(transactionHash).call();
-
-    if (transaction.successful !== true) {
-      throw new Error(`Stellar transaction ${transactionHash} was not successful.`);
-    }
-
-    if (transaction.source_account !== expectedSource) {
-      throw new Error(
-        `Transaction source account mismatch. Expected ${expectedSource}, got ${transaction.source_account}`
-      );
-    }
-
-    const operationsResponse = await server.operations().forTransaction(transactionHash).call();
-    const paymentOperation = operationsResponse.records.find((op) => op.type === 'payment');
-
-    if (!paymentOperation) {
-      throw new Error(`No payment operation found in transaction ${transactionHash}.`);
-    }
-
-    const paymentDetails = paymentOperation as unknown as Operation.Payment;
-
-    if (paymentDetails.destination !== expectedDestination) {
-      throw new Error(
-        `Payment destination mismatch. Expected ${expectedDestination}, got ${paymentDetails.destination}`
-      );
-    }
-
-    // Check asset details directly from paymentDetails.asset
-    if (paymentDetails.asset.isNative()) {
-      throw new Error(`Native (XLM) asset used in payment. Expected ${expectedAssetCode}.`);
-    }
-
-    const paymentAsset = paymentDetails.asset as Asset; // Cast to Asset to access code and issuer
-    if (paymentAsset.code !== expectedAssetCode) {
-      throw new Error(
-        `Payment asset code mismatch. Expected ${expectedAssetCode}, got ${paymentAsset.code}`
-      );
-    }
-    if (paymentAsset.issuer !== USDC_ISSUER) {
-      throw new Error(
-        `Payment asset issuer mismatch. Expected ${USDC_ISSUER}, got ${paymentAsset.issuer}`
-      );
-    }
-
-    if (Number.parseFloat(paymentDetails.amount) < Number.parseFloat(expectedAmount)) {
-      throw new Error(
-        `Payment amount too low. Expected at least ${expectedAmount}, got ${paymentDetails.amount}`
-      );
-    }
-
-    return true;
   } catch (error) {
     console.error(`Error verifying Stellar transaction ${transactionHash}:`, error);
-    throw new Error(
-      `Transaction verification failed: ${error instanceof Error ? error.message : 'Unknown error'}`
-    );
+    throw classifyError(error);
   }
 }
 
