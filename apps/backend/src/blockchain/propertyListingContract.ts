@@ -69,46 +69,15 @@ This task builds upon the existing authentication system and should integrate se
 
 import crypto from 'node:crypto';
 import * as StellarSdk from '@stellar/stellar-sdk';
-import type { Server as SorobanRpcServer } from '@stellar/stellar-sdk/rpc';
 import type { Property } from '../types/property.types';
-
-const useMock = process.env.USE_MOCK === 'true';
-
-// Initialize blockchain-related variables
-let sourceKeypair: StellarSdk.Keypair;
-let contractId: string;
-let server: SorobanRpcServer;
-let networkPassphrase: string;
-
-if (!useMock) {
-  const secretKey = process.env.STELLAR_SECRET_KEY;
-  if (!secretKey) {
-    throw new Error('STELLAR_SECRET_KEY environment variable is required');
-  }
-  sourceKeypair = StellarSdk.Keypair.fromSecret(secretKey);
-
-  const envContractId = process.env.PROPERTY_LISTING_CONTRACT_ID;
-  if (!envContractId) {
-    throw new Error('PROPERTY_LISTING_CONTRACT_ID environment variable is required');
-  }
-  contractId = envContractId;
-
-  const rpcUrl = process.env.SOROBAN_RPC_URL;
-  if (!rpcUrl) {
-    throw new Error('SOROBAN_RPC_URL environment variable is required');
-  }
-
-  // Initialize server with proper error handling
-  try {
-    const { Server } = require('@stellar/stellar-sdk/rpc');
-    server = new Server(rpcUrl);
-  } catch (e) {
-    console.error('Could not initialize Soroban RPC server:', e);
-    throw new Error('Failed to initialize Soroban RPC server');
-  }
-
-  networkPassphrase = process.env.SOROBAN_NETWORK_PASSPHRASE || StellarSdk.Networks.TESTNET;
-}
+import { getSorobanConfig } from './config';
+import {
+  buildTransaction,
+  submitAndConfirmTransaction,
+  retryOperation,
+  simulateTransaction,
+} from './transactionUtils';
+import { classifyError, ContractError } from './errors';
 
 export interface PropertyListing {
   id: string;
@@ -158,7 +127,9 @@ export async function createPropertyListing(
   propertyData: PropertyHashData,
   ownerAddress: string
 ): Promise<PropertyListing> {
-  if (useMock) {
+  const config = getSorobanConfig();
+
+  if (config.useMock) {
     const dataHash = generatePropertyHash(propertyData);
     return {
       id: propertyId,
@@ -169,38 +140,49 @@ export async function createPropertyListing(
   }
 
   try {
-    const contract = new StellarSdk.Contract(contractId);
-    const dataHash = generatePropertyHash(propertyData);
+    return await retryOperation(
+      async () => {
+        const contract = new StellarSdk.Contract(config.contractIds.property);
+        const dataHash = generatePropertyHash(propertyData);
 
-    const propertyIdScVal = StellarSdk.nativeToScVal(propertyId, { type: 'string' });
-    const dataHashScVal = StellarSdk.nativeToScVal(dataHash, { type: 'string' });
-    const ownerScVal = StellarSdk.nativeToScVal(StellarSdk.Address.fromString(ownerAddress));
+        const propertyIdScVal = StellarSdk.nativeToScVal(propertyId, { type: 'string' });
+        const dataHashScVal = StellarSdk.nativeToScVal(dataHash, { type: 'string' });
+        const ownerScVal = StellarSdk.nativeToScVal(StellarSdk.Address.fromString(ownerAddress));
 
-    const account = await server.getAccount(sourceKeypair.publicKey());
-    const tx = new StellarSdk.TransactionBuilder(account, {
-      fee: '100',
-      networkPassphrase,
-    })
-      .addOperation(contract.call('create_listing', propertyIdScVal, dataHashScVal, ownerScVal))
-      .setTimeout(30)
-      .build();
+        const operation = contract.call(
+          'create_listing',
+          propertyIdScVal,
+          dataHashScVal,
+          ownerScVal
+        );
 
-    tx.sign(sourceKeypair);
+        const tx = await buildTransaction(operation, config, {
+          fee: config.fees.property,
+        });
 
-    const result = await server.sendTransaction(tx);
+        tx.sign(config.sourceKeypair);
 
-    if (result.status === 'SUCCESS') {
-      return {
-        id: propertyId,
-        data_hash: dataHash,
-        owner: ownerAddress,
-        status: 'Available',
-      };
-    }
-    throw new Error(`Transaction failed: ${result.status}`);
+        const result = await submitAndConfirmTransaction(tx, config.rpcServer, config);
+
+        if (result.status === 'SUCCESS') {
+          return {
+            id: propertyId,
+            data_hash: dataHash,
+            owner: ownerAddress,
+            status: 'Available',
+          };
+        }
+
+        throw new ContractError(
+          `Transaction failed: ${result.status}`,
+          config.contractIds.property
+        );
+      },
+      config
+    );
   } catch (error) {
     console.error('Blockchain property listing creation failed:', error);
-    throw new Error(`Failed to create property listing on blockchain: ${error}`);
+    throw classifyError(error);
   }
 }
 
@@ -212,7 +194,9 @@ export async function updatePropertyListing(
   propertyData: PropertyHashData,
   ownerAddress: string
 ): Promise<PropertyListing> {
-  if (useMock) {
+  const config = getSorobanConfig();
+
+  if (config.useMock) {
     const dataHash = generatePropertyHash(propertyData);
     return {
       id: propertyId,
@@ -223,38 +207,49 @@ export async function updatePropertyListing(
   }
 
   try {
-    const contract = new StellarSdk.Contract(contractId);
-    const dataHash = generatePropertyHash(propertyData);
+    return await retryOperation(
+      async () => {
+        const contract = new StellarSdk.Contract(config.contractIds.property);
+        const dataHash = generatePropertyHash(propertyData);
 
-    const propertyIdScVal = StellarSdk.nativeToScVal(propertyId, { type: 'string' });
-    const dataHashScVal = StellarSdk.nativeToScVal(dataHash, { type: 'string' });
-    const ownerScVal = StellarSdk.nativeToScVal(StellarSdk.Address.fromString(ownerAddress));
+        const propertyIdScVal = StellarSdk.nativeToScVal(propertyId, { type: 'string' });
+        const dataHashScVal = StellarSdk.nativeToScVal(dataHash, { type: 'string' });
+        const ownerScVal = StellarSdk.nativeToScVal(StellarSdk.Address.fromString(ownerAddress));
 
-    const account = await server.getAccount(sourceKeypair.publicKey());
-    const tx = new StellarSdk.TransactionBuilder(account, {
-      fee: '100',
-      networkPassphrase,
-    })
-      .addOperation(contract.call('update_listing', propertyIdScVal, dataHashScVal, ownerScVal))
-      .setTimeout(30)
-      .build();
+        const operation = contract.call(
+          'update_listing',
+          propertyIdScVal,
+          dataHashScVal,
+          ownerScVal
+        );
 
-    tx.sign(sourceKeypair);
+        const tx = await buildTransaction(operation, config, {
+          fee: config.fees.property,
+        });
 
-    const result = await server.sendTransaction(tx);
+        tx.sign(config.sourceKeypair);
 
-    if (result.status === 'SUCCESS') {
-      return {
-        id: propertyId,
-        data_hash: dataHash,
-        owner: ownerAddress,
-        status: 'Available',
-      };
-    }
-    throw new Error(`Transaction failed: ${result.status}`);
+        const result = await submitAndConfirmTransaction(tx, config.rpcServer, config);
+
+        if (result.status === 'SUCCESS') {
+          return {
+            id: propertyId,
+            data_hash: dataHash,
+            owner: ownerAddress,
+            status: 'Available',
+          };
+        }
+
+        throw new ContractError(
+          `Transaction failed: ${result.status}`,
+          config.contractIds.property
+        );
+      },
+      config
+    );
   } catch (error) {
     console.error('Blockchain property listing update failed:', error);
-    throw new Error(`Failed to update property listing on blockchain: ${error}`);
+    throw classifyError(error);
   }
 }
 
@@ -266,7 +261,9 @@ export async function updatePropertyStatus(
   status: 'Available' | 'Booked' | 'Maintenance' | 'Inactive',
   ownerAddress: string
 ): Promise<PropertyListing> {
-  if (useMock) {
+  const config = getSorobanConfig();
+
+  if (config.useMock) {
     return {
       id: propertyId,
       data_hash: 'mock_hash',
@@ -276,37 +273,50 @@ export async function updatePropertyStatus(
   }
 
   try {
-    const contract = new StellarSdk.Contract(contractId);
+    return await retryOperation(
+      async () => {
+        const contract = new StellarSdk.Contract(config.contractIds.property);
 
-    const propertyIdScVal = StellarSdk.nativeToScVal(propertyId, { type: 'string' });
-    const ownerScVal = StellarSdk.nativeToScVal(StellarSdk.Address.fromString(ownerAddress));
-    const statusScVal = StellarSdk.nativeToScVal(status, { type: 'symbol' });
+        const propertyIdScVal = StellarSdk.nativeToScVal(propertyId, { type: 'string' });
+        const ownerScVal = StellarSdk.nativeToScVal(
+          StellarSdk.Address.fromString(ownerAddress)
+        );
+        const statusScVal = StellarSdk.nativeToScVal(status, { type: 'symbol' });
 
-    const account = await server.getAccount(sourceKeypair.publicKey());
-    const tx = new StellarSdk.TransactionBuilder(account, {
-      fee: '100',
-      networkPassphrase,
-    })
-      .addOperation(contract.call('update_status', propertyIdScVal, ownerScVal, statusScVal))
-      .setTimeout(30)
-      .build();
+        const operation = contract.call(
+          'update_status',
+          propertyIdScVal,
+          ownerScVal,
+          statusScVal
+        );
 
-    tx.sign(sourceKeypair);
+        const tx = await buildTransaction(operation, config, {
+          fee: config.fees.property,
+        });
 
-    const result = await server.sendTransaction(tx);
+        tx.sign(config.sourceKeypair);
 
-    if (result.status === 'SUCCESS') {
-      return {
-        id: propertyId,
-        data_hash: 'updated_hash',
-        owner: ownerAddress,
-        status,
-      };
-    }
-    throw new Error(`Transaction failed: ${result.status}`);
+        const result = await submitAndConfirmTransaction(tx, config.rpcServer, config);
+
+        if (result.status === 'SUCCESS') {
+          return {
+            id: propertyId,
+            data_hash: 'updated_hash',
+            owner: ownerAddress,
+            status,
+          };
+        }
+
+        throw new ContractError(
+          `Transaction failed: ${result.status}`,
+          config.contractIds.property
+        );
+      },
+      config
+    );
   } catch (error) {
     console.error('Blockchain property status update failed:', error);
-    throw new Error(`Failed to update property status on blockchain: ${error}`);
+    throw classifyError(error);
   }
 }
 
@@ -314,7 +324,9 @@ export async function updatePropertyStatus(
  * Get property listing from the blockchain
  */
 export async function getPropertyListing(propertyId: string): Promise<PropertyListing | null> {
-  if (useMock) {
+  const config = getSorobanConfig();
+
+  if (config.useMock) {
     return {
       id: propertyId,
       data_hash: 'mock_hash',
@@ -324,38 +336,33 @@ export async function getPropertyListing(propertyId: string): Promise<PropertyLi
   }
 
   try {
-    const contract = new StellarSdk.Contract(contractId);
+    return await retryOperation(
+      async () => {
+        const contract = new StellarSdk.Contract(config.contractIds.property);
 
-    const propertyIdScVal = StellarSdk.nativeToScVal(propertyId, { type: 'string' });
+        const propertyIdScVal = StellarSdk.nativeToScVal(propertyId, { type: 'string' });
 
-    const account = await server.getAccount(sourceKeypair.publicKey());
-    const tx = new StellarSdk.TransactionBuilder(account, {
-      fee: '100',
-      networkPassphrase,
-    })
-      .addOperation(contract.call('get_listing', propertyIdScVal))
-      .setTimeout(30)
-      .build();
+        const operation = contract.call('get_listing', propertyIdScVal);
 
-    const sim = await server.simulateTransaction(tx);
+        const tx = await buildTransaction(operation, config, {
+          fee: config.fees.default,
+        });
 
-    // Type guard for successful simulation
-    if ('results' in sim && Array.isArray(sim.results) && sim.results.length > 0) {
-      const xdrResult = sim.results[0].xdr;
-      const scVal = StellarSdk.xdr.ScVal.fromXDR(xdrResult, 'base64');
-      const result = StellarSdk.scValToNative(scVal);
+        const result = await simulateTransaction(tx, config.rpcServer);
 
-      if (result) {
-        return {
-          id: result.id,
-          data_hash: result.data_hash,
-          owner: result.owner,
-          status: result.status,
-        };
-      }
-    }
+        if (result) {
+          return {
+            id: result.id,
+            data_hash: result.data_hash,
+            owner: result.owner,
+            status: result.status,
+          };
+        }
 
-    return null;
+        return null;
+      },
+      config
+    );
   } catch (error) {
     console.error('Blockchain property listing retrieval failed:', error);
     return null;
