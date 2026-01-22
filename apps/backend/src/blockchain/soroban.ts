@@ -53,13 +53,12 @@ async function checkAvailability(request: AvailabilityRequest): Promise<Availabi
         const fromTimestamp = Math.floor(request.dates.from.getTime() / 1000);
         const toTimestamp = Math.floor(request.dates.to.getTime() / 1000);
 
-        const propertyAddress = Address.fromString(request.propertyId);
-        const propertyScVal = nativeToScVal(propertyAddress);
+        const propertyIdScVal = nativeToScVal(request.propertyId, { type: 'string' });
         const fromScVal = nativeToScVal(fromTimestamp, { type: 'u64' });
         const toScVal = nativeToScVal(toTimestamp, { type: 'u64' });
         const operation = bookingContract.call(
           'check_availability',
-          propertyScVal,
+          propertyIdScVal,
           fromScVal,
           toScVal
         );

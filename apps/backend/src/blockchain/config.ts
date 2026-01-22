@@ -1,10 +1,9 @@
-import { Networks, Keypair } from '@stellar/stellar-sdk';
+import { Networks, Keypair, Horizon } from '@stellar/stellar-sdk';
 import { Server as SorobanRpcServer } from '@stellar/stellar-sdk/rpc';
-import { Server as HorizonServer } from '@stellar/stellar-sdk/horizon';
 
 export interface SorobanConfig {
   rpcServer: SorobanRpcServer;
-  horizonServer: HorizonServer;
+  horizonServer: Horizon.Server;
   networkPassphrase: string;
   sourceKeypair: Keypair;
   contractIds: {
@@ -90,7 +89,7 @@ export function initializeSorobanConfig(): SorobanConfig {
 
   // Initialize servers
   let rpcServer: SorobanRpcServer;
-  let horizonServer: HorizonServer;
+  let horizonServer: Horizon.Server;
 
   try {
     rpcServer = new SorobanRpcServer(rpcUrl);
@@ -101,7 +100,7 @@ export function initializeSorobanConfig(): SorobanConfig {
   }
 
   try {
-    horizonServer = new HorizonServer(horizonUrl);
+    horizonServer = new Horizon.Server(horizonUrl);
   } catch (error) {
     throw new Error(
       `Failed to initialize Horizon server at ${horizonUrl}: ${error instanceof Error ? error.message : 'Unknown error'}`
