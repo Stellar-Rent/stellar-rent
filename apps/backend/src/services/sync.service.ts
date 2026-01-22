@@ -18,7 +18,7 @@
  * - Status monitoring and statistics
  */
 
-import { Contract, Networks, nativeToScVal, scValToNative } from '@stellar/stellar-sdk';
+import { Contract, Networks, nativeToScVal, rpc, scValToNative } from '@stellar/stellar-sdk';
 import { Server as SorobanRpcServer } from '@stellar/stellar-sdk/lib/rpc';
 import { supabase } from '../config/supabase';
 import { bookingService } from './booking.service';
