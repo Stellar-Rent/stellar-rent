@@ -1,4 +1,4 @@
-import { Contract, Networks, xdr } from '@stellar/stellar-sdk';
+import { Contract, Networks, rpc, xdr } from '@stellar/stellar-sdk';
 import { Server as SorobanRpcServer } from '@stellar/stellar-sdk/rpc';
 import { supabase } from '../config/supabase';
 import { loggingService } from '../services/logging.service';
