@@ -51,12 +51,12 @@ console.log('Loaded environment variables:', {
 export const app = express();
 
 // Determine port: use env var if set, otherwise try 3000 first, then 3001
-const getPort = async (): Promise<number> => {
+const getPort = async (): Promise<{ port: number; fromEnv: boolean }> => {
   // If PORT is explicitly set in environment, use it
   if (process.env.PORT) {
     const envPort = parseInt(process.env.PORT, 10);
     if (!isNaN(envPort)) {
-      return envPort;
+      return { port: envPort, fromEnv: true };
     }
   }
 
@@ -70,7 +70,7 @@ const getPort = async (): Promise<number> => {
     );
   }
 
-  return availablePort;
+  return { port: availablePort, fromEnv: false };
 };
 
 // Middleware
@@ -107,12 +107,12 @@ app.use(errorMiddleware);
 // Start server with automatic port detection
 (async () => {
   try {
-    const PORT = await getPort();
+    const { port: PORT, fromEnv } = await getPort();
 
     // Verify port availability before binding
     const server = app.listen(PORT, async () => {
       console.log(`🚀 Server running on http://localhost:${PORT}`);
-      if (PORT === 3001) {
+      if (!fromEnv && PORT === 3001) {
         console.log('ℹ️  Port 3000 was occupied, using port 3001 instead');
       }
 

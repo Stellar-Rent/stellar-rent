@@ -8,19 +8,16 @@ The backend now automatically detects and uses an available port, eliminating po
 
 ## Features
 
-###  Automatic Port Detection
-
+### Automatic Port Detection
 - **Default Behavior**: The backend tries port 3000 first, then automatically falls back to port 3001 if 3000 is occupied
 - **Environment Override**: You can still specify a custom port using the `PORT` environment variable
 - **Port Availability Check**: The system verifies port availability before attempting to bind
 
-###  CORS Configuration
-
+### CORS Configuration
 - The backend accepts requests from both `http://localhost:3000` and `http://localhost:3001`
 - This ensures the frontend can connect regardless of which port the backend uses
 
-###  Clear Error Messages
-
+### Clear Error Messages
 - Informative console messages indicate which port is being used
 - Helpful error messages if no ports are available
 
@@ -88,7 +85,7 @@ PORT=4000 bun run dev
 ## Console Output Examples
 
 ### When Port 3000 is Available:
-```
+```text
  Server running on http://localhost:3000
  Redis connection established
  Blockchain synchronization service started
@@ -96,7 +93,7 @@ PORT=4000 bun run dev
 ```
 
 ### When Port 3000 is Occupied:
-```
+```text
  Server running on http://localhost:3001
 ℹ  Port 3000 was occupied, using port 3001 instead
  Redis connection established
@@ -105,7 +102,7 @@ PORT=4000 bun run dev
 ```
 
 ### When No Ports are Available:
-```
+```text
  None of the preferred ports (3000, 3001) are available. Please free up a port or set PORT environment variable.
  Failed to start server: Error: ...
 ```
