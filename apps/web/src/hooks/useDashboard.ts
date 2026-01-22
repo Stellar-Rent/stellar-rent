@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { bookingAPI, dashboardAPI, handleAPIError, profileAPI, walletAPI } from '../services/api';
 import type { DashboardBooking, Transaction, UserProfile } from '../types';
+import { retryApiCall } from './useApiCall';
 
 interface UseDashboardProps {
   userId: string;
@@ -56,10 +57,19 @@ export const useDashboard = ({ userId, userType }: UseDashboardProps): UseDashbo
     setError(null);
 
     try {
-      const response = await fetch('/api/bookings');
-      if (!response.ok) {
-        throw new Error(`Failed to fetch bookings: ${response.statusText}`);
-      }
+      // Retry logic for bookings fetch
+      const response = await retryApiCall(
+        async () => {
+          const res = await fetch('/api/bookings');
+          if (!res.ok) {
+            throw new Error(`Failed to fetch bookings: ${res.statusText}`);
+          }
+          return res;
+        },
+        3, // max retries
+        1000 // delay between retries
+      );
+
       const data = await response.json();
       // Handle the response structure from backend
       const bookingsData = data.data?.bookings || data.bookings || data || [];
@@ -67,7 +77,7 @@ export const useDashboard = ({ userId, userType }: UseDashboardProps): UseDashbo
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch bookings';
       setError(errorMessage);
-      console.error('Failed to fetch bookings:', err);
+      console.error('Failed to fetch bookings after retries:', err);
       setBookings([]); // Reset to empty array on error
     } finally {
       setIsLoadingBookings(false);
@@ -81,16 +91,23 @@ export const useDashboard = ({ userId, userType }: UseDashboardProps): UseDashbo
     setError(null);
 
     try {
-      const response = await fetch('/api/profile');
-      if (!response.ok) {
-        throw new Error(`Failed to fetch profile: ${response.statusText}`);
-      }
+      const response = await retryApiCall(
+        async () => {
+          const res = await fetch('/api/profile');
+          if (!res.ok) {
+            throw new Error(`Failed to fetch profile: ${res.statusText}`);
+          }
+          return res;
+        },
+        3,
+        1000
+      );
       const data = await response.json();
       setProfile(data || null);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch profile';
       setError(errorMessage);
-      console.error('Failed to fetch profile:', err);
+      console.error('Failed to fetch profile after retries:', err);
       setProfile(null); // Reset to null on error
     } finally {
       setIsLoadingProfile(false);
@@ -108,23 +125,23 @@ export const useDashboard = ({ userId, userType }: UseDashboardProps): UseDashbo
       // TODO: Replace with real API call when /api/wallet/transactions is available
       const mockTransactions: Transaction[] = [
         {
-          id: '1',
+          id: 1,
           date: '2025-05-28',
           description: 'Luxury Downtown Apartment',
           amount: -1250,
-          type: 'booking',
+          type: 'payment',
           status: 'completed',
         },
         {
-          id: '2',
+          id: 2,
           date: '2025-05-26',
           description: 'Cozy Beach House',
           amount: -900,
-          type: 'booking',
+          type: 'payment',
           status: 'pending',
         },
         {
-          id: '3',
+          id: 3,
           date: '2025-05-20',
           description: 'Wallet Top-up',
           amount: 2000,
@@ -132,11 +149,11 @@ export const useDashboard = ({ userId, userType }: UseDashboardProps): UseDashbo
           status: 'completed',
         },
         {
-          id: '4',
+          id: 4,
           date: '2025-05-15',
           description: 'Mountain Cabin Retreat',
           amount: -1600,
-          type: 'booking',
+          type: 'payment',
           status: 'completed',
         },
       ];
@@ -163,10 +180,17 @@ export const useDashboard = ({ userId, userType }: UseDashboardProps): UseDashbo
     try {
       // Calculate stats from bookings data instead of calling non-existent analytics endpoint
       // TODO: Replace with real analytics API when /api/analytics/overview is implemented
-      const response = await fetch('/api/bookings');
-      if (!response.ok) {
-        throw new Error(`Failed to fetch bookings for stats: ${response.statusText}`);
-      }
+      const response = await retryApiCall(
+        async () => {
+          const res = await fetch('/api/bookings');
+          if (!res.ok) {
+            throw new Error(`Failed to fetch bookings for stats: ${res.statusText}`);
+          }
+          return res;
+        },
+        3,
+        1000
+      );
       const data = await response.json();
       const bookingsData = data.data?.bookings || data.bookings || [];
 
@@ -198,7 +222,7 @@ export const useDashboard = ({ userId, userType }: UseDashboardProps): UseDashbo
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch dashboard stats';
       setError(errorMessage);
-      console.error('Failed to fetch dashboard stats:', err);
+      console.error('Failed to fetch dashboard stats after retries:', err);
       // Set default stats on error
       setStats({
         totalBookings: 0,

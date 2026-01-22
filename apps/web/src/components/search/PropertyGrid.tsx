@@ -1,5 +1,8 @@
 'use client';
 
+import { useState } from 'react';
+import { ErrorDisplay } from '../ui/error-display';
+import { LoadingGrid } from '../ui/loading-skeleton';
 import { PropertyCard } from './PropertyCard';
 
 // Mock data for properties
@@ -126,7 +129,43 @@ const mockProperties = [
   },
 ];
 
-export const PropertyGrid = () => {
+interface PropertyGridProps {
+  isLoading?: boolean;
+  error?: string | null;
+  onRetry?: () => void;
+}
+
+export const PropertyGrid = ({ isLoading = false, error = null, onRetry }: PropertyGridProps) => {
+  // Show loading state
+  if (isLoading) {
+    return <LoadingGrid count={8} columns={4} />;
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="py-12">
+        <ErrorDisplay
+          title="Failed to load properties"
+          message={error}
+          onRetry={onRetry}
+          variant="destructive"
+        />
+      </div>
+    );
+  }
+
+  // Show empty state
+  if (!mockProperties || mockProperties.length === 0) {
+    return (
+      <div className="py-12 text-center">
+        <p className="text-gray-400 text-lg">No properties found</p>
+        <p className="text-gray-500 text-sm mt-2">Try adjusting your search filters</p>
+      </div>
+    );
+  }
+
+  // Show properties
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
       {mockProperties.map((property) => (
