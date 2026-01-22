@@ -63,6 +63,7 @@ const InvitationsPage = () => {
     }
   }, [role, isAuthenticated]);
 
+  const mobileInvitations = MOBILE_INVITATIONS;
   const drawerItems = useMemo(() => menuItems.filter((item) => item.id !== 'menu'), [menuItems]);
   const filteredDesktopInvitations = useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLowerCase();
