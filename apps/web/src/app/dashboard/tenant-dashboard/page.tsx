@@ -3,7 +3,7 @@
 import BookingHistory from '@/components/dashboard/BookingHistory';
 import NotificationSystem from '@/components/dashboard/NotificationSystem';
 import ProfileManagement from '@/components/dashboard/ProfileManagement';
-import RoleGuard from '@/hooks/auth/RoleGuard';
+import { RoleGuard } from '@/components/guards/RoleGuard';
 import {
   Activity,
   AlertCircle,

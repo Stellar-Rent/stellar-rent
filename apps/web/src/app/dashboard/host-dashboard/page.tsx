@@ -4,7 +4,7 @@ import BookingHistory from '@/components/dashboard/BookingHistory';
 import NotificationSystem from '@/components/dashboard/NotificationSystem';
 import ProfileManagement from '@/components/dashboard/ProfileManagement';
 import PropertyManagement from '@/components/dashboard/PropertyManagement';
-import RoleGuard from '@/hooks/auth/RoleGuard';
+import { RoleGuard } from '@/components/guards/RoleGuard';
 import { useRealTimeNotifications } from '@/hooks/useRealTimeUpdates';
 import { Calendar, DollarSign, Settings, User, Wallet } from 'lucide-react';
 import Image from 'next/image';
