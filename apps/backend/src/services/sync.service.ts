@@ -18,15 +18,15 @@
  * - Status monitoring and statistics
  */
 
-import { Contract, Networks, nativeToScVal, rpc, scValToNative } from '@stellar/stellar-sdk';
-import { Server as SorobanRpcServer } from '@stellar/stellar-sdk/lib/rpc';
 import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
+import { Contract, Networks, nativeToScVal, rpc, scValToNative } from '@stellar/stellar-sdk';
+import { Server as SorobanRpcServer } from '@stellar/stellar-sdk/lib/rpc';
 import { supabase } from '../config/supabase';
 import { bookingService } from './booking.service';
+import { loggingService } from './logging.service';
 
 const execAsync = promisify(exec);
-import { loggingService } from './logging.service';
 
 export interface SyncEvent {
   id: string;
@@ -367,10 +367,10 @@ export class SyncService {
 
       const { stdout, stderr } = await execAsync(command, {
         timeout: 15000, // 15 second timeout
-        maxBuffer: 1024 * 1024 // 1MB buffer
+        maxBuffer: 1024 * 1024, // 1MB buffer
       });
 
-      if (stderr && stderr.trim()) {
+      if (stderr?.trim()) {
         console.warn('Stellar CLI stderr:', stderr);
       }
 
@@ -381,11 +381,15 @@ export class SyncService {
       } catch (parseError) {
         console.error('Failed to parse JSON response from Stellar CLI:', parseError);
         console.error('Raw response:', stdout);
-        throw new Error(`Failed to parse JSON response from Stellar CLI: ${(parseError as Error).message}`);
+        throw new Error(
+          `Failed to parse JSON response from Stellar CLI: ${(parseError as Error).message}`
+        );
       }
 
       if (!result || typeof result.sequence !== 'number') {
-        throw new Error('Invalid response format from Stellar CLI: missing or invalid sequence field');
+        throw new Error(
+          'Invalid response format from Stellar CLI: missing or invalid sequence field'
+        );
       }
 
       return result.sequence;
@@ -399,7 +403,8 @@ export class SyncService {
       const err = error as NodeJS.ErrnoException & { signal?: string; message?: string };
 
       if (err.code === 'ENOENT') {
-        const installMessage = 'Stellar CLI not found. Please install: curl -s https://get.stellar.org | bash';
+        const installMessage =
+          'Stellar CLI not found. Please install: curl -s https://get.stellar.org | bash';
         console.error(installMessage);
         throw new Error(installMessage);
       }
@@ -427,12 +432,17 @@ export class SyncService {
     // Try SDK method first (primary)
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        console.log(`Attempting to get current block height using SDK (attempt ${attempt}/${maxRetries})`);
+        console.log(
+          `Attempting to get current block height using SDK (attempt ${attempt}/${maxRetries})`
+        );
         const blockHeight = await this.getLatestLedgerFromSDK();
         console.log(`Successfully retrieved ledger ${blockHeight} using SDK`);
         return blockHeight;
       } catch (error) {
-        console.error(`SDK method failed on attempt ${attempt}:`, error instanceof Error ? error.message : String(error));
+        console.error(
+          `SDK method failed on attempt ${attempt}:`,
+          error instanceof Error ? error.message : String(error)
+        );
         if (attempt < maxRetries) {
           await new Promise((resolve) => setTimeout(resolve, retryDelay));
         }
@@ -443,19 +453,26 @@ export class SyncService {
     console.log('SDK method failed, trying CLI fallback...');
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        console.log(`Attempting to get current block height using CLI (attempt ${attempt}/${maxRetries})`);
+        console.log(
+          `Attempting to get current block height using CLI (attempt ${attempt}/${maxRetries})`
+        );
         const blockHeight = await this.getLatestLedgerFromCLI();
         console.log(`Successfully retrieved ledger ${blockHeight} using CLI fallback`);
         return blockHeight;
       } catch (error) {
-        console.error(`CLI method failed on attempt ${attempt}:`, error instanceof Error ? error.message : String(error));
+        console.error(
+          `CLI method failed on attempt ${attempt}:`,
+          error instanceof Error ? error.message : String(error)
+        );
         if (attempt < maxRetries) {
           await new Promise((resolve) => setTimeout(resolve, retryDelay));
         }
       }
     }
 
-    console.warn(`All ${maxRetries} attempts failed for both SDK and CLI methods. Using fallback block height: ${this.lastProcessedBlock}`);
+    console.warn(
+      `All ${maxRetries} attempts failed for both SDK and CLI methods. Using fallback block height: ${this.lastProcessedBlock}`
+    );
     return this.lastProcessedBlock;
   }
 
