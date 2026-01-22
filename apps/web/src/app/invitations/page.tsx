@@ -298,8 +298,8 @@ const InvitationsPage = () => {
             </div>
 
             <div className="mt-4 space-y-3 md:hidden">
-              {mobileInvitations.length === 0 ? (
-                <div className="rounded-lg border border-gray-800 bg-[#071429] p-6 text-center text-sm text-gray-300">
+              {filteredMobileInvitations.length === 0 ? (
+                <div className="rounded-lg border border-gray-800 bg-[`#071429`] p-6 text-center text-sm text-gray-300">
                   No invitations sent yet
                 </div>
               ) : (
