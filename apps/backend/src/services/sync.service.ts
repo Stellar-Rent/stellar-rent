@@ -21,7 +21,7 @@
 import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
 import { Contract, Networks } from '@stellar/stellar-sdk';
-import { Server as SorobanRpcServer } from '@stellar/stellar-sdk/lib/rpc';
+import { Server as SorobanRpcServer } from '@stellar/stellar-sdk/rpc';
 import { supabase } from '../config/supabase';
 import { SyncError } from '../types/errors';
 import { bookingService } from './booking.service';
