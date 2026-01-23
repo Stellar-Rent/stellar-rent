@@ -14,6 +14,7 @@ import { connectRedis } from './config/redis';
 import syncRoutes from './routes/sync.routes';
 import { runInitialCleanup, startCleanupScheduler } from './services/cleanup-schedular';
 import { syncService } from './services/sync.service';
+import { findAvailablePort } from './utils/port.util';
 
 // Environment variables configuration
 dotenv.config();
@@ -48,12 +49,35 @@ console.log('Loaded environment variables:', {
 });
 
 export const app = express();
-const PORT = process.env.PORT || 3001;
+
+// Determine port: use env var if set, otherwise try 3000 first, then 3001
+const getPort = async (): Promise<{ port: number; fromEnv: boolean }> => {
+  // If PORT is explicitly set in environment, use it
+  if (process.env.PORT) {
+    const envPort = parseInt(process.env.PORT, 10);
+    if (!isNaN(envPort)) {
+      return { port: envPort, fromEnv: true };
+    }
+  }
+
+  // Try preferred ports in order: 3000, then 3001
+  const preferredPorts = [3000, 3001];
+  const availablePort = await findAvailablePort(preferredPorts);
+
+  if (availablePort === null) {
+    throw new Error(
+      `❌ None of the preferred ports (${preferredPorts.join(', ')}) are available. Please free up a port or set PORT environment variable.`
+    );
+  }
+
+  return { port: availablePort, fromEnv: false };
+};
 
 // Middleware
 app.use(express.json());
 app.use(
   cors({
+    // Allow requests from both common frontend ports
     origin: ['http://localhost:3000', 'http://localhost:3001'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -80,15 +104,39 @@ app.get('/', (_req, res) => {
 // Error handling
 app.use(errorMiddleware);
 
-// Start server
-app.listen(PORT, async () => {
-  console.log(`Running on port http://localhost:${PORT}`);
-
+// Start server with automatic port detection
+(async () => {
   try {
-    await initializeServices();
-    console.log('✅ All services initialized successfully');
+    const { port: PORT, fromEnv } = await getPort();
+
+    // Verify port availability before binding
+    const server = app.listen(PORT, async () => {
+      console.log(`🚀 Server running on http://localhost:${PORT}`);
+      if (!fromEnv && PORT === 3001) {
+        console.log('ℹ️  Port 3000 was occupied, using port 3001 instead');
+      }
+
+      try {
+        await initializeServices();
+        console.log('✅ All services initialized successfully');
+      } catch (error) {
+        console.error('❌ Failed to initialize services:', error);
+        console.error('⚠️  Server is running but some services may not be fully functional');
+      }
+    });
+
+    // Handle server errors
+    server.on('error', (error: NodeJS.ErrnoException) => {
+      if (error.code === 'EADDRINUSE') {
+        console.error(`❌ Port ${PORT} is already in use. Please free up the port or set a different PORT environment variable.`);
+        process.exit(1);
+      } else {
+        console.error('❌ Server error:', error);
+        process.exit(1);
+      }
+    });
   } catch (error) {
-    console.error('❌ Failed to initialize services:', error);
-    console.error('⚠️  Server is running but some services may not be fully functional');
+    console.error('❌ Failed to start server:', error);
+    process.exit(1);
   }
-});
+})();

@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useUserRole } from '~/hooks/useUserRole';
 import type { UserRole } from '~/types/roles';
 
@@ -11,30 +11,36 @@ interface RoleGuardProps {
   fallbackPath?: string;
 }
 
-export function RoleGuard({
-  children,
-  requiredRole,
-  fallbackPath = '/become-host',
-}: RoleGuardProps) {
-  const roleInfo = useUserRole();
-  const { canAccessHostDashboard, isLoading } = roleInfo;
+export function RoleGuard({ children, requiredRole, fallbackPath = '/dashboard' }: RoleGuardProps) {
+  const { role, canAccessHostDashboard, isLoading } = useUserRole();
   const router = useRouter();
-  const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
-    // Wait for role data to load
-    if (!isLoading) {
-      setIsChecking(false);
+    if (isLoading) {
+      return;
+    }
 
-      // Redirect if user doesn't have required access
-      if (requiredRole === 'host' && !canAccessHostDashboard) {
-        router.push(fallbackPath);
+    // Redirect unauthenticated users to main dashboard
+    if (!role) {
+      router.replace(fallbackPath);
+      return;
+    }
+
+    if (requiredRole === 'host') {
+      // Host role requires: (role === 'host' || role === 'dual') AND canAccessHostDashboard
+      if (!(role === 'host' || role === 'dual') || !canAccessHostDashboard) {
+        router.replace(fallbackPath);
+      }
+    } else if (requiredRole === 'guest') {
+      // Guest role allows: guest, dual, or host without host-dashboard access
+      if (role !== 'guest' && role !== 'dual' && !(role === 'host' && !canAccessHostDashboard)) {
+        router.replace(fallbackPath);
       }
     }
-  }, [requiredRole, canAccessHostDashboard, isLoading, router, fallbackPath]);
+  }, [role, canAccessHostDashboard, isLoading, router, requiredRole, fallbackPath]);
 
   // Show loading state while checking authentication
-  if (isLoading || isChecking) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
         <div className="text-center">
@@ -46,16 +52,21 @@ export function RoleGuard({
   }
 
   // Show unauthorized UI if user doesn't have required access
-  if (requiredRole === 'host' && !canAccessHostDashboard) {
+  if (
+    requiredRole === 'host' &&
+    (!(role === 'host' || role === 'dual') || !canAccessHostDashboard)
+  ) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen p-4">
         <div className="text-center max-w-md">
           <h2 className="text-2xl font-bold mb-4">Host Access Required</h2>
-          <p className="text-gray-600 mb-6">You need to become a host to access this page.</p>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            You need to become a host to access this page.
+          </p>
           <button
             type="button"
             onClick={() => router.push('/become-host')}
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
+            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
           >
             Become a Host
           </button>
@@ -67,3 +78,4 @@ export function RoleGuard({
   // User has access, render children
   return <>{children}</>;
 }
+

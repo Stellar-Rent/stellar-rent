@@ -1,6 +1,6 @@
 import { SearchBar } from '@/components/features/search/SearchBar';
 import { RightSidebar } from '@/components/layout/RightSidebar';
-import { PropertyGrid } from '@/components/search/PropertyGrid';
+import PropertyGrid from '@/components/search/PropertyGrid';
 import { House } from 'lucide-react';
 import Image from 'next/image';
 import { Suspense } from 'react';
@@ -9,9 +9,7 @@ export default function Home() {
   return (
     <div className="flex w-full min-h-screen">
       <main className="flex flex-1 flex-col w-full min-h-screen px-5 pr-16">
-        <header className="flex items-center justify-between p-4 border-b border-gray-800">
-          <Image src="/stellarrentlogo.png" alt="StellaRent" width={100} height={100} />
-        </header>
+        <header className="flex items-center justify-between p-4 border-b border-gray-800" />
 
         <section className="p-4">
           <SearchBar />

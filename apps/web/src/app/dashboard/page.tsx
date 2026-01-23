@@ -47,7 +47,7 @@ export default function DashboardPage() {
           You don't have any properties yet. Please create a property to access the host dashboard.
         </p>
         <Link
-          href="/add-property"
+          href="/list"
           className="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700"
         >
           Create Property

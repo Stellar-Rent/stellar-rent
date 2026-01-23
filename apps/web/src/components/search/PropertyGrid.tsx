@@ -2,8 +2,35 @@
 
 import { PropertyCard } from './PropertyCard';
 
-// Mock data for properties
-const mockProperties = [
+// Flexible interface that supports both internal mock data and FullPropertyProps from search
+interface Property {
+  id: number | string;
+  title: string;
+  address?: string;
+  location?: string;
+  image?: string;
+  images?: string[];
+  maxPeople?: number;
+  maxGuests?: number;
+  bedrooms?: number;
+  distance: number | string;
+  rating: number;
+  reviews?: number;
+  area?: number;
+  price: number;
+  currency?: string;
+  period?: string;
+  verified?: boolean;
+  amenities?: string[];
+}
+
+interface PropertyGridProps {
+  properties?: Property[];
+  onLoadMore?: () => void;
+}
+
+// Mock data for properties (fallback)
+const mockProperties: Property[] = [
   {
     id: 1,
     title: 'Luxury Studio in SoHo',
@@ -126,12 +153,36 @@ const mockProperties = [
   },
 ];
 
-export const PropertyGrid = () => {
+const PropertyGrid = ({ properties, onLoadMore: _onLoadMore }: PropertyGridProps) => {
+  // Use passed properties or fall back to mock data
+  const displayProperties = properties || mockProperties;
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-      {mockProperties.map((property) => (
-        <PropertyCard key={property.id} property={property} />
-      ))}
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 py-4">
+      {displayProperties.map((property) => {
+        // Map property to match PropertyCard's expected format
+        const cardProperty = {
+          id: typeof property.id === 'string' ? Number.parseInt(property.id, 10) || 0 : property.id,
+          title: property.title,
+          address: property.address || property.location || '',
+          image: property.image || property.images?.[0] || '/images/house.webp',
+          maxPeople: property.maxPeople || property.maxGuests || 2,
+          distance:
+            typeof property.distance === 'string'
+              ? Number.parseFloat(property.distance) || 0
+              : property.distance,
+          rating: property.rating,
+          reviews: property.reviews || 0,
+          area: property.area || (property.bedrooms ? property.bedrooms * 20 : 50),
+          price: property.price,
+          currency: property.currency || 'USD',
+          period: property.period || 'per month',
+          verified: property.verified !== undefined ? property.verified : true,
+        };
+        return <PropertyCard key={property.id} property={cardProperty} />;
+      })}
     </div>
   );
 };
+
+export default PropertyGrid;
