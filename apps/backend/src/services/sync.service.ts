@@ -21,6 +21,7 @@
 import { Contract, Networks, nativeToScVal, scValToNative } from '@stellar/stellar-sdk';
 import { Server as SorobanRpcServer } from '@stellar/stellar-sdk/rpc';
 import { supabase } from '../config/supabase';
+import { SyncError } from '../types/errors';
 import { bookingService } from './booking.service';
 import { loggingService } from './logging.service';
 
@@ -327,18 +328,19 @@ export class SyncService {
         eventsProcessed: this.totalEventsProcessed,
       });
     } catch (error) {
-      console.error('Error polling for events:', error);
       this.failedEvents++;
 
-      // Log the error in sync_logs table instead of using loggingService
-      await supabase.from('sync_logs').insert({
-        operation: 'pollForEvents',
-        status: 'error',
-        message: 'Failed to poll for blockchain events',
-        error_details: {
-          error: error instanceof Error ? error.message : 'Unknown error',
-        },
+      // Log the error using loggingService for proper error serialization
+      const errorLog = await loggingService.logBlockchainOperation('pollForEvents', {
+        lastProcessedBlock: this.lastProcessedBlock,
       });
+      await loggingService.logBlockchainError(errorLog, {
+        error,
+        context: 'Failed to poll for blockchain events',
+      });
+
+      // Re-throw as SyncError to propagate to callers
+      throw new SyncError('Failed to poll for blockchain events', 'POLL_EVENTS_FAIL', error);
     }
   }
 
@@ -551,21 +553,22 @@ export class SyncService {
         };
       });
     } catch (error) {
-      console.error('Failed to get contract events:', error);
-
-      // Log the error but don't throw to prevent sync service from stopping
-      await supabase.from('sync_logs').insert({
-        operation: 'get_contract_events',
-        status: 'error',
-        message: 'Failed to query blockchain events',
-        error_details: {
-          error: error instanceof Error ? error.message : 'Unknown error',
-          from_block: fromBlock,
-          to_block: toBlock,
-        },
+      // Log the error using loggingService
+      const errorLog = await loggingService.logBlockchainOperation('getContractEvents', {
+        fromBlock,
+        toBlock,
+      });
+      await loggingService.logBlockchainError(errorLog, {
+        error,
+        context: 'Failed to query blockchain events',
       });
 
-      return [];
+      // Re-throw as SyncError for proper error handling
+      throw new SyncError('Failed to get contract events', 'GET_EVENTS_FAIL', {
+        error,
+        fromBlock,
+        toBlock,
+      });
     }
   }
 
@@ -609,7 +612,22 @@ export class SyncService {
         guests: eventData.guests ? Number(eventData.guests) : undefined,
       };
     } catch (error) {
-      console.error('Failed to parse event data:', error);
+      // Log parsing error but return empty object to allow sync to continue
+      // This is intentionally not re-thrown as parsing failures shouldn't stop sync
+      // Note: Using fire-and-forget logging since this method is synchronous
+      loggingService
+        .logBlockchainOperation('parseStellarEventData', {
+          event: event.value,
+        })
+        .then((errorLog) => {
+          loggingService.logBlockchainError(errorLog, {
+            error,
+            context: 'Failed to parse event data - returning empty object',
+          });
+        })
+        .catch(() => {
+          // Ignore logging failures to prevent cascading errors
+        });
       return {};
     }
   }
@@ -717,10 +735,18 @@ export class SyncService {
         await bookingService.syncBookingFromBlockchain(
           eventData.escrow_id,
           this.mapBlockchainStatus(eventData.status),
-          eventData
+          eventData as unknown as Record<string, unknown>
         );
       } catch (error) {
-        console.error('Failed to sync booking from blockchain event:', error);
+        // Log and use fallback to direct database update
+        const errorLog = await loggingService.logBlockchainOperation('handleBookingUpdated', {
+          escrowId: eventData.escrow_id,
+          status: eventData.status,
+        });
+        await loggingService.logBlockchainError(errorLog, {
+          error,
+          context: 'Failed to sync booking from blockchain event - using fallback',
+        });
         // Fallback to direct database update
         await supabase
           .from('bookings')
@@ -873,6 +899,63 @@ export class SyncService {
       Cancelled: 'cancelled',
     };
     return statusMap[blockchainStatus] || 'pending';
+  }
+
+  /**
+   * Process sync event atomically using PostgreSQL RPC function
+   * This ensures event logging, status updates, and marking as processed
+   * all happen in a single transaction to prevent inconsistent states.
+   */
+  async processEventAtomic(
+    eventId: string,
+    eventType: string,
+    bookingId: string | null,
+    propertyId: string | null,
+    userId: string,
+    eventData: Record<string, unknown>,
+    newStatus?: string
+  ): Promise<{ success: boolean; syncEventId?: string; error?: string }> {
+    const log = await loggingService.logBlockchainOperation('processEventAtomic', {
+      eventId,
+      eventType,
+      bookingId,
+      newStatus,
+    });
+
+    try {
+      const { data, error } = await supabase.rpc('process_sync_event_atomic', {
+        p_event_id: eventId,
+        p_event_type: eventType,
+        p_booking_id: bookingId,
+        p_property_id: propertyId,
+        p_user_id: userId,
+        p_event_data: eventData,
+        p_new_status: newStatus || null,
+      });
+
+      if (error) {
+        await loggingService.logBlockchainError(log, { error, context: 'RPC call failed' });
+        throw new SyncError('Failed to process event atomically', 'ATOMIC_PROCESS_FAIL', error);
+      }
+
+      if (!data.success) {
+        if (data.error === 'DUPLICATE_EVENT') {
+          // Duplicate events are not errors, just skip them
+          await loggingService.logBlockchainSuccess(log, { skipped: true, reason: 'duplicate' });
+          return { success: true, error: 'DUPLICATE_EVENT' };
+        }
+        throw new SyncError(`Atomic processing failed: ${data.error}`, data.error, data);
+      }
+
+      await loggingService.logBlockchainSuccess(log, { syncEventId: data.sync_event_id });
+      return { success: true, syncEventId: data.sync_event_id };
+    } catch (error) {
+      if (error instanceof SyncError) {
+        throw error;
+      }
+      await loggingService.logBlockchainError(log, { error, context: 'processEventAtomic' });
+      throw new SyncError('Failed to process event atomically', 'ATOMIC_PROCESS_FAIL', error);
+    }
   }
 
   /**
