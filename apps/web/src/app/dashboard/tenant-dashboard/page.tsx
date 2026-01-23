@@ -3,21 +3,13 @@
 import BookingHistory from '@/components/dashboard/BookingHistory';
 import NotificationSystem from '@/components/dashboard/NotificationSystem';
 import ProfileManagement from '@/components/dashboard/ProfileManagement';
+import { Breadcrumb } from '@/components/ui/breadcrumb';
 import RoleGuard from '@/hooks/auth/RoleGuard';
 import {
-  Activity,
-  AlertCircle,
   BarChart3,
-  Bath,
-  Bed,
-  Bell,
   Calendar,
   Check,
   CheckCircle,
-  ChevronDown,
-  ChevronRight,
-  Clock,
-  CreditCard,
   DollarSign,
   Download,
   Edit3,
@@ -29,17 +21,10 @@ import {
   MapPin,
   MessageSquare,
   PieChart,
-  Plus,
-  Search,
   Settings,
   Star,
-  Trash2,
-  TrendingUp,
   User,
-  Users,
   Wallet,
-  X,
-  XCircle,
 } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -335,6 +320,7 @@ const TenantDashboard = () => {
       <div className="min-h-screen bg-gray-50 bg-gradient-to-b from-white to-blue-50 dark:from-[#0B1D39] dark:to-[#071429] dark:text-white">
         <header className="bg-white dark:bg-card/90 dark:text-foreground shadow-sm border-b">
           <div className="w-full px-4 sm:px-6 lg:px-8">
+            <Breadcrumb className="pt-4" />
             <div className="flex justify-between items-center h-16">
               <div className="flex items-center">
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">

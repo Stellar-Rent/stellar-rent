@@ -25,10 +25,8 @@ import { transformFromLegacyUser, transformToLegacyBooking, transformToLegacyUse
 import type {
   LegacyBooking as BookingType,
   Notification,
-  Transaction,
   LegacyUserProfile as UserProfile,
 } from '@/types';
-import BookingCard from './components/booking-card';
 import { BookingModal, CancelModal } from './components/modal';
 import ProfileManagement from './components/profile-management';
 import WalletTransactions from './components/wallet-transaction';

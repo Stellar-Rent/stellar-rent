@@ -6,6 +6,7 @@ export interface RouteInfo {
 }
 
 export const ROUTES: Record<string, RouteInfo> = {
+  // Public routes
   HOME: { path: '/', name: 'Home', requiresAuth: false },
   SEARCH: { path: '/search', name: 'Search Properties', requiresAuth: false },
   PROPERTY: {
@@ -17,6 +18,7 @@ export const ROUTES: Record<string, RouteInfo> = {
   REGISTER: { path: '/register', name: 'Register', requiresAuth: false },
   HELP: { path: '/help', name: 'Help Center', requiresAuth: false },
 
+  // Protected routes
   DASHBOARD: { path: '/dashboard', name: 'Dashboard', requiresAuth: true },
   TENANT_DASHBOARD: {
     path: '/dashboard/tenant-dashboard',
@@ -28,12 +30,16 @@ export const ROUTES: Record<string, RouteInfo> = {
     name: 'Host Dashboard',
     requiresAuth: true,
   },
-  BOOKINGS: {
-    path: '/dashboard/bookings',
-    name: 'My Bookings',
+  LIST_PROPERTY: {
+    path: '/list',
+    name: 'List Property',
     requiresAuth: true,
   },
-
+  INVITATIONS: {
+    path: '/invitations',
+    name: 'Guest Invitations',
+    requiresAuth: true,
+  },
   BOOKING_CONFIRMATION: {
     path: '/booking/confirmation',
     name: 'Booking Confirmation',
@@ -43,10 +49,10 @@ export const ROUTES: Record<string, RouteInfo> = {
 
 export const navigationHelpers = {
   getBookingsUrl: (isAuthenticated: boolean) =>
-    isAuthenticated ? '/dashboard/tenant-dashboard' : '/login?redirect=/tenant-dashboard',
+    isAuthenticated ? '/dashboard/tenant-dashboard' : '/login?redirect=/dashboard/tenant-dashboard',
 
   getDashboardUrl: (isAuthenticated: boolean) =>
-    isAuthenticated ? '/dashboard/tenant-dashboard' : '/login?redirect=/tenant-dashboard',
+    isAuthenticated ? '/dashboard/tenant-dashboard' : '/login?redirect=/dashboard/tenant-dashboard',
 
   goToHome: () => '/',
 
