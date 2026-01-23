@@ -1,7 +1,6 @@
 'use client';
 import { X } from 'lucide-react';
 import type React from 'react';
-import type { Property } from '../types';
 
 interface AddPropertyModalProps {
   open: boolean;

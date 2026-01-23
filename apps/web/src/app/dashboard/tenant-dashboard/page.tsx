@@ -6,44 +6,21 @@ import ProfileManagement from '@/components/dashboard/ProfileManagement';
 import { Breadcrumb } from '@/components/ui/breadcrumb';
 import RoleGuard from '@/hooks/auth/RoleGuard';
 import {
-  Activity,
-  AlertCircle,
   BarChart3,
-  Bath,
-  Bed,
-  Bell,
   Calendar,
   Check,
   CheckCircle,
-  ChevronDown,
-  ChevronRight,
-  Clock,
-  CreditCard,
   DollarSign,
   Download,
   Edit3,
-  Eye,
-  Filter,
-  Home,
-  Info,
-  MapPin,
-  MessageSquare,
   PieChart,
-  Plus,
-  Search,
   Settings,
   Star,
-  Trash2,
-  TrendingUp,
   User,
-  Users,
   Wallet,
-  X,
-  XCircle,
 } from 'lucide-react';
 import Image from 'next/image';
-import type React from 'react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 interface Booking {
   id: string;
