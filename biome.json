@@ -16,7 +16,8 @@
       "*.lock",
       "coverage",
       "apps/backend/src/config/supabase.ts",
-      "apps/backend/tests/**/*.ts"
+      "apps/backend/tests/**/*.ts",
+      "apps/web/stellar-social-sdk"
     ]
   },
   "formatter": {
