@@ -1,251 +1,352 @@
 'use client';
 
-import { type ReactNode, createContext, useContext, useEffect, useState } from 'react';
-import { signTransactionWithFreighter } from '~/lib/freighter-utils';
-import { getNetworkName, getNetworkPassphrase, logNetworkInfo } from '~/lib/network-utils';
-import { apiUtils, authAPI } from '../../services/api';
-import { useWallet } from '../useWallet';
+import {
+  type ReactNode,
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
+import toast from 'react-hot-toast';
+import { StellarSocialSDK } from '~/lib/stellar-social-sdk';
+import type {
+  AuthContextType,
+  BalanceInfo,
+  CredentialResponse,
+  SocialUser,
+  StellarSocialAccount,
+} from '~/types/auth';
 
-interface User {
-  id: string;
-  email?: string;
-  name: string;
-  publicKey?: string;
-  authType?: 'email' | 'wallet';
-}
+// Configuración del SDK
+const CONTRACT_ID =
+  process.env.NEXT_PUBLIC_CONTRACT_ID || 'CALZGCSB3P3WEBLW3QTF5Y4WEALEVTYUYBC7KBGQ266GDINT7U4E74KW';
+const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+const STELLAR_NETWORK = (process.env.NEXT_PUBLIC_STELLAR_NETWORK || 'testnet') as
+  | 'testnet'
+  | 'mainnet';
 
-interface AuthContextType {
-  user: User | null;
-  isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, fullName: string) => Promise<void>;
-  loginWithWallet: () => Promise<void>;
-  logout: () => Promise<void>;
-  isAuthenticated: boolean;
-  authType: 'email' | 'wallet' | null;
-}
+// Claves de localStorage
+const STORAGE_KEYS = {
+  USER: 'stellar_social_user',
+  AUTH_METHOD: 'stellar_social_auth_method',
+} as const;
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
-  isLoading: false,
-  login: async () => {},
-  register: async () => {},
-  loginWithWallet: async () => {},
-  logout: async () => {},
+  account: null,
   isAuthenticated: false,
-  authType: null,
+  isLoading: true,
+  authMethod: null,
+  loginWithGoogle: async () => {},
+  loginWithFreighter: async () => {},
+  logout: () => {},
+  getBalance: async () => [],
+  sendPayment: async () => '',
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [authType, setAuthType] = useState<'email' | 'wallet' | null>(null);
-  const { network, networkPassphrase, getPublicKey } = useWallet();
+  const [user, setUser] = useState<SocialUser | null>(null);
+  const [account, setAccount] = useState<StellarSocialAccount | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [authMethod, setAuthMethod] = useState<'google' | 'freighter' | null>(null);
+  const [sdk, setSdk] = useState<StellarSocialSDK | null>(null);
+
+  // Refs para acceder al estado actual en callbacks
+  const sdkRef = useRef<StellarSocialSDK | null>(null);
+  const setUserRef = useRef(setUser);
+  const setAccountRef = useRef(setAccount);
+  const setAuthMethodRef = useRef(setAuthMethod);
+  const setIsLoadingRef = useRef(setIsLoading);
+
+  // Actualizar refs cuando cambia el estado
+  useEffect(() => {
+    sdkRef.current = sdk;
+  }, [sdk]);
 
   useEffect(() => {
-    const checkAuth = () => {
-      const storedUser = localStorage.getItem('user');
-      const storedAuthType = localStorage.getItem('authType') as 'email' | 'wallet' | null;
+    setUserRef.current = setUser;
+    setAccountRef.current = setAccount;
+    setAuthMethodRef.current = setAuthMethod;
+    setIsLoadingRef.current = setIsLoading;
+  }, []);
 
-      if (storedUser) {
-        try {
-          const parsedUser = JSON.parse(storedUser);
-          setUser(parsedUser);
-          setAuthType(storedAuthType);
-        } catch (error) {
-          console.error('Error parsing stored user:', error);
-          apiUtils.clearAuth();
-        }
+  // Inicializar SDK
+  useEffect(() => {
+    const initSDK = async () => {
+      try {
+        const stellarSDK = new StellarSocialSDK({
+          contractId: CONTRACT_ID,
+          network: STELLAR_NETWORK,
+          googleClientId: GOOGLE_CLIENT_ID,
+        });
+
+        setSdk(stellarSDK);
+        console.log('✅ Stellar Social SDK initialized');
+      } catch (error) {
+        console.error('❌ Failed to initialize SDK:', error);
+        toast.error('Failed to initialize authentication system');
       }
     };
 
-    checkAuth();
+    initSDK();
   }, []);
 
-  const login = async (email: string, password: string) => {
-    setIsLoading(true);
-    try {
-      const response = (await authAPI.login(email, password)) as {
-        token: string;
-        user: { id: string; email: string; name: string };
-      };
-      const userData: User = {
-        id: response.user.id,
-        email: response.user.email,
-        name: response.user.name,
-        authType: 'email',
-      };
-
-      setUser(userData);
-      setAuthType('email');
-      localStorage.setItem('authToken', response.token);
-      localStorage.setItem('user', JSON.stringify(userData));
-      localStorage.setItem('authType', 'email');
-    } catch (error) {
-      console.error('Login failed:', error);
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const register = async (email: string, password: string, fullName: string) => {
-    setIsLoading(true);
-    try {
-      const response = (await authAPI.register(email, password, fullName)) as {
-        token: string;
-        user: { id: string; email: string; name: string };
-      };
-      const userData: User = {
-        id: response.user.id,
-        email: response.user.email,
-        name: response.user.name,
-        authType: 'email',
-      };
-
-      setUser(userData);
-      setAuthType('email');
-      localStorage.setItem('authToken', response.token);
-      localStorage.setItem('user', JSON.stringify(userData));
-      localStorage.setItem('authType', 'email');
-    } catch (error) {
-      console.error('Registration failed:', error);
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const loginWithWallet = async () => {
-    setIsLoading(true);
-    try {
-      // Get public key (this handles connection if needed)
-      const walletPublicKey = await getPublicKey();
-      if (!walletPublicKey) {
-        throw new Error('Failed to get public key from wallet');
-      }
-
-      console.log('🔑 Using public key:', walletPublicKey);
-
-      // Debug network information
-      logNetworkInfo(network, 'TESTNET');
-
-      // Request challenge from backend
-      const challengeResponse = await authAPI.requestChallenge(walletPublicKey);
-
+  // Restaurar sesión desde localStorage
+  useEffect(() => {
+    const restoreSession = () => {
       try {
-        const { TransactionBuilder, Account, Memo, BASE_FEE } = await import(
-          '@stellar/stellar-sdk'
-        );
+        const storedUser = localStorage.getItem(STORAGE_KEYS.USER);
+        const storedAuthMethod = localStorage.getItem(STORAGE_KEYS.AUTH_METHOD) as
+          | 'google'
+          | 'freighter'
+          | null;
 
-        const challengeText = challengeResponse.challenge;
-        if (challengeText.length > 28) {
-          throw new Error('Challenge too long for transaction memo');
+        if (storedUser && storedAuthMethod) {
+          const parsedUser = JSON.parse(storedUser) as SocialUser;
+          setUser(parsedUser);
+          setAuthMethod(storedAuthMethod);
+          console.log('✅ Session restored for:', parsedUser.name || parsedUser.publicKey);
         }
+      } catch (error) {
+        console.error('Error restoring session:', error);
+        clearStorage();
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-        // Use the wallet's current network, but ensure it matches what we expect
-        const walletNetworkPassphrase = networkPassphrase || getNetworkPassphrase(network);
-        const targetNetworkName = getNetworkName(network);
+    restoreSession();
+  }, []);
 
-        console.log('🌐 Transaction Network Info:');
-        console.log('  Wallet Network:', network);
-        console.log('  Wallet Passphrase:', networkPassphrase);
-        console.log('  Using Passphrase:', walletNetworkPassphrase);
-        console.log('  Target Network Name:', targetNetworkName);
+  // Configurar Google OAuth cuando el SDK esté listo
+  useEffect(() => {
+    if (!sdk || !GOOGLE_CLIENT_ID) return;
 
-        // Create memo-only transaction (no operations as backend expects)
-        const account = new Account(walletPublicKey, '0');
-        const transaction = new TransactionBuilder(account, {
-          fee: BASE_FEE,
-          networkPassphrase: walletNetworkPassphrase, // Use wallet's actual network
-        })
-          .addMemo(Memo.text(challengeText)) // Only memo, no operations
-          .setTimeout(30)
-          .build();
+    const setupGoogleOAuth = () => {
+      if (typeof window !== 'undefined' && window.google?.accounts?.id) {
+        // Asignar callback global
+        window.handleGoogleCredential = handleGoogleAuthComplete;
 
-        console.log('📝 Transaction created for network:', walletNetworkPassphrase);
-
-        // Sign transaction - use the wallet's current network
-        const signResult = await signTransactionWithFreighter(transaction.toXDR(), {
-          network: targetNetworkName,
-          networkPassphrase: walletNetworkPassphrase,
-          address: walletPublicKey,
+        // Inicializar Google Identity Services
+        window.google.accounts.id.initialize({
+          client_id: GOOGLE_CLIENT_ID,
+          callback: handleGoogleAuthComplete,
+          auto_select: false,
+          cancel_on_tap_outside: false,
+          ux_mode: 'popup',
+          context: 'signin',
+          itp_support: true,
+          use_fedcm_for_prompt: true,
         });
 
-        if (signResult.error) {
-          throw new Error(signResult.error);
-        }
+        console.log('✅ Google OAuth initialized');
+      } else {
+        // Reintentar si el script de Google aún no ha cargado
+        setTimeout(setupGoogleOAuth, 500);
+      }
+    };
 
-        if (!signResult.signedTxXdr) {
-          throw new Error('No signed transaction returned');
-        }
+    // Esperar a que cargue el script de Google
+    setTimeout(setupGoogleOAuth, 1000);
+  }, [sdk]);
 
-        console.log('✅ Transaction signed successfully');
+  // Handler para autenticación con Google
+  const handleGoogleAuthComplete = useCallback(async (credentialResponse: CredentialResponse) => {
+    const currentSdk = sdkRef.current;
 
-        // Authenticate with backend
-        const authResponse = await authAPI.authenticateWallet(
-          walletPublicKey,
-          signResult.signedTxXdr,
-          challengeResponse.challenge
-        );
+    if (!credentialResponse?.credential) {
+      toast.error('No credential received from Google');
+      return;
+    }
 
-        const userData: User = {
-          id: (authResponse.user as { id: string; name?: string }).id,
-          name: (authResponse.user as { id: string; name?: string }).name || 'Wallet User',
-          publicKey: walletPublicKey,
-          authType: 'wallet',
+    if (!currentSdk) {
+      toast.error('SDK not initialized');
+      return;
+    }
+
+    setIsLoadingRef.current(true);
+    const toastId = toast.loading('Creating your Stellar account...');
+
+    try {
+      const result = await currentSdk.authenticateWithGoogleCredential(credentialResponse);
+
+      if (result.success && result.account) {
+        const stellarAccount = result.account as StellarSocialAccount;
+        const authMethodData = stellarAccount.data.authMethods[0];
+
+        const socialUser: SocialUser = {
+          publicKey: stellarAccount.publicKey,
+          name: authMethodData?.metadata?.name,
+          email: authMethodData?.metadata?.email,
+          picture: authMethodData?.metadata?.picture,
+          authMethod: 'google',
         };
 
-        setUser(userData);
-        setAuthType('wallet');
-        localStorage.setItem('user', JSON.stringify(userData));
-        localStorage.setItem('authType', 'wallet');
+        // Guardar en estado
+        setUserRef.current(socialUser);
+        setAccountRef.current(stellarAccount);
+        setAuthMethodRef.current('google');
 
-        console.log('🎉 Wallet authentication successful!');
-      } catch (signError) {
-        console.error('Error creating or signing transaction:', signError);
-        throw new Error('Failed to sign authentication transaction');
+        // Persistir en localStorage
+        localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(socialUser));
+        localStorage.setItem(STORAGE_KEYS.AUTH_METHOD, 'google');
+
+        toast.success(`Welcome ${socialUser.name || 'User'}!`, { id: toastId });
+        console.log('✅ Google auth successful:', socialUser.publicKey);
+      } else {
+        throw new Error(result.error || 'Authentication failed');
       }
     } catch (error) {
-      console.error('Wallet login failed:', error);
-      throw error;
+      const errorMessage = error instanceof Error ? error.message : 'Error de autenticación';
+      toast.error(errorMessage, { id: toastId });
+      console.error('❌ Google auth failed:', error);
     } finally {
-      setIsLoading(false);
+      setIsLoadingRef.current(false);
     }
-  };
+  }, []);
 
-  const logout = async () => {
+  // Login con Google (trigger manual)
+  const loginWithGoogle = useCallback(
+    async (credentialResponse: CredentialResponse) => {
+      await handleGoogleAuthComplete(credentialResponse);
+    },
+    [handleGoogleAuthComplete]
+  );
+
+  // Login con Freighter
+  const loginWithFreighter = useCallback(async () => {
+    if (!sdk) {
+      toast.error('SDK not initialized');
+      return;
+    }
+
     setIsLoading(true);
+    const toastId = toast.loading('Connecting to Freighter...');
+
     try {
-      await authAPI.logout();
+      const result = await sdk.connectFreighter();
+
+      if (result.success && result.account) {
+        const stellarAccount = result.account as StellarSocialAccount;
+
+        const socialUser: SocialUser = {
+          publicKey: stellarAccount.publicKey,
+          name: 'Freighter User',
+          authMethod: 'freighter',
+        };
+
+        // Guardar en estado
+        setUser(socialUser);
+        setAccount(stellarAccount);
+        setAuthMethod('freighter');
+
+        // Persistir en localStorage
+        localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(socialUser));
+        localStorage.setItem(STORAGE_KEYS.AUTH_METHOD, 'freighter');
+
+        toast.success('Wallet connected!', { id: toastId });
+        console.log('✅ Freighter auth successful:', socialUser.publicKey);
+      } else {
+        throw new Error(result.error || 'Failed to connect Freighter');
+      }
     } catch (error) {
-      console.error('Logout failed:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to connect wallet';
+      toast.error(errorMessage, { id: toastId });
+      console.error('❌ Freighter auth failed:', error);
     } finally {
-      setUser(null);
-      setAuthType(null);
-      apiUtils.clearAuth();
       setIsLoading(false);
     }
-  };
+  }, [sdk]);
 
-  const isAuthenticated = !!user;
+  // Logout
+  const logout = useCallback(() => {
+    // Limpiar estado
+    setUser(null);
+    setAccount(null);
+    setAuthMethod(null);
+
+    // Limpiar localStorage
+    clearStorage();
+
+    // Revocar acceso de Google si estaba autenticado con Google
+    if (authMethod === 'google' && window.google?.accounts?.id) {
+      window.google.accounts.id.disableAutoSelect();
+    }
+
+    toast.success('Logged out');
+    console.log('✅ Logged out');
+  }, [authMethod]);
+
+  // Obtener balance
+  const getBalance = useCallback(async (): Promise<BalanceInfo[]> => {
+    if (!account) {
+      console.warn('No account available for balance check');
+      return [];
+    }
+
+    try {
+      const balances = await account.getBalance();
+      return balances;
+    } catch (error) {
+      console.error('Error fetching balance:', error);
+      return [];
+    }
+  }, [account]);
+
+  // Enviar pago
+  const sendPayment = useCallback(
+    async (to: string, amount: string, memo?: string): Promise<string> => {
+      if (!account) {
+        throw new Error('No active account');
+      }
+
+      const toastId = toast.loading('Sending payment...');
+
+      try {
+        const txHash = await account.sendPayment(to, amount, undefined, memo);
+        toast.success('Payment sent successfully', { id: toastId });
+        return txHash;
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Failed to send payment';
+        toast.error(errorMessage, { id: toastId });
+        throw error;
+      }
+    },
+    [account]
+  );
+
+  const isAuthenticated = !!user && !!user.publicKey;
 
   return (
     <AuthContext.Provider
       value={{
         user,
-        isLoading,
-        login,
-        register,
-        loginWithWallet,
-        logout,
+        account,
         isAuthenticated,
-        authType,
+        isLoading,
+        authMethod,
+        loginWithGoogle,
+        loginWithFreighter,
+        logout,
+        getBalance,
+        sendPayment,
       }}
     >
       {children}
     </AuthContext.Provider>
   );
+}
+
+// Helper para limpiar storage
+function clearStorage() {
+  localStorage.removeItem(STORAGE_KEYS.USER);
+  localStorage.removeItem(STORAGE_KEYS.AUTH_METHOD);
+  // Limpiar claves legacy también
+  localStorage.removeItem('user');
+  localStorage.removeItem('authToken');
+  localStorage.removeItem('authType');
 }
 
 export const useAuth = () => useContext(AuthContext);

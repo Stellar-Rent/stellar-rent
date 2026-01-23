@@ -35,7 +35,8 @@ export function useUserRole(): UseUserRoleReturn {
 
         // Try to fetch profile from API first
         try {
-          const response = await profileAPI.getUserProfile(user.id);
+          const userId = user.publicKey || 'unknown';
+          const response = await profileAPI.getUserProfile(userId);
           const profile = response.data;
 
           // Extract host information from profile
