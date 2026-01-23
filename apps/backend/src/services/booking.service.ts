@@ -1,7 +1,6 @@
 import { StrKey } from '@stellar/stellar-sdk';
 import {
   cancelBookingOnChain,
-  checkBookingAvailability,
   createBookingOnChain,
   updateBookingStatusOnChain,
 } from '../blockchain/bookingContract';
@@ -540,6 +539,7 @@ export async function confirmBookingPayment(bookingId: string, transactionHash: 
           'Transaction hash is already used by another booking',
           'DUPLICATE_TRANSACTION',
         ],
+        INVALID_TRANSACTION_HASH: ['Transaction hash is required', 'INVALID_TRANSACTION_HASH'],
         DB_ERROR: ['Database error occurred', 'DB_ERROR'],
       };
       const [msg, code] = errorMap[data.error] || ['Payment confirmation failed', 'CONFIRM_FAIL'];
