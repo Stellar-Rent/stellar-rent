@@ -1,5 +1,4 @@
 import { DollarSign, TrendingUp, Wallet } from 'lucide-react';
-import type React from 'react';
 
 interface EarningsStatsProps {
   totalEarnings: number;

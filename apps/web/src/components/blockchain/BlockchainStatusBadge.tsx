@@ -2,7 +2,7 @@
 
 import { Badge } from '@/components/ui/badge';
 import { AlertTriangle, CheckCircle, RefreshCw, Shield, XCircle } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   type PropertyBlockchainStatus,
   getPropertyBlockchainStatus,
@@ -30,7 +30,7 @@ export function BlockchainStatusBadge({
     return null;
   }
 
-  const loadStatus = async () => {
+  const loadStatus = useCallback(async () => {
     setIsLoading(true);
     try {
       const blockchainStatus = await getPropertyBlockchainStatus(propertyId);
@@ -44,13 +44,13 @@ export function BlockchainStatusBadge({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [propertyId]);
 
   useEffect(() => {
     if (propertyId) {
       loadStatus();
     }
-  }, [propertyId]);
+  }, [propertyId, loadStatus]);
 
   if (isLoading) {
     return (

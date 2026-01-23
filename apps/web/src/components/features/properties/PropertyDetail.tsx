@@ -31,7 +31,6 @@ import { getPropertyById } from '@/lib/data/properties';
 import type { PropertyDetailProps } from '@/lib/types/property';
 import {
   Bath,
-  Calendar,
   Car,
   ChevronDown,
   ChevronUp,
@@ -49,7 +48,6 @@ import {
   Wifi,
   Wind,
 } from 'lucide-react';
-import Image from 'next/image';
 import Link from 'next/link';
 import type React from 'react';
 import { useState } from 'react';
