@@ -8,16 +8,6 @@
   "files": {
     "ignoreUnknown": true,
     "ignore": [
-      "./apps/web/.next",
-      "./apps/contract/dist",
-      "./apps/*/dist",
-      "./apps/*/build",
-      "node_modules",
-      "*.lock",
-      "coverage",
-      "apps/backend/src/config/supabase.ts",
-      "apps/backend/tests/**/*.ts",
-      "apps/web/stellar-social-sdk"
       "**/node_modules/**",
       "**/.next/**",
       "**/dist/**",
@@ -26,7 +16,9 @@
       "**/*.snap",
       "**/__snapshots__/**",
       "**/*.lock",
-      "apps/backend/src/config/supabase.ts"
+      "apps/backend/src/config/supabase.ts",
+      "apps/backend/tests/**/*.ts",
+      "apps/web/stellar-social-sdk"
     ]
   },
   "formatter": {

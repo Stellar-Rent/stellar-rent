@@ -24,11 +24,9 @@ export function FreighterFallback({ onSuccess, onError, className }: FreighterFa
   useEffect(() => {
     const checkFreighter = async () => {
       try {
-        const connected = await isConnected();
-        // isConnected returns true if extension is installed (even if not connected)
-        setIsFreighterInstalled(
-          connected.isConnected !== undefined ? true : (connected as unknown as boolean)
-        );
+        const result = await isConnected();
+        // isConnected returns { isConnected: boolean } - use the actual boolean value
+        setIsFreighterInstalled(result.isConnected === true);
       } catch {
         // If the API throws, Freighter is likely not installed
         setIsFreighterInstalled(false);

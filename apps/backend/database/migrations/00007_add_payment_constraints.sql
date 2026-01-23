@@ -17,6 +17,15 @@ AS $$
 DECLARE
     v_booking RECORD;
 BEGIN
+    -- Validate transaction hash is provided
+    IF p_transaction_hash IS NULL OR p_transaction_hash = '' THEN
+        RETURN jsonb_build_object(
+            'success', false,
+            'error', 'INVALID_TRANSACTION_HASH',
+            'message', 'Transaction hash is required'
+        );
+    END IF;
+
     -- Lock the booking row for update to prevent concurrent modifications
     SELECT id, status, payment_transaction_hash
     INTO v_booking

@@ -120,6 +120,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     restoreSession();
   }, []);
 
+  // Restore account when SDK is ready and we have a stored session
+  useEffect(() => {
+    const restoreAccount = async () => {
+      if (!sdk || !user || account) return;
+
+      try {
+        if (authMethod === 'freighter') {
+          // For Freighter, try to reconnect silently
+          const { isConnected } = await import('@stellar/freighter-api');
+          const result = await isConnected();
+
+          if (result.isConnected === true) {
+            const reconnectResult = await sdk.connectFreighter();
+            if (reconnectResult.success && reconnectResult.account) {
+              setAccount(reconnectResult.account as StellarSocialAccount);
+              console.log('✅ Freighter account restored');
+            }
+          } else {
+            // Freighter not available, clear session
+            console.warn('Freighter not available, clearing session');
+            clearStorage();
+            setUser(null);
+            setAuthMethod(null);
+          }
+        }
+        // For Google, user must re-authenticate to get account
+        // The UI should prompt for re-auth when account is needed
+      } catch (error) {
+        console.error('Error restoring account:', error);
+      }
+    };
+
+    restoreAccount();
+  }, [sdk, user, authMethod, account]);
+
   // Configurar Google OAuth cuando el SDK esté listo
   useEffect(() => {
     if (!sdk || !GOOGLE_CLIENT_ID) return;

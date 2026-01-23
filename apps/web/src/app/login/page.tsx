@@ -6,11 +6,30 @@ import { useEffect } from 'react';
 import { FreighterFallback } from '~/components/auth/FreighterFallback';
 import { SocialLoginButton } from '~/components/auth/SocialLoginButton';
 
+// Validate redirect URL to prevent open redirect attacks
+function getSafeRedirect(redirectParam: string | null): string {
+  const defaultRedirect = '/dashboard';
+
+  if (!redirectParam) {
+    return defaultRedirect;
+  }
+
+  // Only allow internal paths (must start with / and not //)
+  if (redirectParam.startsWith('/') && !redirectParam.startsWith('//')) {
+    // Additional check: no protocol in the path
+    if (!redirectParam.includes('://')) {
+      return redirectParam;
+    }
+  }
+
+  return defaultRedirect;
+}
+
 export default function LoginPage() {
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirect = searchParams.get('redirect') || '/dashboard';
+  const redirect = getSafeRedirect(searchParams.get('redirect'));
 
   // Redirect if already authenticated
   useEffect(() => {
