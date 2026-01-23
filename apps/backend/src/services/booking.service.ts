@@ -514,37 +514,63 @@ export const bookingService = new BookingService(blockchainServices);
 
 // Existing utility functions for payment confirmation and booking retrieval
 export async function confirmBookingPayment(bookingId: string, transactionHash: string) {
+  const log = await loggingService.logBlockchainOperation('confirmBookingPayment', {
+    bookingId,
+    transactionHash,
+  });
+
   try {
-    const { data: existingBooking, error: fetchError } = await supabase
+    // Use atomic RPC function to validate and confirm payment
+    const { data, error } = await supabase.rpc('confirm_booking_payment_atomic', {
+      p_booking_id: bookingId,
+      p_transaction_hash: transactionHash,
+    });
+
+    if (error) {
+      await loggingService.logBlockchainError(log, { error, context: 'RPC call failed' });
+      throw new BookingError('Database error during payment confirmation', 'DB_ERROR', error);
+    }
+
+    // Handle validation errors from the RPC function
+    if (!data.success) {
+      const errorMap: Record<string, [string, string]> = {
+        NOT_FOUND: ['Booking not found', 'NOT_FOUND'],
+        ALREADY_PAID: ['Booking has already been paid', 'ALREADY_PAID'],
+        DUPLICATE_TRANSACTION: [
+          'Transaction hash is already used by another booking',
+          'DUPLICATE_TRANSACTION',
+        ],
+        DB_ERROR: ['Database error occurred', 'DB_ERROR'],
+      };
+      const [msg, code] = errorMap[data.error] || ['Payment confirmation failed', 'CONFIRM_FAIL'];
+      throw new BookingError(msg, code, data);
+    }
+
+    // Fetch the updated booking to return full data
+    const { data: booking, error: fetchError } = await supabase
       .from('bookings')
       .select('*')
       .eq('id', bookingId)
       .single();
 
-    if (fetchError || !existingBooking) {
-      throw new BookingError('Booking not found or failed to retrieve', 'NOT_FOUND', fetchError);
+    if (fetchError || !booking) {
+      // Payment was confirmed but fetch failed - log but don't throw
+      await loggingService.logBlockchainError(log, {
+        error: fetchError,
+        context: 'Payment confirmed but failed to fetch updated booking',
+      });
+      // Return minimal data since confirmation was successful
+      return { id: bookingId, status: 'confirmed', payment_transaction_hash: transactionHash };
     }
 
-    const { data, error } = await supabase
-      .from('bookings')
-      .update({
-        status: 'confirmed',
-        payment_transaction_hash: transactionHash,
-        paid_at: new Date().toISOString(),
-      })
-      .eq('id', bookingId)
-      .select()
-      .single();
-
-    if (error || !data) {
-      throw new BookingError('Failed to confirm booking status update', 'CONFIRM_FAIL', error);
-    }
-    return data;
+    await loggingService.logBlockchainSuccess(log, { booking });
+    return booking;
   } catch (error) {
     if (error instanceof BookingError) {
       throw error;
     }
-    throw new BookingError('Confirmation error', 'CONFIRM_FAIL', error);
+    await loggingService.logBlockchainError(log, { error, context: 'confirmBookingPayment' });
+    throw new BookingError('Payment confirmation failed', 'CONFIRM_FAIL', error);
   }
 }
 
