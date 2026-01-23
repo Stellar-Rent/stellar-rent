@@ -100,7 +100,7 @@ test.describe('useStellar Hook', () => {
         },
         Horizon: {
           Server: class MockHorizonServer {
-            friendbot(publicKey: string) {
+            friendbot(_publicKey: string) {
               return {
                 call: async () => {
                   const mocks = (window as WindowWithStellarMocks).__stellarHookMocks;
@@ -119,7 +119,11 @@ test.describe('useStellar Hook', () => {
 
       // Mock passkey utilities
       const mockStellarUtils: MockStellarUtils = {
-        handleDeploy: async (bundlerKey: MockKeypair, contractSalt: string, publicKey: string) => {
+        handleDeploy: async (
+          _bundlerKey: MockKeypair,
+          _contractSalt: string,
+          _publicKey: string
+        ) => {
           const mocks = (window as WindowWithStellarMocks).__stellarHookMocks;
           if (mocks?.shouldThrowError) {
             throw new Error(mocks.errorMessage || 'Deploy failed');
@@ -127,7 +131,7 @@ test.describe('useStellar Hook', () => {
           return mocks?.deployResponse || `CTEST${Math.random().toString(36).substr(2, 50)}`;
         },
         // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-        getPublicKeys: async (registerRes: any) => {
+        getPublicKeys: async (_registerRes: any) => {
           const mocks = (window as WindowWithStellarMocks).__stellarHookMocks;
           if (mocks?.shouldThrowError) {
             throw new Error(mocks.errorMessage || 'Public keys failed');

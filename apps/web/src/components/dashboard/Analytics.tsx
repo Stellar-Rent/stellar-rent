@@ -4,18 +4,12 @@ import {
   Activity,
   ArrowDownRight,
   ArrowUpRight,
-  BarChart3,
   Calendar,
   DollarSign,
   Download,
-  Eye,
-  Filter,
   Home,
-  PieChart,
   RefreshCw,
   Star,
-  TrendingDown,
-  TrendingUp,
   Users,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';

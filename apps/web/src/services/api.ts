@@ -1,20 +1,15 @@
 import type {
   APIResponse,
-  AccountDetails,
   Booking,
   BookingFilters,
   BookingFormData,
   DateRangeFilter,
-  Notification,
-  NotificationFilters,
-  PaginatedResponse,
   ProfileFormData,
   Property,
   PropertyAvailabilityData,
   PropertyFilters,
   PropertyFormData,
   PropertyUpdateData,
-  Transaction,
   UserProfile,
 } from '../types/shared';
 
@@ -43,41 +38,6 @@ interface ChallengeResponse {
   challenge: string;
   expiresAt: string;
 }
-
-// Generic API call function
-const _apiCall = async <T>(endpoint: string, options: RequestInit = {}): Promise<T> => {
-  const url = `${API_BASE_URL}${endpoint}`;
-  const token = localStorage.getItem('authToken');
-
-  const headers = new Headers({
-    'Content-Type': 'application/json',
-    ...(token && { Authorization: `Bearer ${token}` }),
-    ...((options.headers as Record<string, string>) || {}),
-  });
-
-  try {
-    const response = await fetch(url, {
-      ...options,
-      headers,
-      credentials: 'include',
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'API request failed');
-    }
-
-    // For 204 No Content responses
-    if (response.status === 204) {
-      return {} as T;
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error(`API call failed for ${endpoint}:`, error);
-    throw error;
-  }
-};
 
 // Transform wallet user function
 const _transformWalletUser = (user: Record<string, unknown>): UserProfile => {
@@ -353,9 +313,9 @@ export const walletAPI = {
 };
 
 export const notificationAPI = {
-  async getNotifications(_userId: string, _filters?: Record<string, unknown>) {
-    // TODO: Implement notifications API
-    return Promise.resolve({ data: [], success: true });
+  async getNotifications(userId: string, filters?: Record<string, unknown>) {
+    const params = createURLParams({ userId }, filters);
+    return apiUtils.request(`/notifications?${params}`);
   },
 };
 

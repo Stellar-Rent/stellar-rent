@@ -18,11 +18,15 @@
  * - Status monitoring and statistics
  */
 
-import { Contract, Networks, nativeToScVal, scValToNative } from '@stellar/stellar-sdk';
+import { exec } from 'node:child_process';
+import { promisify } from 'node:util';
+import { Contract, Networks, nativeToScVal, rpc, scValToNative } from '@stellar/stellar-sdk';
 import { Server as SorobanRpcServer } from '@stellar/stellar-sdk/lib/rpc';
 import { supabase } from '../config/supabase';
 import { bookingService } from './booking.service';
 import { loggingService } from './logging.service';
+
+const execAsync = promisify(exec);
 
 export interface SyncEvent {
   id: string;
@@ -345,23 +349,130 @@ export class SyncService {
   /**
    * Get current block height from Stellar network
    */
+  /**
+   * Get the latest ledger sequence using Stellar SDK (primary method)
+   */
+  private async getLatestLedgerFromSDK(): Promise<number> {
+    const currentLedger = await this.server.getLatestLedger();
+    return currentLedger.sequence || 0;
+  }
+
+  /**
+   * Get the latest ledger sequence using Stellar CLI (fallback method)
+   */
+  private async getLatestLedgerFromCLI(): Promise<number> {
+    try {
+      const network = process.env.STELLAR_NETWORK || 'testnet';
+      const command = `stellar ledger latest --network ${network} --output json`;
+
+      const { stdout, stderr } = await execAsync(command, {
+        timeout: 15000, // 15 second timeout
+        maxBuffer: 1024 * 1024, // 1MB buffer
+      });
+
+      if (stderr?.trim()) {
+        console.warn('Stellar CLI stderr:', stderr);
+      }
+
+      // Parse JSON response with robust error handling
+      let result: { sequence: number };
+      try {
+        result = JSON.parse(stdout.trim());
+      } catch (parseError) {
+        console.error('Failed to parse JSON response from Stellar CLI:', parseError);
+        console.error('Raw response:', stdout);
+        throw new Error(
+          `Failed to parse JSON response from Stellar CLI: ${(parseError as Error).message}`
+        );
+      }
+
+      if (!result || typeof result.sequence !== 'number') {
+        throw new Error(
+          'Invalid response format from Stellar CLI: missing or invalid sequence field'
+        );
+      }
+
+      return result.sequence;
+    } catch (error) {
+      // Enhanced error handling with specific error types
+      if (error instanceof SyntaxError) {
+        console.error('JSON parsing failed:', error.message);
+        throw new Error(`JSON parsing failed: ${error.message}`);
+      }
+
+      const err = error as NodeJS.ErrnoException & { signal?: string; message?: string };
+
+      if (err.code === 'ENOENT') {
+        const installMessage =
+          'Stellar CLI not found. Please install: curl -s https://get.stellar.org | bash';
+        console.error(installMessage);
+        throw new Error(installMessage);
+      }
+
+      if (err.code === 'ETIMEDOUT' || err.signal === 'SIGTERM') {
+        console.error('Stellar CLI command timed out');
+        throw new Error('Stellar CLI command timed out - RPC endpoint may be unresponsive');
+      }
+
+      if (err.code === '1' && err.message?.includes('network')) {
+        console.error('Stellar network connection failed');
+        throw new Error('Stellar network connection failed - check network configuration');
+      }
+
+      // Log and re-throw other errors
+      console.error('Stellar CLI command failed:', err.message || err);
+      throw new Error(`Stellar CLI command failed: ${err.message || err}`);
+    }
+  }
+
   private async getCurrentBlockHeight(): Promise<number> {
     const maxRetries = Number.parseInt(process.env.SYNC_MAX_RETRIES || '3', 10);
     const retryDelay = Number.parseInt(process.env.SYNC_RETRY_DELAY || '1000', 10);
 
+    // Try SDK method first (primary)
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        const currentLedger = await this.server.getLatestLedger();
-        return currentLedger.sequence || 0;
+        console.log(
+          `Attempting to get current block height using SDK (attempt ${attempt}/${maxRetries})`
+        );
+        const blockHeight = await this.getLatestLedgerFromSDK();
+        console.log(`Successfully retrieved ledger ${blockHeight} using SDK`);
+        return blockHeight;
       } catch (error) {
-        console.error(`Attempt ${attempt} failed to get current block height:`, error);
+        console.error(
+          `SDK method failed on attempt ${attempt}:`,
+          error instanceof Error ? error.message : String(error)
+        );
         if (attempt < maxRetries) {
           await new Promise((resolve) => setTimeout(resolve, retryDelay));
         }
       }
     }
 
-    console.warn('All retries failed. Returning last known block.');
+    // Fallback to CLI method
+    console.log('SDK method failed, trying CLI fallback...');
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(
+          `Attempting to get current block height using CLI (attempt ${attempt}/${maxRetries})`
+        );
+        const blockHeight = await this.getLatestLedgerFromCLI();
+        console.log(`Successfully retrieved ledger ${blockHeight} using CLI fallback`);
+        return blockHeight;
+      } catch (error) {
+        console.error(
+          `CLI method failed on attempt ${attempt}:`,
+          error instanceof Error ? error.message : String(error)
+        );
+        if (attempt < maxRetries) {
+          await new Promise((resolve) => setTimeout(resolve, retryDelay));
+        }
+      }
+    }
+
+    console.warn(
+      `All ${maxRetries} attempts failed for both SDK and CLI methods. Using fallback block height: ${this.lastProcessedBlock}`
+    );
     return this.lastProcessedBlock;
   }
 

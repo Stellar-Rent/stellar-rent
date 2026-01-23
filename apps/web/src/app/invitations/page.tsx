@@ -244,7 +244,6 @@ const InvitationsPage = () => {
                   </div>
                 </div>
               </div>
-            </div>
 
             <DesktopInvitationsTable invitations={currentDesktopInvitations} />
 
@@ -266,9 +265,8 @@ const InvitationsPage = () => {
                 onNext={() => setDesktopPage((prev) => Math.min(desktopTotalPages, prev + 1))}
               />
             </div>
-          </div>
-        </section>
-      </main>
+          </section>
+        </main>
 
       <div className="hidden md:flex">
         <RightSidebar />

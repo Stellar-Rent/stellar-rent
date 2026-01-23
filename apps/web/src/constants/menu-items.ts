@@ -35,7 +35,7 @@ export const TENANT_MENU_ITEMS: MenuItem[] = [
     src: '/icons/lock.webp',
     alt: 'My Calendar',
     label: 'My Calendar',
-    href: '/dashboard/guest?tab=calendar',
+    href: '/dashboard/tenant-dashboard?tab=calendar',
   },
   {
     id: 'messages',
@@ -63,7 +63,7 @@ export const TENANT_MENU_ITEMS: MenuItem[] = [
     src: '/icons/heart.webp',
     alt: 'My Bookings',
     label: 'My Bookings',
-    href: '/dashboard/guest?tab=bookings',
+    href: '/dashboard/tenant-dashboard?tab=bookings',
   },
 ];
 
@@ -75,7 +75,7 @@ export const HOST_MENU_ITEMS: MenuItem[] = [
     src: '/icons/search.webp',
     alt: 'My Properties',
     label: 'My Properties',
-    href: '/dashboard/host',
+    href: '/dashboard/host-dashboard',
     withContainer: true,
   },
   {
@@ -83,7 +83,7 @@ export const HOST_MENU_ITEMS: MenuItem[] = [
     src: '/icons/lock.webp',
     alt: 'Property Calendar',
     label: 'Property Calendar',
-    href: '/dashboard/host?tab=calendar',
+    href: '/dashboard/host-dashboard?tab=calendar',
   },
   {
     id: 'messages',
@@ -111,7 +111,7 @@ export const HOST_MENU_ITEMS: MenuItem[] = [
     src: '/icons/heart.webp',
     alt: 'Bookings',
     label: 'Bookings',
-    href: '/dashboard/host?tab=bookings',
+    href: '/dashboard/host-dashboard?tab=bookings',
   },
 ];
 
@@ -131,14 +131,14 @@ export const DUAL_MENU_ITEMS: MenuItem[] = [
     src: '/icons/heart.webp',
     alt: 'My Bookings',
     label: 'My Bookings',
-    href: '/dashboard/guest',
+    href: '/dashboard/tenant-dashboard',
   },
   {
     id: 'my-properties',
     src: '/icons/lock.webp',
     alt: 'My Properties',
     label: 'My Properties',
-    href: '/dashboard/host',
+    href: '/dashboard/host-dashboard',
   },
   {
     id: 'messages',
@@ -159,6 +159,6 @@ export const DUAL_MENU_ITEMS: MenuItem[] = [
     src: '/icons/settings.webp',
     alt: 'Calendar',
     label: 'Calendar',
-    href: '/dashboard/guest?tab=calendar',
+    href: '/dashboard/tenant-dashboard?tab=calendar',
   },
 ];
