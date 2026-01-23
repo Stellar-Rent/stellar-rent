@@ -25,6 +25,7 @@ import {
   Filter,
   Home,
   Info,
+  LogOut,
   MapPin,
   MessageSquare,
   PieChart,
@@ -41,8 +42,10 @@ import {
   XCircle,
 } from 'lucide-react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import type React from 'react';
 import { useEffect, useState } from 'react';
+import { useAuth } from '~/hooks/auth/use-auth';
 
 interface Booking {
   id: string;
@@ -187,6 +190,8 @@ const mockTransactions = [
 ];
 
 const TenantDashboard = () => {
+  const router = useRouter();
+  const { logout } = useAuth();
   const [activeTab, setActiveTab] = useState('bookings');
   const [bookings, setBookings] = useState(mockBookings);
   const [user, setUser] = useState(mockUser);
@@ -360,6 +365,18 @@ const TenantDashboard = () => {
                     {user.name}
                   </span>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    logout();
+                    router.push('/login');
+                  }}
+                  className="flex items-center space-x-1 text-gray-500 dark:text-white hover:text-red-500 dark:hover:text-red-400 transition-colors"
+                  title="Logout"
+                >
+                  <LogOut className="w-5 h-5" />
+                  <span className="text-sm hidden sm:inline">Logout</span>
+                </button>
               </div>
             </div>
           </div>
