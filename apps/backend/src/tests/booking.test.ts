@@ -1,3 +1,6 @@
+// Import test setup first to configure environment variables
+import '../../tests/setup';
+
 import { beforeEach, describe, expect, it, mock } from 'bun:test';
 import type { AvailabilityResponse } from '../blockchain/soroban';
 import { supabase } from '../config/supabase';

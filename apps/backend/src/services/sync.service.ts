@@ -18,15 +18,11 @@
  * - Status monitoring and statistics
  */
 
-import { exec } from 'node:child_process';
-import { promisify } from 'node:util';
-import { Contract, Networks, nativeToScVal, rpc, scValToNative } from '@stellar/stellar-sdk';
-import { Server as SorobanRpcServer } from '@stellar/stellar-sdk/lib/rpc';
+import { Contract, Networks, nativeToScVal, scValToNative } from '@stellar/stellar-sdk';
+import { Server as SorobanRpcServer } from '@stellar/stellar-sdk/rpc';
 import { supabase } from '../config/supabase';
 import { bookingService } from './booking.service';
 import { loggingService } from './logging.service';
-
-const execAsync = promisify(exec);
 
 export interface SyncEvent {
   id: string;
