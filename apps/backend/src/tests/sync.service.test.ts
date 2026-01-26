@@ -2,8 +2,13 @@
 import '../../tests/setup';
 
 import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test';
+<<<<<<< HEAD
 import { SyncService, syncService } from '../services/sync.service';
 import { supabase } from '../config/supabase';
+=======
+import { supabase } from '../config/supabase';
+import { SyncService, syncService } from '../services/sync.service';
+>>>>>>> 4846267 (fix: remove hardcoded supabase mock, modularize supabase mock, call mock on setup)
 
 describe('SyncService', () => {
   beforeEach(() => {
@@ -70,7 +75,8 @@ describe('SyncService', () => {
         // Set custom polling interval
         process.env.SYNC_POLL_INTERVAL = '10000';
         process.env.SOROBAN_RPC_URL = 'https://test-rpc.stellar.org';
-        process.env.SOROBAN_CONTRACT_ID = 'CB3ILSDNHL6TWZYZJAS4L27GLHNAGW4ISW6YXIBHGHL4QYI4JPLP6W3E';
+        process.env.SOROBAN_CONTRACT_ID =
+          'CB3ILSDNHL6TWZYZJAS4L27GLHNAGW4ISW6YXIBHGHL4QYI4JPLP6W3E';
         process.env.SOROBAN_NETWORK_PASSPHRASE = 'Test SDF Network ; September 2015';
 
         const customSyncService = new SyncService();
@@ -95,7 +101,8 @@ describe('SyncService', () => {
         // Set invalid polling interval
         process.env.SYNC_POLL_INTERVAL = 'invalid';
         process.env.SOROBAN_RPC_URL = 'https://test-rpc.stellar.org';
-        process.env.SOROBAN_CONTRACT_ID = 'CB3ILSDNHL6TWZYZJAS4L27GLHNAGW4ISW6YXIBHGHL4QYI4JPLP6W3E';
+        process.env.SOROBAN_CONTRACT_ID =
+          'CB3ILSDNHL6TWZYZJAS4L27GLHNAGW4ISW6YXIBHGHL4QYI4JPLP6W3E';
         process.env.SOROBAN_NETWORK_PASSPHRASE = 'Test SDF Network ; September 2015';
 
         const fallbackSyncService = new SyncService();

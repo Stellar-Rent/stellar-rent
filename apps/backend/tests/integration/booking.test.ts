@@ -8,10 +8,6 @@ import request from 'supertest';
 
 import { authenticateToken } from '../../src/middleware/auth.middleware';
 import type { Booking } from '../../src/types/booking.types';
-import { setupSupabaseMock } from '../mocks/supabase.mock.setup';
-
-// Setup Supabase mock with auth support
-setupSupabaseMock();
 
 // Import controller and service after mocks are set up
 import { getBooking } from '../../src/controllers/booking.controller';
