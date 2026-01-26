@@ -1,11 +1,14 @@
 'use client';
 import {
   AlertCircle,
+  Bell,
   Check,
+  ChevronDown,
   Home,
   Loader2,
   LogOut,
   RefreshCw,
+  Search,
   Settings,
   User,
   Wallet,

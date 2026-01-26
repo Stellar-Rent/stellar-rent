@@ -13,7 +13,13 @@ import {
   DollarSign,
   Download,
   Edit3,
+  Eye,
+  Filter,
+  Home,
+  Info,
   LogOut,
+  MapPin,
+  MessageSquare,
   PieChart,
   Settings,
   Star,
@@ -22,7 +28,7 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '~/hooks/auth/use-auth';
 
 interface Booking {
