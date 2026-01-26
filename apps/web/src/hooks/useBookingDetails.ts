@@ -34,7 +34,7 @@ export function useBookingDetails(bookingId: string): UseBookingDetailsReturn {
       }
 
       const response = await fetch(`/api/bookings/${bookingId}`);
-      
+
       if (!response.ok) {
         if (response.status === 404) {
           throw new Error('Booking not found');
@@ -43,7 +43,7 @@ export function useBookingDetails(bookingId: string): UseBookingDetailsReturn {
       }
 
       const data = await response.json();
-      
+
       // Ensure the response matches our expected BookingData type
       const booking: BookingData = {
         id: data.id || bookingId,

@@ -1,5 +1,4 @@
 'use client';
-import React from 'react';
 import ListingForm from '~/components/properties/ListingForm';
 import { useAuthGuard } from '~/hooks/auth/use-auth-guard';
 const Page = () => {

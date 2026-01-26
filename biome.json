@@ -1,22 +1,22 @@
 {
-  "$schema": "https://biomejs.dev/schemas/1.5.3/schema.json",
+  "$schema": "https://biomejs.dev/schemas/1.8.3/schema.json",
   "vcs": {
     "enabled": true,
     "clientKind": "git",
     "useIgnoreFile": true
   },
   "files": {
-    "ignoreUnknown": false,
+    "ignoreUnknown": true,
     "ignore": [
-      "./apps/web/.next",
-      "./apps/contract/dist",
-      "./apps/*/dist",
-      "./apps/*/build",
-      "node_modules",
-      "*.lock",
-      "coverage",
-      "apps/backend/src/config/supabase.ts",
-      "apps/backend/tests/**/*.ts"
+      "**/node_modules/**",
+      "**/.next/**",
+      "**/dist/**",
+      "**/build/**",
+      "**/coverage/**",
+      "**/*.snap",
+      "**/__snapshots__/**",
+      "**/*.lock",
+      "apps/backend/src/config/supabase.ts"
     ]
   },
   "formatter": {
@@ -24,22 +24,26 @@
     "formatWithErrors": false,
     "indentStyle": "space",
     "indentWidth": 2,
-    "lineWidth": 100,
-    "lineEnding": "lf"
-  },
-  "organizeImports": {
-    "enabled": true
+    "lineWidth": 100
   },
   "linter": {
     "enabled": true,
     "rules": {
       "recommended": true,
       "correctness": {
-        "noUnusedVariables": "warn"
+        "noUnusedVariables": "warn",
+        "noUnusedImports": "warn"
       },
       "suspicious": {
-        "noDebugger": "warn",
+        "noExplicitAny": "off",
+        "noArrayIndexKey": "off",
         "noConsoleLog": "off"
+      },
+      "a11y": {
+        "all": false
+      },
+      "style": {
+        "useImportType": "off"
       }
     }
   },
@@ -49,16 +53,6 @@
       "jsxQuoteStyle": "double",
       "trailingCommas": "es5",
       "semicolons": "always"
-    }
-  },
-  "json": {
-    "formatter": {
-      "enabled": true
-    }
-  },
-  "css": {
-    "formatter": {
-      "enabled": true
     }
   }
 }
