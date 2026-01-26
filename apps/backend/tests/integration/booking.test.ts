@@ -42,7 +42,6 @@ describe('GET /bookings/:bookingId', () => {
     const res = await request(app).get('/bookings/not-a-uuid').set('Authorization', validToken);
 
     expect(res.status).toBe(400);
-    expect(res.status).toBe(400);
     expect(res.body.success).toBe(false);
     expect(res.body.data).toBeNull();
     expect(res.body.error).toBeDefined();
