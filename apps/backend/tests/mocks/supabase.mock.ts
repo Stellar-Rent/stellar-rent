@@ -42,8 +42,9 @@ export const createSupabaseMock = () => {
 
           // When update().eq() is called, apply the update
           if (column === 'id' || column === 'public_key') {
-            for (const item of tableData.values()) {
+            for (const [key, item] of tableData.entries()) {
               if (item[column] === value) {
+                // Update the item
                 Object.assign(item, { updated_at: new Date().toISOString() });
               }
             }
