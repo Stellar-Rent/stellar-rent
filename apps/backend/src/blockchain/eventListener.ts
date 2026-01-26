@@ -1,7 +1,8 @@
-import { Contract, Networks, rpc, xdr } from '@stellar/stellar-sdk';
+import { Contract } from '@stellar/stellar-sdk';
 import { Server as SorobanRpcServer } from '@stellar/stellar-sdk/rpc';
 import { supabase } from '../config/supabase';
 import { loggingService } from '../services/logging.service';
+import { syncService } from '../services/sync.service';
 
 export interface BlockchainEvent {
   id: string;
@@ -118,7 +119,15 @@ export class BlockchainEventListener {
 
       console.log(`Initialized event listener at ledger ${this.lastProcessedLedger}`);
     } catch (error) {
-      console.warn('Could not initialize last processed ledger, starting from current:', error);
+      const errorLog = await loggingService.logBlockchainOperation(
+        'initializeLastProcessedLedger',
+        {}
+      );
+      await loggingService.logBlockchainError(errorLog, {
+        error,
+        context: 'Could not initialize last processed ledger from database, starting from current',
+      });
+      // Fallback to current ledger
       this.lastProcessedLedger = await this.getCurrentLedger();
     }
   }
@@ -131,7 +140,14 @@ export class BlockchainEventListener {
       const ledgerInfo = await this.server.getLatestLedger();
       return ledgerInfo.sequence || 0;
     } catch (error) {
-      console.error('Failed to get current ledger:', error);
+      const errorLog = await loggingService.logBlockchainOperation('getCurrentLedger', {
+        lastProcessedLedger: this.lastProcessedLedger,
+      });
+      await loggingService.logBlockchainError(errorLog, {
+        error,
+        context: 'Failed to get current ledger from Stellar network',
+      });
+      // Return last processed ledger as fallback to allow processing to continue
       return this.lastProcessedLedger;
     }
   }
@@ -176,7 +192,15 @@ export class BlockchainEventListener {
           await this.processEvent(event);
         }
       } catch (error) {
-        console.error(`Error processing ledger ${ledger}:`, error);
+        const errorLog = await loggingService.logBlockchainOperation('processLedgers', {
+          ledger,
+          fromLedger,
+          toLedger,
+        });
+        await loggingService.logBlockchainError(errorLog, {
+          error,
+          context: `Error processing ledger ${ledger}, continuing with next ledger`,
+        });
         // Continue with next ledger instead of failing completely
       }
     }
@@ -217,7 +241,15 @@ export class BlockchainEventListener {
 
       return events;
     } catch (error) {
-      console.error(`Failed to get events from ledger ${ledger}:`, error);
+      const errorLog = await loggingService.logBlockchainOperation('getEventsFromLedger', {
+        ledger,
+        contractId: this.config.contractId,
+      });
+      await loggingService.logBlockchainError(errorLog, {
+        error,
+        context: `Failed to get events from ledger ${ledger}`,
+      });
+      // Return empty array to allow processing to continue with next ledger
       return [];
     }
   }
@@ -249,7 +281,24 @@ export class BlockchainEventListener {
         data: eventData,
       };
     } catch (error) {
-      console.error('Error parsing Soroban event:', error);
+      // Log parsing errors but don't block processing
+      // Using fire-and-forget logging to avoid blocking the event loop
+      loggingService
+        .logBlockchainOperation('parseSorobanEvent', {
+          ledger,
+          txHash: event.txHash,
+        })
+        .then((errorLog) => {
+          loggingService.logBlockchainError(errorLog, {
+            error,
+            context: 'Error parsing Soroban event, skipping event',
+          });
+        })
+        .catch((loggingError) => {
+          // Fallback to console if logging service fails
+          console.error('Failed to log parseSorobanEvent error:', loggingError);
+          console.error('Original parsing error:', error);
+        });
       return null;
     }
   }
@@ -272,7 +321,21 @@ export class BlockchainEventListener {
       // Return empty object if no data found
       return {};
     } catch (error) {
-      console.error('Error parsing Soroban event data:', error);
+      // Log parsing errors but don't block processing
+      // Using fire-and-forget logging to avoid blocking the event loop
+      loggingService
+        .logBlockchainOperation('parseSorobanEventData', {})
+        .then((errorLog) => {
+          loggingService.logBlockchainError(errorLog, {
+            error,
+            context: 'Error parsing Soroban event data, returning empty object',
+          });
+        })
+        .catch((loggingError) => {
+          // Fallback to console if logging service fails
+          console.error('Failed to log parseSorobanEventData error:', loggingError);
+          console.error('Original parsing error:', error);
+        });
       return {};
     }
   }
@@ -296,55 +359,180 @@ export class BlockchainEventListener {
           return null;
       }
     } catch (error) {
-      console.error('Error determining event type:', error);
+      // Log parsing errors but don't block processing
+      // Using fire-and-forget logging to avoid blocking the event loop
+      loggingService
+        .logBlockchainOperation('determineEventType', {
+          eventName: event.name ?? event.type,
+        })
+        .then((errorLog) => {
+          loggingService.logBlockchainError(errorLog, {
+            error,
+            context: 'Error determining event type, skipping event',
+          });
+        })
+        .catch((loggingError) => {
+          // Fallback to console if logging service fails
+          console.error('Failed to log determineEventType error:', loggingError);
+          console.error('Original parsing error:', error);
+        });
       return null;
     }
   }
 
   /**
-   * Process a single blockchain event
+   * Check if event has already been processed (duplicate check)
+   */
+  private async isEventAlreadyProcessed(eventId: string): Promise<boolean> {
+    try {
+      const { data, error } = await supabase
+        .from('sync_events')
+        .select('id, processed')
+        .eq('event_id', eventId)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        // PGRST116 is "not found" which is expected for new events
+        // Other errors should be logged but not block processing
+        const errorLog = await loggingService.logBlockchainOperation('isEventAlreadyProcessed', {
+          eventId,
+        });
+        await loggingService.logBlockchainError(errorLog, {
+          error,
+          context: 'Error checking for duplicate event',
+        });
+      }
+
+      return data !== null && data !== undefined;
+    } catch (error) {
+      // Log error but don't block processing - let the atomic function handle duplicates
+      const errorLog = await loggingService.logBlockchainOperation('isEventAlreadyProcessed', {
+        eventId,
+      });
+      await loggingService.logBlockchainError(errorLog, {
+        error,
+        context: 'Exception checking for duplicate event',
+      });
+      return false;
+    }
+  }
+
+  /**
+   * Determine the new status for an event type
+   */
+  private getStatusForEventType(eventType: string): string | undefined {
+    switch (eventType) {
+      case 'booking_cancelled':
+        return 'cancelled';
+      case 'payment_confirmed':
+        return 'confirmed';
+      default:
+        return undefined;
+    }
+  }
+
+  /**
+   * Process a single blockchain event atomically
    */
   private async processEvent(event: BlockchainEvent): Promise<void> {
     try {
-      const logId = await loggingService.logBlockchainOperation('processEvent', { event });
+      const logId = await loggingService.logBlockchainOperation('processEvent', {
+        eventId: event.id,
+        eventType: event.type,
+        txHash: event.transactionHash,
+      });
 
-      // Store event in database
-      await this.storeEvent(event);
+      // Validate transaction ID before processing (explicit duplicate check)
+      const isDuplicate = await this.isEventAlreadyProcessed(event.id);
+      if (isDuplicate) {
+        await loggingService.logBlockchainSuccess(logId, {
+          eventId: event.id,
+          skipped: true,
+          reason: 'duplicate_event_detected_before_processing',
+        });
+        return;
+      }
 
-      // Call registered callbacks
+      // Determine new status if applicable
+      const newStatus = this.getStatusForEventType(event.type);
+
+      // Process event atomically (insert, update status if applicable, mark as processed)
+      const result = await syncService.processEventAtomic(
+        event.id,
+        event.type,
+        event.bookingId || null,
+        event.propertyId || null,
+        event.userId || 'unknown',
+        {
+          ...event.data,
+          blockHeight: event.blockHeight,
+          transactionHash: event.transactionHash,
+          timestamp: event.timestamp.toISOString(),
+        },
+        newStatus
+      );
+
+      // Handle duplicate event (detected during atomic processing)
+      if (result.error === 'DUPLICATE_EVENT') {
+        await loggingService.logBlockchainSuccess(logId, {
+          eventId: event.id,
+          skipped: true,
+          reason: 'duplicate_event_detected_during_atomic_processing',
+        });
+        return;
+      }
+
+      // Call registered callbacks after atomic processing
+      // These should be idempotent and handle their own errors
       const callback = this.eventCallbacks.get(event.type);
       if (callback) {
-        await callback(event);
+        try {
+          await callback(event);
+        } catch (callbackError) {
+          // Log callback errors but don't fail the event processing
+          // since the atomic processing already succeeded
+          const callbackErrorLog = await loggingService.logBlockchainOperation(
+            'processEvent_callback',
+            {
+              eventId: event.id,
+              eventType: event.type,
+            }
+          );
+          await loggingService.logBlockchainError(callbackErrorLog, {
+            error: callbackError,
+            context: 'Callback execution failed after atomic event processing',
+          });
+        }
       }
 
       // Log success
-      await loggingService.logBlockchainSuccess(logId, { eventId: event.id });
+      await loggingService.logBlockchainSuccess(logId, {
+        eventId: event.id,
+        syncEventId: result.syncEventId,
+      });
     } catch (error) {
-      console.error(`Error processing event ${event.id}:`, error);
+      const errorLog = await loggingService.logBlockchainOperation('processEvent', {
+        eventId: event.id,
+        eventType: event.type,
+      });
+      await loggingService.logBlockchainError(errorLog, {
+        error,
+        context: 'Failed to process blockchain event',
+      });
       await this.markEventFailed(event.id, error as Error);
-      loggingService.logBlockchainError('processEvent', error as Error);
+      throw error;
     }
   }
 
   /**
    * Store event in database
+   * @deprecated This method is no longer used. Events are stored atomically via processEventAtomic.
+   * Kept for reference but should not be called.
    */
-  private async storeEvent(event: BlockchainEvent): Promise<void> {
-    await supabase.from('sync_events').insert({
-      event_id: event.id,
-      event_type: event.type,
-      booking_id: event.bookingId,
-      property_id: event.propertyId,
-      user_id: event.userId,
-      event_data: {
-        ...event.data,
-        blockHeight: event.blockHeight,
-        transactionHash: event.transactionHash,
-        timestamp: event.timestamp.toISOString(),
-      },
-      processed: false,
-      created_at: new Date().toISOString(),
-    });
+  private async storeEvent(_event: BlockchainEvent): Promise<void> {
+    // This method is deprecated - events are now stored atomically via processEventAtomic
+    // Keeping for backward compatibility but it should not be called
+    console.warn('storeEvent is deprecated - use processEventAtomic instead');
   }
 
   /**

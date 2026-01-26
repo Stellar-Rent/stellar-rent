@@ -16,7 +16,9 @@
       "**/*.snap",
       "**/__snapshots__/**",
       "**/*.lock",
-      "apps/backend/src/config/supabase.ts"
+      "apps/backend/src/config/supabase.ts",
+      "apps/backend/tests/**/*.ts",
+      "apps/web/stellar-social-sdk"
     ]
   },
   "formatter": {

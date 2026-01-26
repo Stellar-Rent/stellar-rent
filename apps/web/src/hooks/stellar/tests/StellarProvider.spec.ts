@@ -1,5 +1,5 @@
 // tests/e2e/tests/components/StellarProvider.spec.ts
-import { expect, test } from '../../fixtures/auth.fixture';
+import { type Page, expect, test } from '@playwright/test';
 
 interface WindowWithStellarMocks extends Window {
   __stellarMocks?: {
@@ -57,7 +57,7 @@ interface WindowWithStellarMocks extends Window {
 }
 
 test.describe('StellarProvider Component', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page }: { page: Page }) => {
     // Mock Stellar SDK and Horizon server
     await page.addInitScript(() => {
       // Initialize mock storage
@@ -86,7 +86,9 @@ test.describe('StellarProvider Component', () => {
       });
 
       // Mock Stellar SDK
-      (window as WindowWithStellarMocks & typeof globalThis)['@stellar/stellar-sdk'] = {
+      (window as WindowWithStellarMocks & typeof globalThis as unknown as Record<string, unknown>)[
+        '@stellar/stellar-sdk'
+      ] = {
         Keypair: {
           random: () => ({
             // biome-ignore lint/style/useTemplate: Mock function for testing
@@ -138,7 +140,7 @@ test.describe('StellarProvider Component', () => {
   });
 
   test.describe('Provider Initialization', () => {
-    test('should provide stellar context to children', async ({ page }) => {
+    test('should provide stellar context to children', async ({ page }: { page: Page }) => {
       await page.setContent(`
         <div id="test-app">
           <script type="module">
@@ -174,7 +176,9 @@ test.describe('StellarProvider Component', () => {
       await expect(page.locator('#context-status')).toContainText('Context available');
     });
 
-    test('should throw error when useStellarContext used outside provider', async ({ page }) => {
+    test('should throw error when useStellarContext used outside provider', async ({
+      page,
+    }: { page: Page }) => {
       await page.setContent(`
         <div id="test-app">
           <div id="error-message">No error</div>
@@ -196,7 +200,7 @@ test.describe('StellarProvider Component', () => {
   });
 
   test.describe('Hook State Management', () => {
-    test('should initialize with correct default state', async ({ page }) => {
+    test('should initialize with correct default state', async ({ page }: { page: Page }) => {
       await page.evaluate(() => {
         // Simulate hook initialization
         const mockHookState = {
@@ -223,7 +227,7 @@ test.describe('StellarProvider Component', () => {
       expect(hookState?.contractData).toBeNull();
     });
 
-    test('should handle bundler key generation', async ({ page }) => {
+    test('should handle bundler key generation', async ({ page }: { page: Page }) => {
       await page.evaluate(() => {
         // Simulate bundler key initialization
         const mockBundlerKey = {
@@ -248,10 +252,10 @@ test.describe('StellarProvider Component', () => {
       expect(friendbotCalled).toBe(true);
     });
 
-    test('should restore existing deployee from storage', async ({ page }) => {
+    test('should restore existing deployee from storage', async ({ page }: { page: Page }) => {
       const mockDeployee = 'EXISTING_DEPLOYEE_ADDRESS';
 
-      await page.evaluate((deployee) => {
+      await page.evaluate((deployee: string) => {
         localStorage.setItem('sp:deployee', deployee);
 
         // Simulate hook reading from storage
@@ -267,7 +271,7 @@ test.describe('StellarProvider Component', () => {
   });
 
   test.describe('Registration Flow', () => {
-    test('should handle successful registration', async ({ page }) => {
+    test('should handle successful registration', async ({ page }: { page: Page }) => {
       const mockRegistrationResponse = {
         id: 'mock-credential-id',
         response: {
@@ -276,7 +280,7 @@ test.describe('StellarProvider Component', () => {
         },
       };
 
-      await page.evaluate((registerRes) => {
+      await page.evaluate((registerRes: typeof mockRegistrationResponse) => {
         // Set up successful deploy mock
         const mocks = (window as WindowWithStellarMocks).__stellarMocks;
         if (mocks) {
@@ -336,13 +340,13 @@ test.describe('StellarProvider Component', () => {
       expect(storedDeployee).toBe('NEW_DEPLOYEE_ADDRESS');
     });
 
-    test('should handle registration failure', async ({ page }) => {
+    test('should handle registration failure', async ({ page }: { page: Page }) => {
       const mockRegistrationResponse = {
         id: 'mock-credential-id',
         response: {},
       };
 
-      await page.evaluate((registerRes) => {
+      await page.evaluate((registerRes: typeof mockRegistrationResponse) => {
         // Set up deployment failure
         const mocks = (window as WindowWithStellarMocks).__stellarMocks;
         if (mocks) {
@@ -374,7 +378,9 @@ test.describe('StellarProvider Component', () => {
       expect(error).toBe('Deployment failed');
     });
 
-    test('should skip registration if deployee already exists', async ({ page }) => {
+    test('should skip registration if deployee already exists', async ({
+      page,
+    }: { page: Page }) => {
       await page.evaluate(() => {
         // Set existing deployee
         localStorage.setItem('sp:deployee', 'EXISTING_DEPLOYEE');
@@ -393,7 +399,7 @@ test.describe('StellarProvider Component', () => {
   });
 
   test.describe('Signing Operations', () => {
-    test('should handle prepare sign operation', async ({ page }) => {
+    test('should handle prepare sign operation', async ({ page }: { page: Page }) => {
       await page.evaluate(() => {
         // Simulate prepareSign function
         const prepareSign = async () => {
@@ -414,15 +420,9 @@ test.describe('StellarProvider Component', () => {
       expect(result).toEqual({});
     });
 
-    test('should handle sign operation', async ({ page }) => {
-      const mockSignParams = {
-        signRes: { signature: 'mock-signature' },
-        authTxn: 'mock-auth-transaction',
-        lastLedger: 12345,
-      };
-
-      await page.evaluate((signParams) => {
-        const simulateSign = async ({ signRes, authTxn, lastLedger }: typeof signParams) => {
+    test('should handle sign operation', async ({ page }: { page: Page }) => {
+      await page.evaluate(() => {
+        const simulateSign = async () => {
           try {
             // TODO: Currently sets empty contract data as per implementation
             const contractData = {};
@@ -439,8 +439,8 @@ test.describe('StellarProvider Component', () => {
           }
         };
 
-        simulateSign(signParams);
-      }, mockSignParams);
+        simulateSign();
+      });
 
       const result = await page.evaluate(() => (window as WindowWithStellarMocks).__signResult);
       expect(result?.success).toBe(true);
@@ -449,7 +449,7 @@ test.describe('StellarProvider Component', () => {
   });
 
   test.describe('Reset Functionality', () => {
-    test('should clear all stored data on reset', async ({ page }) => {
+    test('should clear all stored data on reset', async ({ page }: { page: Page }) => {
       // Set up stored data
       await page.evaluate(() => {
         localStorage.setItem('sp:deployee', 'test-deployee');
@@ -489,7 +489,7 @@ test.describe('StellarProvider Component', () => {
   });
 
   test.describe('Error Handling', () => {
-    test('should handle initialization errors gracefully', async ({ page }) => {
+    test('should handle initialization errors gracefully', async ({ page }: { page: Page }) => {
       await page.evaluate(() => {
         // Simulate initialization error
         const simulateInitError = async () => {
@@ -515,7 +515,7 @@ test.describe('StellarProvider Component', () => {
       expect(loadingAfterError).toBe(false);
     });
 
-    test('should handle missing bundler key error', async ({ page }) => {
+    test('should handle missing bundler key error', async ({ page }: { page: Page }) => {
       await page.evaluate(() => {
         // Simulate operation without bundler key
         const simulateNoBundlerKey = () => {
@@ -533,7 +533,7 @@ test.describe('StellarProvider Component', () => {
       expect(error).toBe('Bundler key not found');
     });
 
-    test('should handle invalid public keys error', async ({ page }) => {
+    test('should handle invalid public keys error', async ({ page }: { page: Page }) => {
       await page.evaluate(() => {
         const simulateInvalidKeys = async () => {
           // Simulate getPublicKeys returning invalid data
@@ -588,7 +588,7 @@ test.describe('StellarProvider Component', () => {
       expect(loadingStates?.[3]).toEqual({ loadingRegister: false, creatingDeployee: false });
     });
 
-    test('should manage loading states during signing', async ({ page }) => {
+    test('should manage loading states during signing', async ({ page }: { page: Page }) => {
       await page.evaluate(() => {
         const simulateSignLoading = () => {
           const states = [];
@@ -637,7 +637,7 @@ test.describe('StellarProvider Component', () => {
       expect(keys?.credentialId).toBe('sp:id');
     });
 
-    test('should handle storage operations atomically', async ({ page }) => {
+    test('should handle storage operations atomically', async ({ page }: { page: Page }) => {
       await page.evaluate(() => {
         // Simulate atomic storage operations
         const atomicStore = (

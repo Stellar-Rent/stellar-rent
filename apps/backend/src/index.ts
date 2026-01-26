@@ -8,7 +8,7 @@ import { rateLimiter } from './middleware/rateLimiter';
 import { locationRoutes, profileRoutes, propertyRoutes } from './routes';
 import authRoutes from './routes/auth';
 import bookingRoutes from './routes/booking.routes';
-import walletAuthRoutes from './routes/wallet-auth.routes';
+// wallet-auth routes removed - replaced by client-side Stellar Social SDK
 
 import { connectRedis } from './config/redis';
 import syncRoutes from './routes/sync.routes';
@@ -89,7 +89,7 @@ app.use(rateLimiter);
 
 // Routes
 app.use('/auth', authRoutes);
-app.use('/api/auth', walletAuthRoutes);
+// wallet-auth endpoint removed - authentication now handled by client-side Stellar Social SDK
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/locations', locationRoutes);
 app.use('/api/profile', profileRoutes);

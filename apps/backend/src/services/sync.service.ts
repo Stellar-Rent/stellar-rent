@@ -20,9 +20,10 @@
 
 import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
-import { Contract, Networks, nativeToScVal, rpc, scValToNative } from '@stellar/stellar-sdk';
-import { Server as SorobanRpcServer } from '@stellar/stellar-sdk/lib/rpc';
+import { Contract, Networks } from '@stellar/stellar-sdk';
+import { Server as SorobanRpcServer } from '@stellar/stellar-sdk/rpc';
 import { supabase } from '../config/supabase';
+import { SyncError } from '../types/errors';
 import { bookingService } from './booking.service';
 import { loggingService } from './logging.service';
 
@@ -296,11 +297,17 @@ export class SyncService {
 
       console.log(`Initialized sync state: last block ${this.lastProcessedBlock}`);
     } catch (error) {
-      console.warn('Could not initialize sync state, starting fresh:', error);
+      // Log error properly and reset state
+      const errorLog = await loggingService.logBlockchainOperation('initializeSyncState', {});
+      await loggingService.logBlockchainError(errorLog, {
+        error,
+        context: 'Could not initialize sync state from database, starting fresh',
+      });
       this.lastProcessedBlock = 0;
       this.totalEventsProcessed = 0;
       this.failedEvents = 0;
       this.lastSyncTime = null;
+      // Don't rethrow - starting fresh is a valid fallback
     }
   }
 
@@ -331,18 +338,19 @@ export class SyncService {
         eventsProcessed: this.totalEventsProcessed,
       });
     } catch (error) {
-      console.error('Error polling for events:', error);
       this.failedEvents++;
 
-      // Log the error in sync_logs table instead of using loggingService
-      await supabase.from('sync_logs').insert({
-        operation: 'pollForEvents',
-        status: 'error',
-        message: 'Failed to poll for blockchain events',
-        error_details: {
-          error: error instanceof Error ? error.message : 'Unknown error',
-        },
+      // Log the error using loggingService for proper error serialization
+      const errorLog = await loggingService.logBlockchainOperation('pollForEvents', {
+        lastProcessedBlock: this.lastProcessedBlock,
       });
+      await loggingService.logBlockchainError(errorLog, {
+        error,
+        context: 'Failed to poll for blockchain events',
+      });
+
+      // Re-throw as SyncError to propagate to callers
+      throw new SyncError('Failed to poll for blockchain events', 'POLL_EVENTS_FAIL', error);
     }
   }
 
@@ -470,9 +478,18 @@ export class SyncService {
       }
     }
 
-    console.warn(
-      `All ${maxRetries} attempts failed for both SDK and CLI methods. Using fallback block height: ${this.lastProcessedBlock}`
-    );
+    // Log the critical failure properly
+    const errorLog = await loggingService.logBlockchainOperation('getCurrentBlockHeight', {
+      maxRetries,
+      lastProcessedBlock: this.lastProcessedBlock,
+    });
+    await loggingService.logBlockchainError(errorLog, {
+      error: new Error(
+        `All ${maxRetries} attempts failed for both SDK and CLI methods. Using fallback block height.`
+      ),
+      context: 'Critical: Cannot get current block height from Stellar network',
+    });
+    // Return fallback but log the critical issue
     return this.lastProcessedBlock;
   }
 
@@ -533,43 +550,48 @@ export class SyncService {
       const events = eventsResponse?.events || [];
 
       // Transform Stellar events into our format
-      return events.map((event: unknown) => {
-        const stellarEvent = event as {
-          ledger: number;
-          ledgerClosedAt: string;
-          id: string;
-          topic?: string[];
-          value?: Record<string, unknown>;
-          txHash: string;
-          contractId: string;
-        };
+      const transformedEvents = await Promise.all(
+        events.map(async (event: unknown) => {
+          const stellarEvent = event as {
+            ledger: number;
+            ledgerClosedAt: string;
+            id: string;
+            topic?: string[];
+            value?: Record<string, unknown>;
+            txHash: string;
+            contractId: string;
+          };
 
-        return {
-          id: `${stellarEvent.ledger}-${stellarEvent.ledgerClosedAt}-${stellarEvent.id}`,
-          type: this.mapStellarEventType(stellarEvent.topic?.[0] || 'unknown'),
-          blockNumber: stellarEvent.ledger,
-          timestamp: new Date(stellarEvent.ledgerClosedAt),
-          data: this.parseStellarEventData(stellarEvent),
-          txHash: stellarEvent.txHash,
-          contractId: stellarEvent.contractId,
-        };
-      });
+          return {
+            id: `${stellarEvent.ledger}-${stellarEvent.ledgerClosedAt}-${stellarEvent.id}`,
+            type: this.mapStellarEventType(stellarEvent.topic?.[0] || 'unknown'),
+            blockNumber: stellarEvent.ledger,
+            timestamp: new Date(stellarEvent.ledgerClosedAt),
+            data: await this.parseStellarEventData(stellarEvent),
+            txHash: stellarEvent.txHash,
+            contractId: stellarEvent.contractId,
+          };
+        })
+      );
+
+      return transformedEvents;
     } catch (error) {
-      console.error('Failed to get contract events:', error);
-
-      // Log the error but don't throw to prevent sync service from stopping
-      await supabase.from('sync_logs').insert({
-        operation: 'get_contract_events',
-        status: 'error',
-        message: 'Failed to query blockchain events',
-        error_details: {
-          error: error instanceof Error ? error.message : 'Unknown error',
-          from_block: fromBlock,
-          to_block: toBlock,
-        },
+      // Log the error using loggingService
+      const errorLog = await loggingService.logBlockchainOperation('getContractEvents', {
+        fromBlock,
+        toBlock,
+      });
+      await loggingService.logBlockchainError(errorLog, {
+        error,
+        context: 'Failed to query blockchain events',
       });
 
-      return [];
+      // Re-throw as SyncError for proper error handling
+      throw new SyncError('Failed to get contract events', 'GET_EVENTS_FAIL', {
+        error,
+        fromBlock,
+        toBlock,
+      });
     }
   }
 
@@ -594,9 +616,9 @@ export class SyncService {
   /**
    * Parse Stellar event data into our format
    */
-  private parseStellarEventData(event: {
+  private async parseStellarEventData(event: {
     value?: Record<string, unknown>;
-  }): BlockchainEventData {
+  }): Promise<BlockchainEventData> {
     try {
       // Parse event data based on contract event structure
       const eventData = event.value || {};
@@ -613,60 +635,192 @@ export class SyncService {
         guests: eventData.guests ? Number(eventData.guests) : undefined,
       };
     } catch (error) {
-      console.error('Failed to parse event data:', error);
+      // Log parsing error properly
+      // This is intentionally not re-thrown as parsing failures shouldn't stop sync
+      // Using async logging but handling failures gracefully
+      try {
+        const errorLog = await loggingService.logBlockchainOperation('parseStellarEventData', {
+          event: event.value,
+        });
+        await loggingService.logBlockchainError(errorLog, {
+          error,
+          context: 'Failed to parse event data - returning empty object',
+        });
+      } catch (loggingError) {
+        // Log to console as fallback if logging service fails
+        console.error('Failed to log parseStellarEventData error:', loggingError);
+        console.error('Original parsing error:', error);
+      }
       return {};
     }
   }
 
   /**
-   * Process a single blockchain event
+   * Check if event has already been processed (duplicate check)
+   */
+  private async isEventAlreadyProcessed(eventId: string): Promise<boolean> {
+    try {
+      const { data, error } = await supabase
+        .from('sync_events')
+        .select('id, processed')
+        .eq('event_id', eventId)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        // PGRST116 is "not found" which is expected for new events
+        // Other errors should be logged but not block processing
+        const errorLog = await loggingService.logBlockchainOperation('isEventAlreadyProcessed', {
+          eventId,
+        });
+        await loggingService.logBlockchainError(errorLog, {
+          error,
+          context: 'Error checking for duplicate event',
+        });
+      }
+
+      return data !== null && data !== undefined;
+    } catch (error) {
+      // Log error but don't block processing - let the atomic function handle duplicates
+      const errorLog = await loggingService.logBlockchainOperation('isEventAlreadyProcessed', {
+        eventId,
+      });
+      await loggingService.logBlockchainError(errorLog, {
+        error,
+        context: 'Exception checking for duplicate event',
+      });
+      return false;
+    }
+  }
+
+  /**
+   * Determine the new status for an event type
+   */
+  private getStatusForEventType(
+    eventType: string,
+    eventData: BlockchainEventData
+  ): string | undefined {
+    switch (eventType) {
+      case 'booking_cancelled':
+        return 'cancelled';
+      case 'payment_confirmed':
+        return 'confirmed';
+      case 'escrow_created':
+        return 'pending';
+      case 'escrow_released':
+        return 'completed';
+      case 'booking_updated':
+      case 'booking_created':
+        return eventData.status ? this.mapBlockchainStatus(eventData.status) : undefined;
+      default:
+        return undefined;
+    }
+  }
+
+  /**
+   * Process a single blockchain event atomically
    */
   private async processEvent(event: Record<string, unknown>): Promise<void> {
+    const eventId = event.id as string;
+    const eventType = event.type as string;
+    const eventData = event.data as BlockchainEventData;
+    const txHash = event.txHash as string | undefined;
+
     try {
-      const logId = await loggingService.logBlockchainOperation('processEvent', { event });
+      const logId = await loggingService.logBlockchainOperation('processEvent', {
+        eventId,
+        eventType,
+        txHash,
+      });
 
-      // Store event in database for tracking
-      await this.storeSyncEvent(event);
+      // Validate transaction ID before processing (explicit duplicate check)
+      const isDuplicate = await this.isEventAlreadyProcessed(eventId);
+      if (isDuplicate) {
+        await loggingService.logBlockchainSuccess(logId, {
+          eventId,
+          skipped: true,
+          reason: 'duplicate_event_detected_before_processing',
+        });
+        return;
+      }
 
-      // Process based on event type
-      switch (event.type as string) {
+      // Extract event metadata
+      const bookingId = eventData.escrow_id || (event.bookingId as string) || null;
+      const propertyId = eventData.property_id || (event.propertyId as string) || null;
+      const userId = eventData.user_id || (event.userId as string) || 'unknown';
+      const newStatus = this.getStatusForEventType(eventType, eventData);
+
+      // Process event atomically (insert, update status if applicable, mark as processed)
+      const result = await this.processEventAtomic(
+        eventId,
+        eventType,
+        bookingId,
+        propertyId,
+        userId,
+        eventData as unknown as Record<string, unknown>,
+        newStatus
+      );
+
+      // Handle duplicate event (detected during atomic processing)
+      if (result.error === 'DUPLICATE_EVENT') {
+        await loggingService.logBlockchainSuccess(logId, {
+          eventId,
+          skipped: true,
+          reason: 'duplicate_event_detected_during_atomic_processing',
+        });
+        return;
+      }
+
+      // For events that require additional processing beyond status updates
+      // (e.g., creating bookings, logging), handle them after atomic processing
+      // These operations are idempotent or handle their own errors gracefully
+      switch (eventType) {
         case 'booking_created':
+          // Booking creation is handled by handleBookingCreated which checks for existing bookings
           await this.handleBookingCreated(event);
           break;
         case 'booking_updated':
+          // Enhanced sync with booking service
           await this.handleBookingUpdated(event);
           break;
-        case 'booking_cancelled':
-          await this.handleBookingCancelled(event);
-          break;
-        case 'payment_confirmed':
-          await this.handlePaymentConfirmed(event);
-          break;
         case 'property_created':
-          await this.handlePropertyCreated(event);
-          break;
         case 'property_updated':
-          await this.handlePropertyUpdated(event);
+          // These only do logging, which is safe to do after atomic processing
+          if (eventType === 'property_created') {
+            await this.handlePropertyCreated(event);
+          } else {
+            await this.handlePropertyUpdated(event);
+          }
           break;
         case 'escrow_created':
-          await this.handleEscrowCreated(event);
-          break;
         case 'escrow_released':
-          await this.handleEscrowReleased(event);
+          // These do additional logging after status update
+          if (eventType === 'escrow_created') {
+            await this.handleEscrowCreated(event);
+          } else {
+            await this.handleEscrowReleased(event);
+          }
           break;
+        // booking_cancelled, payment_confirmed are fully handled by processEventAtomic
         default:
-          console.warn(`Unknown event type: ${event.type as string}`);
+          if (eventType !== 'unknown') {
+            console.warn(`Unknown event type: ${eventType}`);
+          }
       }
 
-      // Mark event as processed
-      await this.markEventProcessed(event.id as string);
-
       await loggingService.logBlockchainSuccess(logId, {
-        eventId: event.id as string,
+        eventId,
+        syncEventId: result.syncEventId,
       });
     } catch (error) {
-      console.error(`Error processing event ${event.id as string}:`, error);
-      await this.markEventFailed(event.id as string, error as Error);
+      const errorLog = await loggingService.logBlockchainOperation('processEvent', {
+        eventId,
+        eventType,
+      });
+      await loggingService.logBlockchainError(errorLog, {
+        error,
+        context: 'Failed to process blockchain event',
+      });
+      await this.markEventFailed(eventId, error as Error);
       throw error;
     }
   }
@@ -721,48 +875,62 @@ export class SyncService {
         await bookingService.syncBookingFromBlockchain(
           eventData.escrow_id,
           this.mapBlockchainStatus(eventData.status),
-          eventData
+          eventData as unknown as Record<string, unknown>
         );
       } catch (error) {
-        console.error('Failed to sync booking from blockchain event:', error);
+        // Log and use fallback to direct database update
+        const errorLog = await loggingService.logBlockchainOperation('handleBookingUpdated', {
+          escrowId: eventData.escrow_id,
+          status: eventData.status,
+        });
+        await loggingService.logBlockchainError(errorLog, {
+          error,
+          context: 'Failed to sync booking from blockchain event - using fallback',
+        });
         // Fallback to direct database update
-        await supabase
-          .from('bookings')
-          .update({
-            status: this.mapBlockchainStatus(eventData.status),
-            updated_at: new Date().toISOString(),
-          })
-          .eq('escrow_address', eventData.escrow_id);
+        try {
+          await supabase
+            .from('bookings')
+            .update({
+              status: this.mapBlockchainStatus(eventData.status),
+              updated_at: new Date().toISOString(),
+            })
+            .eq('escrow_address', eventData.escrow_id);
+        } catch (fallbackError) {
+          // Log fallback failure but don't rethrow - event was already processed atomically
+          const fallbackErrorLog = await loggingService.logBlockchainOperation(
+            'handleBookingUpdated_fallback',
+            {
+              escrowId: eventData.escrow_id,
+            }
+          );
+          await loggingService.logBlockchainError(fallbackErrorLog, {
+            error: fallbackError,
+            context: 'Fallback database update also failed',
+          });
+        }
       }
     }
   }
 
   /**
    * Handle booking cancellation event
+   * Note: Status update is handled atomically by processEventAtomic
+   * This handler is kept for potential future additional processing
    */
-  private async handleBookingCancelled(event: Record<string, unknown>): Promise<void> {
-    const eventData = event.data as BlockchainEventData;
-    await supabase
-      .from('bookings')
-      .update({
-        status: 'cancelled',
-        updated_at: new Date().toISOString(),
-      })
-      .eq('escrow_address', eventData.escrow_id || '');
+  private async handleBookingCancelled(_event: Record<string, unknown>): Promise<void> {
+    // Status update is handled atomically by processEventAtomic
+    // No additional processing needed at this time
   }
 
   /**
    * Handle payment confirmation event
+   * Note: Status update is handled atomically by processEventAtomic
+   * This handler is kept for potential future additional processing
    */
-  private async handlePaymentConfirmed(event: Record<string, unknown>): Promise<void> {
-    const eventData = event.data as BlockchainEventData;
-    await supabase
-      .from('bookings')
-      .update({
-        status: 'confirmed',
-        updated_at: new Date().toISOString(),
-      })
-      .eq('escrow_address', eventData.escrow_id || '');
+  private async handlePaymentConfirmed(_event: Record<string, unknown>): Promise<void> {
+    // Status update is handled atomically by processEventAtomic
+    // No additional processing needed at this time
   }
 
   /**
@@ -811,20 +979,13 @@ export class SyncService {
 
   /**
    * Handle escrow creation event
+   * Note: Status update is handled atomically by processEventAtomic
+   * This handler only performs additional logging
    */
   private async handleEscrowCreated(event: Record<string, unknown>): Promise<void> {
     const eventData = event.data as BlockchainEventData;
 
-    // Update booking with escrow creation confirmation
-    await supabase
-      .from('bookings')
-      .update({
-        status: 'pending',
-        updated_at: new Date().toISOString(),
-      })
-      .eq('escrow_address', eventData.escrow_id || '');
-
-    // Log the event
+    // Log the event (status update already handled atomically)
     await supabase.from('sync_logs').insert({
       operation: 'handle_escrow_created',
       status: 'success',
@@ -840,20 +1001,13 @@ export class SyncService {
 
   /**
    * Handle escrow release event
+   * Note: Status update is handled atomically by processEventAtomic
+   * This handler only performs additional logging
    */
   private async handleEscrowReleased(event: Record<string, unknown>): Promise<void> {
     const eventData = event.data as BlockchainEventData;
 
-    // Update booking to completed status when escrow is released
-    await supabase
-      .from('bookings')
-      .update({
-        status: 'completed',
-        updated_at: new Date().toISOString(),
-      })
-      .eq('escrow_address', eventData.escrow_id || '');
-
-    // Log the event
+    // Log the event (status update already handled atomically)
     await supabase.from('sync_logs').insert({
       operation: 'handle_escrow_released',
       status: 'success',
@@ -877,6 +1031,63 @@ export class SyncService {
       Cancelled: 'cancelled',
     };
     return statusMap[blockchainStatus] || 'pending';
+  }
+
+  /**
+   * Process sync event atomically using PostgreSQL RPC function
+   * This ensures event logging, status updates, and marking as processed
+   * all happen in a single transaction to prevent inconsistent states.
+   */
+  async processEventAtomic(
+    eventId: string,
+    eventType: string,
+    bookingId: string | null,
+    propertyId: string | null,
+    userId: string,
+    eventData: Record<string, unknown>,
+    newStatus?: string
+  ): Promise<{ success: boolean; syncEventId?: string; error?: string }> {
+    const log = await loggingService.logBlockchainOperation('processEventAtomic', {
+      eventId,
+      eventType,
+      bookingId,
+      newStatus,
+    });
+
+    try {
+      const { data, error } = await supabase.rpc('process_sync_event_atomic', {
+        p_event_id: eventId,
+        p_event_type: eventType,
+        p_booking_id: bookingId,
+        p_property_id: propertyId,
+        p_user_id: userId,
+        p_event_data: eventData,
+        p_new_status: newStatus || null,
+      });
+
+      if (error) {
+        await loggingService.logBlockchainError(log, { error, context: 'RPC call failed' });
+        throw new SyncError('Failed to process event atomically', 'ATOMIC_PROCESS_FAIL', error);
+      }
+
+      if (!data.success) {
+        if (data.error === 'DUPLICATE_EVENT') {
+          // Duplicate events are not errors, just skip them
+          await loggingService.logBlockchainSuccess(log, { skipped: true, reason: 'duplicate' });
+          return { success: true, error: 'DUPLICATE_EVENT' };
+        }
+        throw new SyncError(`Atomic processing failed: ${data.error}`, data.error, data);
+      }
+
+      await loggingService.logBlockchainSuccess(log, { syncEventId: data.sync_event_id });
+      return { success: true, syncEventId: data.sync_event_id };
+    } catch (error) {
+      if (error instanceof SyncError) {
+        throw error;
+      }
+      await loggingService.logBlockchainError(log, { error, context: 'processEventAtomic' });
+      throw new SyncError('Failed to process event atomically', 'ATOMIC_PROCESS_FAIL', error);
+    }
   }
 
   /**
@@ -927,17 +1138,34 @@ export class SyncService {
    * Update sync state in database
    */
   private async updateSyncState(): Promise<void> {
-    const { error } = await supabase.from('sync_state').upsert({
-      id: 1, // Single row for sync state
-      last_processed_block: this.lastProcessedBlock,
-      total_events_processed: this.totalEventsProcessed,
-      failed_events: this.failedEvents,
-      last_sync_time: this.lastSyncTime?.toISOString(),
-      updated_at: new Date().toISOString(),
-    });
+    try {
+      const { error } = await supabase.from('sync_state').upsert({
+        id: 1, // Single row for sync state
+        last_processed_block: this.lastProcessedBlock,
+        total_events_processed: this.totalEventsProcessed,
+        failed_events: this.failedEvents,
+        last_sync_time: this.lastSyncTime?.toISOString(),
+        updated_at: new Date().toISOString(),
+      });
 
-    if (error) {
-      console.error('Failed to update sync state:', error);
+      if (error) {
+        const errorLog = await loggingService.logBlockchainOperation('updateSyncState', {
+          lastProcessedBlock: this.lastProcessedBlock,
+          totalEventsProcessed: this.totalEventsProcessed,
+        });
+        await loggingService.logBlockchainError(errorLog, {
+          error,
+          context: 'Failed to update sync state in database',
+        });
+        // Don't rethrow - sync can continue even if state update fails
+      }
+    } catch (error) {
+      const errorLog = await loggingService.logBlockchainOperation('updateSyncState', {});
+      await loggingService.logBlockchainError(errorLog, {
+        error,
+        context: 'Exception updating sync state',
+      });
+      // Don't rethrow - sync can continue even if state update fails
     }
   }
 

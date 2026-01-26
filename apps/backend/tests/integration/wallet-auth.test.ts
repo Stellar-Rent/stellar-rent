@@ -1,4 +1,7 @@
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'bun:test';
+// Import test setup first to configure environment variables
+import '../setup';
+
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, mock } from 'bun:test';
 import { randomBytes } from 'node:crypto';
 import {
   Account,
@@ -9,22 +12,24 @@ import {
   TransactionBuilder,
 } from '@stellar/stellar-sdk';
 import request from 'supertest';
+
+// Import app after mock is set up
 import { app } from '../../src/';
 import { supabase } from '../../src/config/supabase';
-import { authenticateWallet } from '../../src/services/wallet-auth.service';
+import { authenticateWallet } from '../../src/_deprecated/wallet-auth.service';
 import {
   cleanupAllExpiredChallenges,
   generateChallenge,
   getValidChallenge,
   removeChallenge,
-} from '../../src/services/wallet-challenge.service';
+} from '../../src/_deprecated/wallet-challenge.service';
 import {
   ConnectionRejectedError,
   InvalidChallengeError,
   InvalidPublicKeyError,
   SignatureVerificationError,
   WalletNotFoundError,
-} from '../../src/types/wallet-error-types';
+} from '../../src/_deprecated/wallet-auth.types';
 
 // Store original console methods
 let originalConsoleLog: typeof console.log;
