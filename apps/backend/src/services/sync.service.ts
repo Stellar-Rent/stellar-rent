@@ -1,27 +1,7 @@
-/**
- * Sync Service
- *
- * Provides blockchain synchronization capabilities for StellarRent.
- * Polls the Stellar network for new events and processes them accordingly.
- *
- * Environment Variables:
- * - SOROBAN_RPC_URL: Soroban RPC endpoint URL
- * - SOROBAN_CONTRACT_ID: Contract ID to monitor
- * - SOROBAN_NETWORK_PASSPHRASE: Network passphrase for validation
- * - SYNC_POLL_INTERVAL: Polling interval in milliseconds (default: 5000ms)
- *
- * Features:
- * - Configurable polling intervals
- * - Network passphrase validation
- * - Comprehensive error handling and logging
- * - Manual sync triggers
- * - Status monitoring and statistics
- */
-
 import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
 import { Contract, Networks } from '@stellar/stellar-sdk';
-import { Server as SorobanRpcServer } from '@stellar/stellar-sdk/lib/rpc';
+import { Server as SorobanRpcServer } from '@stellar/stellar-sdk/rpc';
 import { supabase } from '../config/supabase';
 import { SyncError } from '../types/errors';
 import { bookingService } from './booking.service';
@@ -1204,3 +1184,4 @@ export class SyncService {
 
 // Export singleton instance
 export const syncService = new SyncService();
+
