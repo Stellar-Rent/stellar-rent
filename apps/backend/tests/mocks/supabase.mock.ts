@@ -1,124 +1,20 @@
 import { mock } from 'bun:test';
 
+import { createMockChain } from './supabase.mock.chain';
+import { createMockDataStore } from './supabase.mock.data';
+
 /**
  * Creates a comprehensive Supabase mock that includes all necessary methods
  * with this, the undefined is not an object error is fixed by the auth.getUser method
  */
 export const createSupabaseMock = () => {
-  // In-memory storage for mock data
-  const mockDataStore: Record<string, Map<string, any>> = {
-    wallet_challenges: new Map(),
-    wallet_users: new Map(),
-    profiles: new Map(),
-    bookings: new Map(),
-    properties: new Map(),
-  };
-
-  const createMockChain = (tableName: string) => {
-    const chain = {
-      select: mock(() => chain),
-      eq: mock((column: string, value: any) => {
-        chain._filters = chain._filters || [];
-        chain._filters.push({ column, value, operator: 'eq' });
-        return chain;
-      }),
-      gt: mock((column: string, value: any) => {
-        chain._filters = chain._filters || [];
-        chain._filters.push({ column, value, operator: 'gt' });
-        return chain;
-      }),
-      lt: mock((column: string, value: any) => {
-        chain._filters = chain._filters || [];
-        chain._filters.push({ column, value, operator: 'lt' });
-        return chain;
-      }),
-      in: mock((column: string, values: any[]) => {
-        chain._filters = chain._filters || [];
-        chain._filters.push({ column, values, operator: 'in' });
-        return chain;
-      }),
-      match: mock((column: string, value: any) => {
-        chain._filters = chain._filters || [];
-        chain._filters.push({ column, value, operator: 'match' });
-        return chain;
-      }),
-      not: mock(() => chain),
-      or: mock(() => chain),
-      order: mock(() => chain),
-      limit: mock(() => chain),
-      single: mock(() => {
-        // Try to find matching data based on filters
-        const tableData = mockDataStore[tableName] || new Map();
-        const filters = chain._filters || [];
-        
-        // Simple filter matching - find first item that matches all eq filters
-        if (filters.length > 0) {
-          for (const item of tableData.values()) {
-            let matches = true;
-            for (const filter of filters) {
-              if (filter.operator === 'eq' && item[filter.column] !== filter.value) {
-                matches = false;
-                break;
-              }
-              if (filter.operator === 'gt' && new Date(item[filter.column]) <= new Date(filter.value)) {
-                matches = false;
-                break;
-              }
-              if (filter.operator === 'lt' && new Date(item[filter.column]) >= new Date(filter.value)) {
-                matches = false;
-                break;
-              }
-            }
-            if (matches) {
-              return Promise.resolve({ data: item, error: null });
-            }
-          }
-        }
-        
-        return Promise.resolve({ data: null, error: null });
-      }),
-      maybeSingle: mock(() => Promise.resolve({ data: null, error: null })),
-      then: mock((callback: any) => {
-        // Try to find matching data based on filters
-        const tableData = mockDataStore[tableName] || new Map();
-        const filters = chain._filters || [];
-        const results: any[] = [];
-        
-        if (filters.length > 0) {
-          for (const item of tableData.values()) {
-            let matches = true;
-            for (const filter of filters) {
-              if (filter.operator === 'eq' && item[filter.column] !== filter.value) {
-                matches = false;
-                break;
-              }
-              if (filter.operator === 'gt' && new Date(item[filter.column]) <= new Date(filter.value)) {
-                matches = false;
-                break;
-              }
-              if (filter.operator === 'lt' && new Date(item[filter.column]) >= new Date(filter.value)) {
-                matches = false;
-                break;
-              }
-            }
-            if (matches) {
-              results.push(item);
-            }
-          }
-        }
-        
-        return callback({ data: results, error: null });
-      }),
-      _filters: [] as Array<{ column: string; value?: any; values?: any[]; operator: string }>,
-    };
-    return chain;
-  };
+  const mockDataStore = createMockDataStore();
 
   const mockFrom = mock((tableName: string) => {
     const tableData = mockDataStore[tableName] || new Map();
-    
+
     return {
-      select: mock(() => createMockChain(tableName)),
+      select: mock(() => createMockChain(tableName, mockDataStore)),
       insert: mock((data: any) => {
         const id = data.id || `mock-${Date.now()}-${Math.random()}`;
         const record = {
@@ -128,7 +24,7 @@ export const createSupabaseMock = () => {
           updated_at: data.updated_at || new Date().toISOString(),
         };
         tableData.set(id, record);
-        
+
         return {
           select: mock(() => ({
             single: mock(() => Promise.resolve({ data: record, error: null })),
@@ -139,34 +35,31 @@ export const createSupabaseMock = () => {
         };
       }),
       update: mock(() => {
-        const updateChain = createMockChain(tableName);
-        const originalEq = updateChain.eq;
+        const updateChain = createMockChain(tableName, mockDataStore);
         updateChain.eq = mock((column: string, value: any) => {
           updateChain._filters = updateChain._filters || [];
           updateChain._filters.push({ column, value, operator: 'eq' });
-          
+
           // When update().eq() is called, apply the update
           if (column === 'id' || column === 'public_key') {
-            for (const [key, item] of tableData.entries()) {
+            for (const item of tableData.values()) {
               if (item[column] === value) {
-                // Update the item
                 Object.assign(item, { updated_at: new Date().toISOString() });
               }
             }
           }
-          
+
           return updateChain;
         });
         return updateChain;
       }),
-      upsert: mock(() => createMockChain(tableName)),
+      upsert: mock(() => createMockChain(tableName, mockDataStore)),
       delete: mock(() => {
-        const deleteChain = createMockChain(tableName);
-        const originalEq = deleteChain.eq;
+        const deleteChain = createMockChain(tableName, mockDataStore);
         deleteChain.eq = mock((column: string, value: any) => {
           deleteChain._filters = deleteChain._filters || [];
           deleteChain._filters.push({ column, value, operator: 'eq' });
-          
+
           // When delete().eq() is called, remove matching items
           if (column === 'id' || column === 'public_key') {
             for (const [key, item] of tableData.entries()) {
@@ -175,7 +68,7 @@ export const createSupabaseMock = () => {
               }
             }
           }
-          
+
           return deleteChain;
         });
         deleteChain.lt = mock((column: string, value: any) => {
@@ -230,18 +123,4 @@ export const createSupabaseMock = () => {
       ),
     },
   };
-};
-
-/**
- * Sets up the Supabase mock module for Bun tests
- * @param modulePath - Optional path to the supabase module. Defaults to '../../src/config/supabase'
- */
-export const setupSupabaseMock = (modulePath: string = '../../src/config/supabase') => {
-  const mockSupabase = createSupabaseMock();
-  
-  mock.module(modulePath, () => ({
-    supabase: mockSupabase,
-  }));
-
-  return mockSupabase;
 };

@@ -1,5 +1,6 @@
-import { afterAll, beforeAll, mock } from 'bun:test';
+import { afterAll, beforeAll, beforeEach, mock } from 'bun:test';
 import { config } from 'dotenv';
+import { setupSupabaseMock } from './mocks/supabase.mock.setup';
 
 // Load environment variables for testing
 config({ path: '.env.test' });
@@ -77,6 +78,14 @@ Object.defineProperty(process.env, 'SUPABASE_SERVICE_ROLE_KEY', {
 Object.defineProperty(process.env, 'SYNC_POLL_INTERVAL', {
   value: '1000',
   writable: true,
+});
+
+// Setup Supabase mock before any modules import the client
+setupSupabaseMock();
+
+beforeEach(() => {
+  // Ensure module mock stays registered even if tests call mock.restore()
+  setupSupabaseMock();
 });
 
 // Suppress console logs during tests unless explicitly needed
