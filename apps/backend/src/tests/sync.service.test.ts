@@ -142,17 +142,92 @@ describe('SyncService', () => {
 
   describe('Event Processing', () => {
     it('should process booking created event', async () => {
-      // Global mock is already set up - this test verifies basic functionality
+      const supabaseFromMock = supabase.from as unknown as {
+        mock?: { calls: Array<[string]> };
+        mockClear?: () => void;
+      };
+
+      supabaseFromMock.mockClear?.();
+
       await syncService.start();
+      expect(syncService.getStatus().isRunning).toBe(true);
+
+      const event = {
+        id: 'evt-booking-created',
+        type: 'booking_created',
+        userId: 'user-1',
+        data: {
+          escrow_id: 'escrow-1',
+          property_id: 'property-1',
+          user_id: 'user-1',
+          start_date: Math.floor(Date.now() / 1000),
+          end_date: Math.floor(Date.now() / 1000) + 3600,
+          total_price: 100,
+          deposit: 10,
+          status: 'Pending',
+          guests: 2,
+        },
+      };
+
+      await (
+        syncService as unknown as { processEvent: (e: Record<string, unknown>) => Promise<void> }
+      ).processEvent(event);
+
+      const fromCalls = supabaseFromMock.mock?.calls ?? [];
+      const tables = fromCalls.map((call) => call[0]);
+      expect(tables).toContain('sync_events');
+      expect(tables).toContain('bookings');
       expect(syncService.getStatus().isRunning).toBe(true);
       await syncService.stop();
     });
 
     it('should handle event processing errors gracefully', async () => {
-      // Global mock is already set up - this test verifies error handling
+      const supabaseFromMock = supabase.from as unknown as {
+        mock?: { calls: Array<[string]> };
+        mockClear?: () => void;
+      };
+      const consoleErrorMock = mock(() => {});
+      const originalConsoleError = console.error;
+
+      supabaseFromMock.mockClear?.();
+      console.error = consoleErrorMock;
+
       await syncService.start();
       expect(syncService.getStatus().isRunning).toBe(true);
-      await syncService.stop();
+
+      const serviceWithHandlers = syncService as unknown as {
+        processEvent: (e: Record<string, unknown>) => Promise<void>;
+        handleBookingCreated: (e: Record<string, unknown>) => Promise<void>;
+      };
+      const originalHandler = serviceWithHandlers.handleBookingCreated;
+      serviceWithHandlers.handleBookingCreated = mock(async () => {
+        throw new Error('Handler failed');
+      });
+
+      try {
+        const event = {
+          id: 'evt-booking-error',
+          type: 'booking_created',
+          userId: 'user-1',
+          data: {
+            escrow_id: 'escrow-2',
+            property_id: 'property-2',
+            user_id: 'user-1',
+          },
+        };
+
+        await expect(serviceWithHandlers.processEvent(event)).rejects.toThrow('Handler failed');
+
+        const fromCalls = supabaseFromMock.mock?.calls ?? [];
+        const tables = fromCalls.map((call) => call[0]);
+        expect(tables).toContain('sync_events');
+        expect(consoleErrorMock).toHaveBeenCalled();
+        expect(syncService.getStatus().isRunning).toBe(true);
+      } finally {
+        serviceWithHandlers.handleBookingCreated = originalHandler;
+        console.error = originalConsoleError;
+        await syncService.stop();
+      }
     });
   });
 
