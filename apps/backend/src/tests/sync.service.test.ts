@@ -2,13 +2,8 @@
 import '../../tests/setup';
 
 import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test';
-<<<<<<< HEAD
 import { SyncService, syncService } from '../services/sync.service';
 import { supabase } from '../config/supabase';
-=======
-import { supabase } from '../config/supabase';
-import { SyncService, syncService } from '../services/sync.service';
->>>>>>> 4846267 (fix: remove hardcoded supabase mock, modularize supabase mock, call mock on setup)
 
 describe('SyncService', () => {
   beforeEach(() => {
@@ -147,7 +142,6 @@ describe('SyncService', () => {
 
   describe('Event Processing', () => {
     it('should process booking created event', async () => {
-<<<<<<< HEAD
       const supabaseFromMock = supabase.from as unknown as {
         mock?: { calls: Array<[string]> };
         mockClear?: () => void;
@@ -184,11 +178,6 @@ describe('SyncService', () => {
       expect(tables).toContain('sync_events');
       expect(tables).toContain('bookings');
       expect(syncService.getStatus().isRunning).toBe(true);
-=======
-      // Global mock is already set up - this test verifies basic functionality
-      await syncService.start();
-      expect(syncService.getStatus().isRunning).toBe(true);
->>>>>>> 5d91a40 (fix: booking tests (change to bun and add supabase mocks) and fix sync service (mocks))
       await syncService.stop();
     });
 
