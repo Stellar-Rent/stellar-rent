@@ -16,7 +16,7 @@ export const PropertyCard = ({ property }: PropertyCardProps) => {
       {/* Image Container */}
       <div className="relative h-56 overflow-hidden">
         <Image
-          src={property.images[0] || '/images/house1.webp'}
+          src={property.images?.[0] || '/images/house1.webp'}
           alt={property.title}
           fill
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"

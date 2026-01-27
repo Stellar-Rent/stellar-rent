@@ -1,6 +1,4 @@
 'use client';
-
-import { useState } from 'react';
 import type { FullPropertyProps } from 'public/mock-data';
 import { ErrorDisplay } from '../ui/error-display';
 import { LoadingGrid } from '../ui/loading-skeleton';
@@ -54,28 +52,9 @@ const PropertyGrid = ({
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 py-4">
-        {properties.map((property) => {
-          // Property mapping logic (from main) to ensure compatibility with PropertyCard
-          const cardProperty = {
-            id: typeof property.id === 'string' ? Number.parseInt(property.id, 10) || 0 : property.id,
-            title: property.title,
-            address: property.location || '',
-            image: property.images?.[0] || '/images/house.webp',
-            maxPeople: property.maxGuests || 2,
-            distance: typeof property.distance === 'string' 
-              ? Number.parseFloat(property.distance) || 0 
-              : property.distance,
-            rating: property.rating,
-            reviews: property.reviews || 0,
-            area: property.bedrooms ? property.bedrooms * 20 : 50,
-            price: property.price,
-            currency: 'USD',
-            period: 'per night',
-            verified: true,
-          };
-          
-          return <PropertyCard key={property.id} property={cardProperty as any} />;
-        })}
+        {properties.map((property) => (
+          <PropertyCard key={property.id} property={property} />
+        ))}
       </div>
 
       {isLoading && properties.length > 0 && (
