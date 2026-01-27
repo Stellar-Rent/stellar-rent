@@ -46,6 +46,7 @@ interface ProfileManagementProps {
   user: UserProfile;
   onUpdateProfile: (updates: Partial<UserProfile>) => Promise<void>;
   onUploadAvatar: (file: File) => Promise<void>;
+  onDeleteAccount?: () => Promise<void>;
   isLoading?: boolean;
   error?: string | null;
 }
@@ -54,6 +55,7 @@ const ProfileManagement: React.FC<ProfileManagementProps> = ({
   user,
   onUpdateProfile,
   onUploadAvatar,
+  onDeleteAccount,
   isLoading = false,
   error = null,
 }) => {
@@ -345,12 +347,16 @@ const ProfileManagement: React.FC<ProfileManagementProps> = ({
             {/* Profile Form */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium dark:text-white text-gray-700 mb-2">
+                <label
+                  htmlFor="full-name"
+                  className="block text-sm font-medium dark:text-white text-gray-700 mb-2"
+                >
                   Full Name
                 </label>
                 <div className="relative">
                   <User className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                   <input
+                    id="full-name"
                     type="text"
                     value={formData.name}
                     onChange={(e) => handleInputChange('name', e.target.value)}
@@ -361,12 +367,16 @@ const ProfileManagement: React.FC<ProfileManagementProps> = ({
               </div>
 
               <div>
-                <label className="block text-sm font-medium dark:text-white text-gray-700 mb-2">
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium dark:text-white text-gray-700 mb-2"
+                >
                   Email Address
                 </label>
                 <div className="relative">
                   <Mail className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                   <input
+                    id="email"
                     type="email"
                     value={formData.email}
                     onChange={(e) => handleInputChange('email', e.target.value)}
@@ -377,12 +387,16 @@ const ProfileManagement: React.FC<ProfileManagementProps> = ({
               </div>
 
               <div>
-                <label className="block text-sm font-medium dark:text-white text-gray-700 mb-2">
+                <label
+                  htmlFor="phone"
+                  className="block text-sm font-medium dark:text-white text-gray-700 mb-2"
+                >
                   Phone Number
                 </label>
                 <div className="relative">
                   <Phone className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                   <input
+                    id="phone"
                     type="tel"
                     value={formData.phone}
                     onChange={(e) => handleInputChange('phone', e.target.value)}
@@ -394,12 +408,16 @@ const ProfileManagement: React.FC<ProfileManagementProps> = ({
               </div>
 
               <div>
-                <label className="block text-sm font-medium dark:text-white text-gray-700 mb-2">
+                <label
+                  htmlFor="location"
+                  className="block text-sm font-medium dark:text-white text-gray-700 mb-2"
+                >
                   Location
                 </label>
                 <div className="relative">
                   <MapPin className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                   <input
+                    id="location"
                     type="text"
                     value={formData.location}
                     onChange={(e) => handleInputChange('location', e.target.value)}
@@ -411,10 +429,14 @@ const ProfileManagement: React.FC<ProfileManagementProps> = ({
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium dark:text-white text-gray-700 mb-2">
+                <label
+                  htmlFor="bio-textarea"
+                  className="block text-sm font-medium dark:text-white text-gray-700 mb-2"
+                >
                   Bio
                 </label>
                 <textarea
+                  id="bio-textarea"
                   value={formData.bio}
                   onChange={(e) => handleInputChange('bio', e.target.value)}
                   disabled={!isEditing}
@@ -585,11 +607,15 @@ const ProfileManagement: React.FC<ProfileManagementProps> = ({
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium dark:text-white text-gray-700 mb-2">
+                    <label
+                      htmlFor="current-password"
+                      className="block text-sm font-medium dark:text-white text-gray-700 mb-2"
+                    >
                       Current Password
                     </label>
                     <div className="relative">
                       <input
+                        id="current-password"
                         type={showPassword ? 'text' : 'password'}
                         value={passwordData.currentPassword}
                         onChange={(e) => handlePasswordChange('currentPassword', e.target.value)}
@@ -610,11 +636,15 @@ const ProfileManagement: React.FC<ProfileManagementProps> = ({
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium dark:text-white text-gray-700 mb-2">
+                    <label
+                      htmlFor="new-password"
+                      className="block text-sm font-medium dark:text-white text-gray-700 mb-2"
+                    >
                       New Password
                     </label>
                     <div className="relative">
                       <input
+                        id="new-password"
                         type={showPassword ? 'text' : 'password'}
                         value={passwordData.newPassword}
                         onChange={(e) => handlePasswordChange('newPassword', e.target.value)}
@@ -624,11 +654,15 @@ const ProfileManagement: React.FC<ProfileManagementProps> = ({
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium dark:text-white text-gray-700 mb-2">
+                    <label
+                      htmlFor="confirm-password"
+                      className="block text-sm font-medium dark:text-white text-gray-700 mb-2"
+                    >
                       Confirm New Password
                     </label>
                     <div className="relative">
                       <input
+                        id="confirm-password"
                         type={showConfirmPassword ? 'text' : 'password'}
                         value={passwordData.confirmPassword}
                         onChange={(e) => handlePasswordChange('confirmPassword', e.target.value)}
@@ -695,9 +729,24 @@ const ProfileManagement: React.FC<ProfileManagementProps> = ({
                   </div>
                   <button
                     type="button"
-                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center"
+                    onClick={async () => {
+                      if (
+                        onDeleteAccount &&
+                        confirm(
+                          'Are you sure you want to delete your account? This action cannot be undone.'
+                        )
+                      ) {
+                        await onDeleteAccount();
+                      }
+                    }}
+                    disabled={isLoading}
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center disabled:opacity-50"
                   >
-                    <Trash2 className="w-4 h-4 mr-2" />
+                    {isLoading ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                    ) : (
+                      <Trash2 className="w-4 h-4 mr-2" />
+                    )}
                     Delete Account
                   </button>
                 </div>

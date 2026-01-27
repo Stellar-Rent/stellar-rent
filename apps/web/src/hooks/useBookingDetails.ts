@@ -34,7 +34,7 @@ export function useBookingDetails(bookingId: string): UseBookingDetailsReturn {
       }
 
       const response = await fetch(`/api/bookings/${bookingId}`);
-      
+
       if (!response.ok) {
         if (response.status === 404) {
           throw new Error('Booking not found');
@@ -43,13 +43,13 @@ export function useBookingDetails(bookingId: string): UseBookingDetailsReturn {
       }
 
       const data = await response.json();
-      
+
       // Ensure the response matches our expected BookingData type
       const booking: BookingData = {
         id: data.id || bookingId,
         property: {
           title: data.property?.title || 'Unknown Property',
-          image: data.property?.image || '/images/property-placeholder.jpg',
+          image: data.property?.image || '/images/property-placeholder.webp',
         },
         dates: {
           from: data.dates?.from ? new Date(data.dates.from) : new Date(),

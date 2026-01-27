@@ -18,26 +18,31 @@ import { useEffect, useRef, useState } from 'react';
 
 import BookingHistory from '@/components/dashboard/BookingHistory';
 import NotificationSystem from '@/components/dashboard/NotificationSystem';
+import ProfileManagement from '@/components/dashboard/ProfileManagement';
 import { useDashboard } from '@/hooks/useDashboard';
 import { transformFromLegacyUser, transformToLegacyBooking, transformToLegacyUser } from '@/types';
 import type {
   LegacyBooking as BookingType,
+  DashboardBooking,
   Notification,
   Transaction,
   LegacyUserProfile as UserProfile,
 } from '@/types';
+import type { Booking } from '@/types/shared';
 import BookingCard from './components/booking-card';
 import { BookingModal, CancelModal } from './components/modal';
-import ProfileManagement from './components/profile-management';
 import WalletTransactions from './components/wallet-transaction';
+
+import { ErrorDisplay } from '@/components/ui/error-display';
+import { LoadingGrid } from '@/components/ui/loading-skeleton';
 
 const TenantDashboard: React.FC = () => {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'bookings' | 'profile' | 'wallet'>('bookings');
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
-  const [searchTerm, _setSearchTerm] = useState<string>('');
-  const [filterStatus, _setFilterStatus] = useState<string>('all');
+  const [_searchTerm, _setSearchTerm] = useState<string>('');
+  const [_filterStatus, _setFilterStatus] = useState<string>('all');
   const [selectedBooking, setSelectedBooking] = useState<BookingType | null>(null);
   const [showBookingModal, setShowBookingModal] = useState<boolean>(false);
   const [showCancelModal, setShowCancelModal] = useState<boolean>(false);
@@ -64,22 +69,32 @@ const TenantDashboard: React.FC = () => {
     walletError,
     cancelBooking: apiCancelBooking,
     updateProfile: apiUpdateProfile,
+    uploadAvatar: apiUploadAvatar,
+    deleteAccount: apiDeleteAccount,
     exportTransactions: apiExportTransactions,
     refetchAll,
     isAuthenticated,
   } = useDashboard();
 
-  const bookings = apiBookings.map(transformToLegacyBooking);
+  // Transform apiBookings to the format expected by BookingHistory
+  const bookings: Booking[] = apiBookings.map((b) => ({
+    id: b.id,
+    propertyTitle: b.propertyTitle,
+    propertyImage: b.propertyImage,
+    location: b.propertyLocation,
+    checkIn: b.checkIn,
+    checkOut: b.checkOut,
+    guests: b.guests,
+    totalAmount: b.totalAmount,
+    status: b.status as Booking['status'],
+    bookingDate: b.bookingDate,
+    propertyId: '1', // Placeholder
+    canCancel: true,
+    canReview: b.status === 'completed',
+  }));
+
   const user = apiUser ? transformToLegacyUser(apiUser) : null;
   const transactions = apiTransactions;
-
-  const filterOptions = [
-    { value: 'all', label: 'All Bookings' },
-    { value: 'upcoming', label: 'Upcoming' },
-    { value: 'ongoing', label: 'Ongoing' },
-    { value: 'completed', label: 'Completed' },
-    { value: 'cancelled', label: 'Cancelled' },
-  ];
 
   const showToast = (message: string, type: 'success' | 'error') => {
     setToast({ show: true, message, type });
@@ -101,30 +116,24 @@ const TenantDashboard: React.FC = () => {
     };
   }, []);
 
-  const _getCurrentFilterLabel = () => {
-    const currentOption = filterOptions.find((option) => option.value === filterStatus);
-    return currentOption ? currentOption.label : 'All Bookings';
-  };
-
-  const _filteredBookings = bookings.filter((booking) => {
-    const matchesSearch =
-      booking.propertyTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      booking.propertyLocation.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterStatus === 'all' || booking.status === filterStatus;
-    return matchesSearch && matchesFilter;
-  });
-
-  const handleViewDetails = (booking: BookingType): void => {
-    setSelectedBooking(booking);
+  const handleViewDetails = (booking: Booking): void => {
+    // Legacy mapping or handle directly
+    const found = apiBookings.find((b) => b.id === booking.id);
+    if (found) {
+      setSelectedBooking(transformToLegacyBooking(found));
+    }
     setShowBookingModal(true);
   };
 
-  const handleCancelBooking = (booking: BookingType): void => {
-    setSelectedBooking(booking);
+  const handleCancelBooking = (booking: Booking): void => {
+    const found = apiBookings.find((b) => b.id === booking.id);
+    if (found) {
+      setSelectedBooking(transformToLegacyBooking(found));
+    }
     setShowCancelModal(true);
   };
 
-  const handleConfirmCancel = async (bookingId: number): Promise<void> => {
+  const handleConfirmCancel = async (bookingId: number | string): Promise<void> => {
     try {
       const success = await apiCancelBooking(bookingId.toString());
       if (success) {
@@ -156,65 +165,6 @@ const TenantDashboard: React.FC = () => {
     }
   };
 
-  const handleUploadAvatar = async (file: File): Promise<boolean> => {
-    try {
-      if (!user?.id) {
-        showToast('User ID not found', 'error');
-        return false;
-      }
-
-      const success = await apiUploadAvatar(user.id, file);
-      if (success) {
-        showToast('Avatar uploaded successfully', 'success');
-        // Refresh user data to get updated avatar
-        await refetchAll();
-        return true;
-      }
-
-      showToast('Failed to upload avatar', 'error');
-      return false;
-    } catch (error) {
-      console.error('Error uploading avatar:', error);
-      showToast('An error occurred while uploading avatar', 'error');
-      return false;
-    }
-  };
-
-  const handleDeleteAccount = async (): Promise<boolean> => {
-    try {
-      if (!user?.id) {
-        showToast('User ID not found', 'error');
-        return false;
-      }
-
-      const confirmed = confirm(
-        'Are you sure you want to delete your account? This action cannot be undone.'
-      );
-      if (!confirmed) {
-        return false;
-      }
-
-      const success = await apiDeleteAccount(user.id);
-      if (success) {
-        showToast('Account deleted successfully', 'success');
-        // Redirect to home page after account deletion
-        router.push('/');
-        return true;
-      }
-
-      showToast('Failed to delete account', 'error');
-      return false;
-    } catch (error) {
-      console.error('Error deleting account:', error);
-      showToast('An error occurred while deleting account', 'error');
-      return false;
-    }
-  };
-
-  const handleExportTransactions = (): void => {
-    apiExportTransactions();
-  };
-
   const handleRefresh = async (): Promise<void> => {
     await refetchAll();
   };
@@ -237,12 +187,9 @@ const TenantDashboard: React.FC = () => {
     setNotifications((prev) => {
       const notificationToDelete = prev.find((notification) => notification.id === id);
       const isUnread = notificationToDelete?.read === false;
-
-      // Only decrement unread count if the deleted notification was unread
       if (isUnread) {
         setUnreadNotifications((prevCount) => Math.max(0, prevCount - 1));
       }
-
       return prev.filter((notification) => notification.id !== id);
     });
   };
@@ -277,38 +224,6 @@ const TenantDashboard: React.FC = () => {
       </div>
     );
   };
-
-  const ErrorDisplay = ({
-    error,
-    onRetry,
-    title = 'Something went wrong',
-  }: {
-    error: string;
-    onRetry: () => void;
-    title?: string;
-  }) => (
-    <div className="flex items-center justify-center p-8 bg-red-50 dark:bg-red-900/20 rounded-lg">
-      <div className="text-center">
-        <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-        <h3 className="text-lg font-medium text-red-900 dark:text-red-100 mb-2">{title}</h3>
-        <p className="text-red-700 dark:text-red-300 mb-4">{error}</p>
-        <button
-          type="button"
-          onClick={onRetry}
-          className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
-        >
-          Try Again
-        </button>
-      </div>
-    </div>
-  );
-
-  const LoadingDisplay = ({ message }: { message: string }) => (
-    <div className="flex items-center justify-center p-8">
-      <Loader2 className="w-8 h-8 animate-spin text-blue-500 mr-3" />
-      <span className="text-gray-600 dark:text-gray-300">{message}</span>
-    </div>
-  );
 
   if (!isAuthenticated) {
     return (
@@ -423,6 +338,9 @@ const TenantDashboard: React.FC = () => {
             isLoading={isLoadingBookings}
             onViewDetails={handleViewDetails}
             onRefresh={handleRefresh}
+            onCancelBooking={async (id) => {
+              await apiCancelBooking(id);
+            }}
             error={bookingsError}
           />
         )}
@@ -430,18 +348,27 @@ const TenantDashboard: React.FC = () => {
         {activeTab === 'profile' &&
           (profileError ? (
             <ErrorDisplay
-              error={profileError}
+              message={profileError}
               onRetry={handleRefresh}
               title="Failed to load profile"
             />
           ) : isLoadingProfile ? (
-            <LoadingDisplay message="Loading your profile..." />
+            <div className="flex items-center justify-center p-12">
+              <Loader2 className="w-12 h-12 animate-spin text-blue-500" />
+            </div>
           ) : user ? (
             <ProfileManagement
-              user={user}
-              onUpdateProfile={handleUpdateUser}
-              onUploadAvatar={handleUploadAvatar}
-              onDeleteAccount={handleDeleteAccount}
+              // biome-ignore lint/suspicious/noExplicitAny: mapping legacy
+              user={user as unknown as any}
+              // biome-ignore lint/suspicious/noExplicitAny: mapping legacy
+              onUpdateProfile={handleUpdateUser as unknown as any}
+              onUploadAvatar={async (file) => {
+                await apiUploadAvatar(user.id.toString(), file);
+              }}
+              onDeleteAccount={async () => {
+                await apiDeleteAccount(user.id.toString());
+              }}
+              isLoading={isLoadingProfile}
             />
           ) : (
             <div className="text-center py-12">
@@ -458,18 +385,20 @@ const TenantDashboard: React.FC = () => {
         {activeTab === 'wallet' &&
           (walletError ? (
             <ErrorDisplay
-              error={walletError}
+              message={walletError}
               onRetry={handleRefresh}
               title="Failed to load wallet"
             />
           ) : isLoadingWallet ? (
-            <LoadingDisplay message="Loading wallet information..." />
+            <div className="flex items-center justify-center p-12">
+              <Loader2 className="w-12 h-12 animate-spin text-blue-500" />
+            </div>
           ) : (
             <WalletTransactions
               walletBalance={walletBalance}
               pendingTransactions={pendingTransactions}
-              transactions={transactions}
-              onExportTransactions={handleExportTransactions}
+              transactions={transactions as unknown as Transaction[]}
+              onExportTransactions={apiExportTransactions}
             />
           ))}
       </div>
@@ -478,7 +407,7 @@ const TenantDashboard: React.FC = () => {
         booking={selectedBooking}
         isOpen={showBookingModal}
         onClose={() => setShowBookingModal(false)}
-        onCancel={handleCancelBooking}
+        onCancel={handleCancelBooking as unknown as (booking: BookingType) => void}
       />
       <CancelModal
         booking={selectedBooking}

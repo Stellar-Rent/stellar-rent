@@ -2,7 +2,6 @@
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Card } from '@/components/ui/card';
-import { useWallet } from '@/hooks/useWallet';
 import { format } from 'date-fns';
 import { useState } from 'react';
 import type { DateRange } from 'react-day-picker';
@@ -28,7 +27,6 @@ interface BookingFormProps {
 }
 
 export function BookingForm({ onSubmit, propertyId }: BookingFormProps) {
-  const { isConnected, publicKey } = useWallet();
   const [selectedDates, setSelectedDates] = useState<DateRange | undefined>({
     from: undefined,
     to: undefined,
@@ -38,7 +36,7 @@ export function BookingForm({ onSubmit, propertyId }: BookingFormProps) {
   const property = {
     id: propertyId,
     title: 'Luxury Beachfront Villa',
-    image: '/images/property-placeholder.jpg',
+    image: '/images/property-placeholder.webp',
     pricePerNight: 150,
     deposit: 500,
     commission: 0.00001,

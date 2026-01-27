@@ -1,0 +1,110 @@
+src/app/tenant-dashboard/page.tsx:119:39 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Unexpected any. Specify a different type.
+  
+    117 │   }, []);
+    118 │ 
+  > 119 │   const handleViewDetails = (booking: any): void => {
+        │                                       ^^^
+    120 │     // Legacy mapping or handle directly
+    121 │     const found = apiBookings.find((b) => b.id === booking.id);
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+src/app/tenant-dashboard/page.tsx:128:41 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Unexpected any. Specify a different type.
+  
+    126 │   };
+    127 │ 
+  > 128 │   const handleCancelBooking = (booking: any): void => {
+        │                                         ^^^
+    129 │     const found = apiBookings.find((b) => b.id === booking.id);
+    130 │     if (found) {
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+src/app/tenant-dashboard/page.tsx:359:29 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Unexpected any. Specify a different type.
+  
+    357 │           ) : user ? (
+    358 │             <ProfileManagement
+  > 359 │               user={user as any}
+        │                             ^^^
+    360 │               onUpdateProfile={handleUpdateUser as any}
+    361 │               onUploadAvatar={async (file) => {
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+src/app/tenant-dashboard/page.tsx:360:52 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Unexpected any. Specify a different type.
+  
+    358 │             <ProfileManagement
+    359 │               user={user as any}
+  > 360 │               onUpdateProfile={handleUpdateUser as any}
+        │                                                    ^^^
+    361 │               onUploadAvatar={async (file) => {
+    362 │                 await apiUploadAvatar(user.id.toString(), file);
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+src/app/tenant-dashboard/page.tsx:396:45 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Unexpected any. Specify a different type.
+  
+    394 │               walletBalance={walletBalance}
+    395 │               pendingTransactions={pendingTransactions}
+  > 396 │               transactions={transactions as any}
+        │                                             ^^^
+    397 │               onExportTransactions={apiExportTransactions}
+    398 │             />
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+src/app/tenant-dashboard/page.tsx format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+  
+    207 207 │         <div className="fixed top-4 right-4 z-50 max-w-sm">
+    208 208 │           <div
+    209     │ - ··········className={`rounded-lg·p-4·shadow-lg·${toast.type·===·'success'
+    210     │ - ············?·'bg-green-100·border·border-green-200·text-green-800'
+    211     │ - ············:·'bg-red-100·border·border-red-200·text-red-800'
+    212     │ - ············}`}
+        209 │ + ··········className={`rounded-lg·p-4·shadow-lg·${
+        210 │ + ············toast.type·===·'success'
+        211 │ + ··············?·'bg-green-100·border·border-green-200·text-green-800'
+        212 │ + ··············:·'bg-red-100·border·border-red-200·text-red-800'
+        213 │ + ··········}`}
+    213 214 │           >
+    214 215 │             <div className="flex items-center">
+    ······· │ 
+    316 317 │                     type="button"
+    317 318 │                     onClick={() => setActiveTab(tab.id)}
+    318     │ - ··················className={`flex·items-center·space-x-2·py-4·px-1·border-b-2·font-medium·text-sm·${activeTab·===·tab.id
+    319     │ - ····················?·'border-blue-500·text-blue-600·dark:text-blue-400'
+    320     │ - ····················:·'border-transparent·text-gray-500·dark:text-white·hover:border-gray-300'
+    321     │ - ····················}`}
+        319 │ + ··················className={`flex·items-center·space-x-2·py-4·px-1·border-b-2·font-medium·text-sm·${
+        320 │ + ····················activeTab·===·tab.id
+        321 │ + ······················?·'border-blue-500·text-blue-600·dark:text-blue-400'
+        322 │ + ······················:·'border-transparent·text-gray-500·dark:text-white·hover:border-gray-300'
+        323 │ + ··················}`}
+    322 324 │                   >
+    323 325 │                     <Icon className="w-5 h-5" />
+  
+
+Checked 1 file in 7ms. No fixes applied.
+Found 6 errors.
+check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Some errors were emitted while running checks.
+  
+

@@ -25,12 +25,15 @@ import Image from 'next/image';
 import { useMemo, useState } from 'react';
 import type { Booking, FilterState } from '../../types/shared';
 
+import { ErrorDisplay } from '../ui/error-display';
+
 interface BookingHistoryProps {
   bookings: Booking[];
   onCancelBooking: (bookingId: string) => Promise<void>;
   onViewDetails?: (booking: Booking) => void;
   onContactHost?: (booking: Booking) => void;
   onLeaveReview?: (booking: Booking) => void;
+  onRefresh?: () => void;
   isLoading?: boolean;
   error?: string | null;
 }
@@ -41,6 +44,7 @@ const BookingHistory: React.FC<BookingHistoryProps> = ({
   onViewDetails,
   onContactHost,
   onLeaveReview,
+  onRefresh,
   isLoading = false,
   error = null,
 }) => {
@@ -257,11 +261,13 @@ const BookingHistory: React.FC<BookingHistoryProps> = ({
 
   if (error) {
     return (
-      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
-        <div className="flex items-center">
-          <XCircle className="w-5 h-5 text-red-500 mr-2" />
-          <span className="text-red-700 dark:text-red-300">{error}</span>
-        </div>
+      <div className="py-8">
+        <ErrorDisplay
+          title="Failed to load bookings"
+          message={error}
+          onRetry={onRefresh}
+          variant="destructive"
+        />
       </div>
     );
   }
@@ -649,7 +655,6 @@ const BookingCard: React.FC<{
   booking,
   onCancel,
   onViewDetails,
-  onContactHost,
   onLeaveReview,
   getStatusColor,
   getStatusIcon,

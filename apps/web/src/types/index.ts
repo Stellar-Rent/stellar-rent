@@ -16,6 +16,7 @@ export interface DashboardBooking {
   status: 'pending' | 'confirmed' | 'ongoing' | 'completed' | 'cancelled';
   rating?: number;
   review?: string;
+  canCancel?: boolean;
 }
 
 export interface LegacyBooking {
@@ -44,6 +45,8 @@ export interface UserProfile {
   avatar: string;
   verified: boolean;
   memberSince: string;
+  totalBookings: number;
+  totalSpent?: number;
   publicKey?: string;
   // Host-related fields
   hostStatus?: 'pending' | 'verified' | 'rejected' | 'suspended';
@@ -66,6 +69,7 @@ export interface LegacyUserProfile {
   avatar: string;
   memberSince: string;
   verified: boolean;
+  totalSpent?: number;
   location?: string;
   bio?: string;
   preferences: {
@@ -125,7 +129,7 @@ export function transformToLegacyBooking(booking: DashboardBooking): LegacyBooki
     bookingDate: booking.bookingDate,
     hostName: booking.hostName,
     rating: booking.rating,
-    canCancel: booking.canCancel,
+    canCancel: booking.canCancel ?? true,
   };
 }
 
@@ -137,6 +141,12 @@ export function transformToLegacyUser(user: UserProfile): LegacyUserProfile {
   return {
     ...user,
     id: Number.parseInt(user.id) || 1,
+    phone: user.phone || '',
+    preferences: user.preferences || {
+      currency: 'USD',
+      language: 'en',
+      notifications: true,
+    },
   };
 }
 
@@ -148,6 +158,7 @@ export function transformFromLegacyUser(user: LegacyUserProfile): UserProfile {
   return {
     ...user,
     id: user.id.toString(),
+    totalBookings: 0,
   };
 }
 

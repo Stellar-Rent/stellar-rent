@@ -7,6 +7,8 @@ import { useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
 import { z } from 'zod';
 
+import { InlineError } from '@/components/ui/error-display';
+
 // Schema for form validation
 const searchSchema = z.object({
   location: z
@@ -154,15 +156,8 @@ export const SearchBar = () => {
         </form>
 
         {error && (
-          <div
-            id="search-error"
-            className="text-red-400 text-sm mt-4 px-6 py-3 bg-red-500/10 border border-red-500/20 rounded-xl animate-in slide-in-from-top-2 duration-200"
-            role="alert"
-          >
-            <div className="flex items-center">
-              <div className="w-2 h-2 bg-red-400 rounded-full mr-2 animate-pulse" />
-              {error}
-            </div>
+          <div className="mt-4 px-2">
+            <InlineError message={error} />
           </div>
         )}
       </div>

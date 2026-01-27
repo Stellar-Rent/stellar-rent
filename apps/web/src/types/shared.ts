@@ -133,6 +133,8 @@ export interface BookingFormData {
   guests: number;
   totalAmount: number;
   deposit: number;
+  userId: string;
+  dates: { from: Date; to: Date };
 }
 
 export interface PropertyFormData {

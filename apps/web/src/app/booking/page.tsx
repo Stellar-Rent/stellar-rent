@@ -3,7 +3,6 @@ import { BookingConfirmation } from '@/components/booking/BookingConfirmation';
 import { BookingForm } from '@/components/booking/BookingForm';
 import { WalletConnectionModal } from '@/components/booking/WalletConnectionModal';
 import { useWallet } from '@/hooks/useWallet';
-import { useTheme } from 'next-themes';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import type { DateRange } from 'react-day-picker';
@@ -20,7 +19,6 @@ interface BookingPageProps {
 type BookingFlowStep = 'form' | 'payment' | 'confirmation';
 
 export default function BookingPage({ params }: BookingPageProps) {
-  const { theme } = useTheme();
   const _router = useRouter();
   const { isConnected, connect, publicKey } = useWallet();
 
@@ -54,7 +52,7 @@ export default function BookingPage({ params }: BookingPageProps) {
   const _property = {
     id: params.propertyId,
     title: 'Luxury Beachfront Villa',
-    image: '/images/property-placeholder.jpg',
+    image: '/images/property-placeholder.webp',
     pricePerNight: 150,
     deposit: 500,
     commission: 0.00001,
@@ -107,8 +105,10 @@ export default function BookingPage({ params }: BookingPageProps) {
         propertyId: data.property.id,
         userId: publicKey,
         dates: data.dates,
+        checkIn: data.dates.from.toISOString(),
+        checkOut: data.dates.to.toISOString(),
         guests: data.guests,
-        total: data.totalAmount,
+        totalAmount: data.totalAmount,
         deposit: data.depositAmount,
       });
 
@@ -116,12 +116,12 @@ export default function BookingPage({ params }: BookingPageProps) {
       toast.success('Booking created! Proceeding to payment.');
 
       setCurrentBookingData({
-        bookingId: createdBooking.bookingId,
+        bookingId: createdBooking.data.id,
         property: data.property,
         dates: data.dates,
         guests: data.guests,
         totalAmount: data.totalAmount,
-        escrowAddress: createdBooking.escrowAddress,
+        escrowAddress: createdBooking.data.escrowAddress || '',
       });
 
       setBookingStep('payment');

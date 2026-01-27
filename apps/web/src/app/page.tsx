@@ -1,9 +1,14 @@
+'use client';
+
 import { SearchBar } from '@/components/features/search/SearchBar';
 import { RightSidebar } from '@/components/layout/RightSidebar';
-import { PropertyGrid } from '@/components/search/PropertyGrid';
+import PropertyGrid from '@/components/search/PropertyGrid';
+import { useProperties } from '@/hooks/useProperties';
 import { House } from 'lucide-react';
 
 export default function Home() {
+  const { properties, isLoading, error, refresh } = useProperties();
+
   return (
     <div className="flex w-full min-h-screen">
       <main className="flex flex-1 flex-col w-full min-h-screen px-5 pr-16">
@@ -17,11 +22,16 @@ export default function Home() {
           <div className="flex items-center gap-2 mb-4">
             <span className="text-white text-sm bg-secondary p-2 px-4 rounded-full flex items-center gap-2">
               <House className="w-4 h-4" />
-              Showing 23 properties
+              Showing {properties.length} properties
             </span>
           </div>
 
-          <PropertyGrid />
+          <PropertyGrid
+            properties={properties}
+            isLoading={isLoading}
+            error={error}
+            onRetry={refresh}
+          />
         </section>
       </main>
 
