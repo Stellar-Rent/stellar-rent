@@ -1,0 +1,16 @@
+{
+  "name": "stellar-social-sdk",
+  "version": "0.1.0",
+  "description": "Social login SDK for Stellar blockchain",
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "rollup -c",
+    "dev": "rollup -c -w",
+    "test": "node dist/test.js"
+  },
+  "keywords": ["stellar", "social-login", "blockchain", "web3"],
+  "author": "tu-nombre",
+  "license": "MIT"
+}

@@ -21,7 +21,6 @@ type BookingFlowStep = 'form' | 'payment' | 'confirmation';
 export default function BookingPage({ params }: BookingPageProps) {
   const _router = useRouter();
   const { isConnected, connect, publicKey } = useWallet();
-
   const [_selectedDates, _setSelectedDates] = useState<DateRange | undefined>({
     from: undefined,
     to: undefined,
