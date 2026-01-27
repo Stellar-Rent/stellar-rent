@@ -17,18 +17,14 @@ import { EarningsStats } from './components/EarningsStats';
 import { PaymentMethods } from './components/PaymentMethods';
 import { PayoutHistory } from './components/PayoutHistory';
 import { RecentTransactions } from './components/RecentTransactions';
-import { mockBookings, mockEarnings, mockProperties, mockUser } from './mockData';
+import { mockEarnings, mockProperties, mockUser } from './mockData';
 import type { Property, UserProfile } from './types';
 
 import { ErrorDisplay } from '@/components/ui/error-display';
-import { LoadingGrid } from '@/components/ui/loading-skeleton';
 import { useDashboard } from '@/hooks/useDashboard';
-import {
-  type UserProfile as ApiUserProfile,
-  transformToLegacyBooking,
-  transformToLegacyUser,
-} from '@/types';
+import { type UserProfile as ApiUserProfile } from '@/types';
 import type { Booking } from '@/types/shared';
+import Breadcrumb from '~/components/ui/breadcrumb';
 
 const HostDashboard = () => {
   const [activeTab, setActiveTab] = useState('properties');
