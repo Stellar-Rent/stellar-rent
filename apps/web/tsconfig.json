@@ -24,7 +24,8 @@
     "baseUrl": ".",
     "paths": {
       "~/*": ["./src/*"],
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "stellar-social-sdk": ["./stellar-social-sdk/dist/index.esm.js"]
     },
     "incremental": true,
     "esModuleInterop": true,

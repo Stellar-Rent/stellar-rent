@@ -156,7 +156,7 @@ export const MOCK_PROPERTIES: FullPropertyProps[] = [
     images: [
       '/images/house2.webp',
       '/images/house3.webp',
-      '/images/property-1.webp',
+      '/images/house5.webp',
       '/images/house1.webp',
     ],
     rating: 4.0,
@@ -206,7 +206,7 @@ export const MOCK_PROPERTIES: FullPropertyProps[] = [
     price: 4200,
     images: [
       '/images/house4.webp',
-      '/images/property-1.webp',
+      '/images/house5.webp',
       '/images/house1.webp',
       '/images/house2.webp',
     ],
@@ -258,7 +258,7 @@ export const MOCK_PROPERTIES: FullPropertyProps[] = [
     images: [
       '/images/house2.webp',
       '/images/house.webp',
-      '/images/property-1.webp',
+      '/images/house5.webp',
       '/images/house4.webp',
     ],
     rating: 4.7,
@@ -342,7 +342,7 @@ export const MOCK_PROPERTIES: FullPropertyProps[] = [
     price: 3200,
     images: [
       '/images/house4.webp',
-      '/images/property-1.webp',
+      '/images/house5.webp',
       '/images/house1.webp',
       '/images/house5.webp',
     ],
@@ -412,7 +412,7 @@ export const MOCK_PROPERTIES: FullPropertyProps[] = [
       '/images/house.webp',
       '/images/house2.webp',
       '/images/house4.webp',
-      '/images/property-1.webp',
+      '/images/house5.webp',
     ],
     rating: 4.6,
     maxGuests: 8,

@@ -5,25 +5,17 @@ import NotificationSystem from '@/components/dashboard/NotificationSystem';
 import ProfileManagement from '@/components/dashboard/ProfileManagement';
 import { ErrorDisplay } from '@/components/ui/error-display';
 import { LoadingGrid } from '@/components/ui/loading-skeleton';
-import RoleGuard from '@/hooks/auth/RoleGuard';
+import { RoleGuard } from '@/components/guards/RoleGuard';
 import { useDashboard } from '@/hooks/useDashboard';
 import type { UserProfile as ApiUserProfile } from '@/types';
-import type { UserProfile } from '@/types/shared';
-import type { Booking } from '@/types/shared';
+import type { UserProfile, Booking } from '@/types/shared';
+// import { Breadcrumb } from '@/components/ui/breadcrumb'; 
+
 import {
-  Activity,
-  AlertCircle,
   BarChart3,
-  Bath,
-  Bed,
-  Bell,
   Calendar,
   Check,
   CheckCircle,
-  ChevronDown,
-  ChevronRight,
-  Clock,
-  CreditCard,
   DollarSign,
   Download,
   Edit3,
@@ -32,6 +24,7 @@ import {
   Home,
   Info,
   Loader2,
+  LogOut,
   MapPin,
   MessageSquare,
   PieChart,
@@ -40,17 +33,13 @@ import {
   Search,
   Settings,
   Star,
-  Trash2,
-  TrendingUp,
   User,
-  Users,
   Wallet,
-  X,
-  XCircle,
 } from 'lucide-react';
 import Image from 'next/image';
-import type React from 'react';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { useAuth } from '~/hooks/auth/use-auth';
 
 const mockTransactions = [
   {
@@ -88,6 +77,8 @@ const mockTransactions = [
 ];
 
 const TenantDashboard = () => {
+  const router = useRouter();
+  const { logout } = useAuth();
   const [activeTab, setActiveTab] = useState('bookings');
   const [transactions, _setTransactions] = useState(mockTransactions);
   const [walletBalance, _setWalletBalance] = useState(2500);
@@ -99,7 +90,6 @@ const TenantDashboard = () => {
     isLoadingProfile,
     bookingsError,
     profileError,
-    // error: generalError,
     refetchAll,
     cancelBooking: apiCancelBooking,
     updateProfile: apiUpdateProfile,
@@ -285,17 +275,31 @@ const TenantDashboard = () => {
                   <Settings className="w-6 h-6" />
                 </button>
                 {user && (
-                  <div className="flex items-center space-x-3">
-                    <Image
-                      src={user.avatar}
-                      alt={user.name}
-                      width={32}
-                      height={32}
-                      className="rounded-full"
-                    />
-                    <span className="text-sm font-medium text-gray-700 dark:text-white">
-                      {user.name}
-                    </span>
+                  <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-3">
+                      <Image
+                        src={user.avatar}
+                        alt={user.name}
+                        width={32}
+                        height={32}
+                        className="rounded-full"
+                      />
+                      <span className="text-sm font-medium text-gray-700 dark:text-white">
+                        {user.name}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        logout();
+                        router.push('/login');
+                      }}
+                      className="flex items-center space-x-1 text-gray-500 dark:text-white hover:text-red-500 dark:hover:text-red-400 transition-colors"
+                      title="Logout"
+                    >
+                      <LogOut className="w-5 h-5" />
+                      <span className="text-sm hidden sm:inline">Logout</span>
+                    </button>
                   </div>
                 )}
               </div>

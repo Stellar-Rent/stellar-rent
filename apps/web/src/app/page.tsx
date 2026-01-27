@@ -3,7 +3,7 @@
 import { SearchBar } from '@/components/features/search/SearchBar';
 import { RightSidebar } from '@/components/layout/RightSidebar';
 import PropertyGrid from '@/components/search/PropertyGrid';
-import { useProperties } from '@/hooks/useProperties';
+import { useProperties } from '@/hooks/useProperties'; // Keep this import
 import { House } from 'lucide-react';
 
 export default function Home() {
