@@ -1,6 +1,6 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { MOCK_PROPERTIES } from 'public/mock-data';
-import { vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { useProperties } from '../useProperties';
 
 // Mock the timeout to make tests faster
