@@ -1,6 +1,6 @@
 'use client';
 
-import PropertyGrid from '@/components/search/PropertyGrid';
+import { PropertyGrid } from '@/components/search/PropertyGrid';
 import type { LatLngTuple } from 'leaflet';
 import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
