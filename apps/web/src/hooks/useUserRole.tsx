@@ -22,6 +22,7 @@ export function useUserRole(): UseUserRoleReturn {
 
   useEffect(() => {
     const fetchUserRole = async () => {
+      // 1. Si no está autenticado o no hay usuario, retornamos guest de inmediato
       if (!isAuthenticated || !user) {
         setRoleInfo({
           role: 'guest',
@@ -32,11 +33,19 @@ export function useUserRole(): UseUserRoleReturn {
         return;
       }
 
+      // 2. Extraemos el ID. Si no existe, no llamamos a la API
+      const userId = user.publicKey || user.id;
+      if (!userId) {
+        // CORRECCIÓN: Tipamos 'prev' como RoleInfo para eliminar el error 7006
+        setRoleInfo((prev: RoleInfo) => ({ ...prev, role: 'guest' }));
+        setIsLoading(false);
+        return;
+      }
+
       try {
         setIsLoading(true);
 
         try {
-          const userId = user.publicKey || 'unknown';
           const response = await profileAPI.getUserProfile(userId);
           // biome-ignore lint/suspicious/noExplicitAny: API data handling
           const profile = (response.data as any) || {};

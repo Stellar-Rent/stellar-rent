@@ -1,24 +1,21 @@
-import { Asset, Horizon, Operation, TransactionBuilder } from 'stellar-sdk';
-// @ts-ignore: Stellar SDK export compatibility
-import Server from 'stellar-sdk';
+import { Asset, Horizon, Operation, TransactionBuilder, Transaction } from 'stellar-sdk';
 import { HORIZON_URL, NETWORK_PASSPHRASE, USDC_ISSUER } from './config/config';
 
 /**
  * Función auxiliar para obtener el Asset de forma segura.
- * Evita el error "Issuer is invalid" durante el renderizado inicial.
+ * Lanza un error si el emisor no es válido para evitar pagos accidentales en XLM.
  */
 const getUSDCAsset = () => {
-  try {
-    // Validamos que el issuer exista y tenga un formato coherente de Stellar
-    if (USDC_ISSUER && USDC_ISSUER.startsWith('G') && USDC_ISSUER.length === 56) {
-      return new Asset('USDC', USDC_ISSUER);
-    }
-    // Fallback para Testnet oficial de Circle en caso de error en config
-    return new Asset('USDC', 'GBBD67ZYXG7O6N7F7K6N7F7K6N7F7K6N7F7K6N7F7K6N7F7K6N7F7K6N');
-  } catch (e) {
-    // Retornamos Asset nativo (XLM) como último recurso para no romper el build
-    return Asset.native();
+  // 1. Validamos que el issuer tenga un formato coherente de Stellar
+  if (USDC_ISSUER && USDC_ISSUER.startsWith('G') && USDC_ISSUER.length === 56) {
+    return new Asset('USDC', USDC_ISSUER);
   }
+
+  // 2. Si estamos en desarrollo/testnet y no hay issuer, podrías usar el de Circle,
+  // pero lo más seguro es lanzar un error si la configuración está rota.
+  throw new Error(
+    `Invalid USDC_ISSUER configuration. Check your environment variables. Value: ${USDC_ISSUER}`
+  );
 };
 
 export async function createPaymentTransaction(
@@ -29,6 +26,8 @@ export async function createPaymentTransaction(
   try {
     const server = new Horizon.Server(HORIZON_URL);
     const sourceAccount = await server.loadAccount(sourcePublicKey);
+    
+    // Aquí se lanzará el error si el asset no es válido
     const asset = getUSDCAsset();
 
     const transaction = new TransactionBuilder(sourceAccount, {
@@ -52,11 +51,17 @@ export async function createPaymentTransaction(
   }
 }
 
-export async function submitTransaction(signedTransaction: string) {
+/**
+ * Envía una transacción firmada a la red.
+ */
+export async function submitTransaction(signedTransactionXDR: string) {
   try {
-    // @ts-ignore: Server constructor resolution
-    const server = new Server(HORIZON_URL);
-    const result = await server.submitTransaction(signedTransaction);
+    const server = new Horizon.Server(HORIZON_URL);
+    
+    // Reconstruimos el objeto Transaction desde el string XDR
+    const transactionToSubmit = new Transaction(signedTransactionXDR, NETWORK_PASSPHRASE);
+    
+    const result = await server.submitTransaction(transactionToSubmit);
     return result.hash;
   } catch (error) {
     console.error('Error submitting transaction:', error);
@@ -73,14 +78,12 @@ export async function processPayment(
   amount: string
 ) {
   try {
-    // 1. Crear la transacción
     const transactionXDR = await createPaymentTransaction(
       sourcePublicKey,
       destinationPublicKey,
       amount
     );
 
-    // 2. Firmar con Freighter
     // @ts-ignore: Freighter API global access
     if (typeof window === 'undefined' || !window.freighterApi) {
       throw new Error('Freighter wallet not found');
@@ -89,7 +92,6 @@ export async function processPayment(
     // @ts-ignore: Freighter API global access
     const signedTransaction = await window.freighterApi.signTransaction(transactionXDR);
 
-    // 3. Enviar a la red
     const transactionHash = await submitTransaction(signedTransaction);
     return transactionHash;
   } catch (error) {
@@ -102,11 +104,19 @@ export async function getUSDCBalance(publicKey: string): Promise<string> {
   try {
     const server = new Horizon.Server(HORIZON_URL);
     const account = await server.loadAccount(publicKey);
-    const asset = getUSDCAsset();
+    
+    // Para el balance, si falla el asset, simplemente retornamos '0' 
+    // pero logueamos el error de configuración.
+    let asset: Asset;
+    try {
+      asset = getUSDCAsset();
+    } catch (e) {
+      console.error("Cannot fetch balance: USDC Asset not configured.");
+      return '0';
+    }
 
     const usdcBalance = account.balances.find((balance) => {
       if (balance.asset_type === 'credit_alphanum4' || balance.asset_type === 'credit_alphanum12') {
-        // biome-ignore lint/suspicious/noExplicitAny: asset_code access
         const b = balance as any;
         return b.asset_code === asset.code && b.asset_issuer === asset.issuer;
       }

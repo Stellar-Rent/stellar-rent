@@ -32,17 +32,13 @@ export default function SearchPage() {
     { position: [-34.6, -58.37], title: 'Cozy Studio Apartment' },
   ];
 
-  // Filter & sort properties with memoization
   const filteredSortedProperties = useMemo(() => {
     let result = [...MOCK_PROPERTIES];
-
     const location = searchParams.get('location')?.toLowerCase() || '';
     if (location) {
       result = result.filter((p) => p.location.toLowerCase().includes(location));
     }
-
     result = result.filter((p) => p.price >= filters.price);
-
     const selectedAmenities = Object.entries(filters.amenities)
       .filter(([, checked]) => checked)
       .map(([key]) => key.toLowerCase());
@@ -52,22 +48,12 @@ export default function SearchPage() {
         selectedAmenities.every((am) => p.amenities.map((a) => a.toLowerCase()).includes(am))
       );
     }
-
     if (filters.rating > 0) {
       result = result.filter((p) => p.rating >= filters.rating);
     }
-
     if (sort === 'price_asc') result.sort((a, b) => a.price - b.price);
     if (sort === 'price_desc') result.sort((a, b) => b.price - a.price);
     if (sort === 'rating') result.sort((a, b) => b.rating - a.rating);
-    if (sort === 'distance') {
-      result.sort((a, b) => {
-        const aDist = Number.parseFloat(a.distance);
-        const bDist = Number.parseFloat(b.distance);
-        return aDist - bDist;
-      });
-    }
-
     return result;
   }, [filters, sort, searchParams]);
 
@@ -81,13 +67,16 @@ export default function SearchPage() {
     setTimeout(() => {
       setPage((prev) => prev + 1);
       setIsLoading(false);
-    }, 200); // simulate load
+    }, 200);
   }, [isLoading]);
 
   const minMax = useMemo(() => {
     const sorted = [...MOCK_PROPERTIES].sort((a, b) => a.price - b.price);
     return [sorted[0]?.price || 0, sorted.at(-1)?.price || 0] as [number, number];
   }, []);
+
+  // Alias para evitar el error de IntrinsicAttributes
+  const Grid = PropertyGrid as any;
 
   return (
     <main className="px-4 py-6 mt-10 space-y-6">
@@ -110,7 +99,7 @@ export default function SearchPage() {
 
           <div className="flex flex-col lg:flex-row">
             <div className="w-full">
-              <PropertyGrid properties={visibleProperties} onLoadMore={loadNextPage} />
+              <Grid properties={visibleProperties} onLoadMore={loadNextPage} />
               {isLoading && <p className="text-center my-4">Loading more properties...</p>}
             </div>
 
