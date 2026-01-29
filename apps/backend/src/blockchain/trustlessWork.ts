@@ -1,5 +1,6 @@
 import { Keypair } from '@stellar/stellar-sdk';
 import axios, { type AxiosResponse } from 'axios';
+import { EscrowError } from '../types/errors';
 
 const TRUSTLESS_WORK_API_URL =
   process.env.TRUSTLESS_WORK_API_URL || 'https://api.trustlesswork.com';
@@ -304,8 +305,7 @@ export async function createEscrow(params: BookingEscrowParams): Promise<string>
 
     return response.escrowAddress;
   } catch (error) {
-    console.error('Error creating escrow:', error);
-    throw new Error('Failed to create escrow');
+    throw new EscrowError('Failed to create escrow', 'CREATE_ESCROW_FAIL', error);
   }
 }
 
@@ -349,50 +349,46 @@ export class EscrowManager {
   }
 
   async isEscrowReady(escrowId: string): Promise<boolean> {
-    try {
-      const status = await this.client.getEscrowStatus(escrowId);
-      return status.status === 'created' || status.status === 'pending';
-    } catch (error) {
-      console.error('Error checking escrow status:', error);
-      return false;
-    }
+    const status = await this.client.getEscrowStatus(escrowId);
+    return status.status === 'created' || status.status === 'pending';
   }
 
-  async getEscrowDetails(escrowId: string): Promise<EscrowStatus | null> {
-    try {
-      return await this.client.getEscrowStatus(escrowId);
-    } catch (error) {
-      console.error('Error fetching escrow details:', error);
-      return null;
-    }
+  async getEscrowDetails(escrowId: string): Promise<EscrowStatus> {
+    return await this.client.getEscrowStatus(escrowId);
   }
 
   async releasePayment(escrowId: string, amount?: number): Promise<boolean> {
-    try {
-      const result = await this.client.releaseEscrow({
+    const result = await this.client.releaseEscrow({
+      escrowId,
+      amount: amount?.toFixed(2),
+      reason: 'Successful check-in completed',
+    });
+
+    if (!result.success) {
+      throw new EscrowError('Failed to release payment', 'RELEASE_PAYMENT_FAIL', {
         escrowId,
-        amount: amount?.toFixed(2),
-        reason: 'Successful check-in completed',
+        amount,
       });
-      return result.success;
-    } catch (error) {
-      console.error('Error releasing payment:', error);
-      return false;
     }
+
+    return result.success;
   }
 
   async releaseDeposit(escrowId: string, amount?: number): Promise<boolean> {
-    try {
-      const result = await this.client.releaseEscrow({
+    const result = await this.client.releaseEscrow({
+      escrowId,
+      amount: amount?.toFixed(2),
+      reason: 'Successful checkout, no damages',
+    });
+
+    if (!result.success) {
+      throw new EscrowError('Failed to release deposit', 'RELEASE_DEPOSIT_FAIL', {
         escrowId,
-        amount: amount?.toFixed(2),
-        reason: 'Successful checkout, no damages',
+        amount,
       });
-      return result.success;
-    } catch (error) {
-      console.error('Error releasing deposit:', error);
-      return false;
     }
+
+    return result.success;
   }
 }
 

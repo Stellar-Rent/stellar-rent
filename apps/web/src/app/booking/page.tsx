@@ -20,7 +20,7 @@ interface BookingPageProps {
 type BookingFlowStep = 'form' | 'payment' | 'confirmation';
 
 export default function BookingPage({ params }: BookingPageProps) {
-  const { theme } = useTheme();
+  const { theme: _theme } = useTheme();
   const _router = useRouter();
   const { isConnected, connect, publicKey } = useWallet();
 

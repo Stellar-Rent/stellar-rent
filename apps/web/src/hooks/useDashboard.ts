@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from 'react';
-import { bookingAPI, dashboardAPI, handleAPIError, profileAPI, walletAPI } from '../services/api';
 import type { DashboardBooking, Transaction, UserProfile } from '../types';
 
 interface UseDashboardProps {

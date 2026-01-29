@@ -4,7 +4,7 @@ import BookingHistory from '@/components/dashboard/BookingHistory';
 import NotificationSystem from '@/components/dashboard/NotificationSystem';
 import ProfileManagement from '@/components/dashboard/ProfileManagement';
 import PropertyManagement from '@/components/dashboard/PropertyManagement';
-import RoleGuard from '@/hooks/auth/RoleGuard';
+import { RoleGuard } from '@/components/guards/RoleGuard';
 import { useRealTimeNotifications } from '@/hooks/useRealTimeUpdates';
 import { Calendar, DollarSign, Settings, User, Wallet } from 'lucide-react';
 import Image from 'next/image';
@@ -201,6 +201,7 @@ const HostDashboard = () => {
         {/* Header */}
         <header className="bg-white dark:bg-card/90 dark:text-foreground shadow-sm border-b">
           <div className="w-full px-4 sm:px-6 lg:px-8">
+            <Breadcrumb className="pt-4" />
             <div className="flex justify-between items-center h-16">
               <div className="flex items-center">
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Host Dashboard</h1>

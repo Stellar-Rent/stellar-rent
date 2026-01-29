@@ -3,21 +3,12 @@
 import BookingHistory from '@/components/dashboard/BookingHistory';
 import NotificationSystem from '@/components/dashboard/NotificationSystem';
 import ProfileManagement from '@/components/dashboard/ProfileManagement';
-import RoleGuard from '@/hooks/auth/RoleGuard';
+import { RoleGuard } from '@/components/guards/RoleGuard';
 import {
-  Activity,
-  AlertCircle,
   BarChart3,
-  Bath,
-  Bed,
-  Bell,
   Calendar,
   Check,
   CheckCircle,
-  ChevronDown,
-  ChevronRight,
-  Clock,
-  CreditCard,
   DollarSign,
   Download,
   Edit3,
@@ -25,24 +16,19 @@ import {
   Filter,
   Home,
   Info,
+  LogOut,
   MapPin,
   MessageSquare,
   PieChart,
-  Plus,
-  Search,
   Settings,
   Star,
-  Trash2,
-  TrendingUp,
   User,
-  Users,
   Wallet,
-  X,
-  XCircle,
 } from 'lucide-react';
 import Image from 'next/image';
-import type React from 'react';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { useAuth } from '~/hooks/auth/use-auth';
 
 interface Booking {
   id: string;
@@ -187,6 +173,8 @@ const mockTransactions = [
 ];
 
 const TenantDashboard = () => {
+  const router = useRouter();
+  const { logout } = useAuth();
   const [activeTab, setActiveTab] = useState('bookings');
   const [bookings, setBookings] = useState(mockBookings);
   const [user, setUser] = useState(mockUser);
@@ -330,6 +318,7 @@ const TenantDashboard = () => {
       <div className="min-h-screen bg-gray-50 bg-gradient-to-b from-white to-blue-50 dark:from-[#0B1D39] dark:to-[#071429] dark:text-white">
         <header className="bg-white dark:bg-card/90 dark:text-foreground shadow-sm border-b">
           <div className="w-full px-4 sm:px-6 lg:px-8">
+            <Breadcrumb className="pt-4" />
             <div className="flex justify-between items-center h-16">
               <div className="flex items-center">
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -360,6 +349,18 @@ const TenantDashboard = () => {
                     {user.name}
                   </span>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    logout();
+                    router.push('/login');
+                  }}
+                  className="flex items-center space-x-1 text-gray-500 dark:text-white hover:text-red-500 dark:hover:text-red-400 transition-colors"
+                  title="Logout"
+                >
+                  <LogOut className="w-5 h-5" />
+                  <span className="text-sm hidden sm:inline">Logout</span>
+                </button>
               </div>
             </div>
           </div>

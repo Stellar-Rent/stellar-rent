@@ -8,10 +8,7 @@ import {
   Clock,
   Download,
   Edit,
-  Eye,
-  Filter,
   Plus,
-  Settings,
   Trash2,
   X,
 } from 'lucide-react';

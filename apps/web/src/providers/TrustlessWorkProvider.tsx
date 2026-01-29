@@ -4,8 +4,6 @@ import {
   TrustlessWorkConfig,
   // development environment = "https://dev.api.trustlesswork.com"
   development,
-  // mainnet environment = "https://api.trustlesswork.com"
-  mainNet,
 } from '@trustless-work/escrow';
 import type React from 'react';
 

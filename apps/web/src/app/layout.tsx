@@ -26,6 +26,11 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <meta name="color-scheme" content="light dark" />
+        <meta
+          httpEquiv="Permissions-Policy"
+          content="identity-credentials-get=(), publickey-credentials-get=()"
+        />
+        <script src="https://accounts.google.com/gsi/client" async defer />
       </head>
       <body className={`${geist.className} bg-[#0B1221] min-h-screen antialiased text-white`}>
         <div id="theme-portal-root" />

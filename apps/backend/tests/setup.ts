@@ -1,16 +1,56 @@
-import { afterAll, beforeAll } from 'bun:test';
+import { afterAll, beforeAll, beforeEach, mock } from 'bun:test';
 import { config } from 'dotenv';
+import { setupSupabaseMock } from './mocks/supabase.mock.setup';
 
 // Load environment variables for testing
 config({ path: '.env.test' });
 
-// Load blockchain mocks before any SUT imports
-import './mocks/blockchain.mocks';
+// Mock Stellar SDK RPC module for tests BEFORE any imports
+// This prevents module resolution errors when sync.service.ts is imported
+mock.module('@stellar/stellar-sdk/rpc', () => {
+  class MockServer {
+    constructor(_url: string) {
+      // Mock server constructor
+    }
+    async getLatestLedger() {
+      return Promise.resolve({ sequence: 1000 });
+    }
+    async getContractEvents() {
+      return Promise.resolve({ events: [] });
+    }
+  }
+  return {
+    Server: MockServer,
+    default: { Server: MockServer },
+  };
+});
+
+// Also mock the lib/rpc path that sync.service.ts was trying to use
+mock.module('@stellar/stellar-sdk/lib/rpc', () => {
+  class MockServer {
+    constructor(_url: string) {
+      // Mock server constructor
+    }
+    async getLatestLedger() {
+      return Promise.resolve({ sequence: 1000 });
+    }
+    async getContractEvents() {
+      return Promise.resolve({ events: [] });
+    }
+  }
+  return {
+    Server: MockServer,
+    default: { Server: MockServer },
+  };
+});
 
 // Set test environment variables
 Object.defineProperty(process.env, 'NODE_ENV', { value: 'test', writable: true });
 Object.defineProperty(process.env, 'JWT_SECRET', { value: 'test-secret-key', writable: true });
 Object.defineProperty(process.env, 'STELLAR_NETWORK', { value: 'testnet', writable: true });
+Object.defineProperty(process.env, 'USE_MOCK', { value: 'true', writable: true });
+Object.defineProperty(process.env, 'STELLAR_SECRET_KEY', { value: 'SBTESTXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX', writable: true });
+Object.defineProperty(process.env, 'SOROBAN_RPC_URL', { value: 'https://soroban-testnet.stellar.org', writable: true });
 Object.defineProperty(process.env, 'TRUSTLESS_WORK_API_URL', {
   value: 'https://api.test.trustlesswork.com',
   writable: true,
@@ -38,6 +78,14 @@ Object.defineProperty(process.env, 'SUPABASE_SERVICE_ROLE_KEY', {
 Object.defineProperty(process.env, 'SYNC_POLL_INTERVAL', {
   value: '1000',
   writable: true,
+});
+
+// Setup Supabase mock before any modules import the client
+setupSupabaseMock();
+
+beforeEach(() => {
+  // Ensure module mock stays registered even if tests call mock.restore()
+  setupSupabaseMock();
 });
 
 // Suppress console logs during tests unless explicitly needed

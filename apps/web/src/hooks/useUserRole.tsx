@@ -1,7 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+<<<<<<< HEAD
 // @ts-ignore: Alias resolution issue
+=======
+>>>>>>> origin/main
 import { profileAPI } from '~/services/api';
 // @ts-ignore: Alias resolution issue
 import type { RoleInfo, UserRole } from '~/types/roles';
@@ -46,9 +49,15 @@ export function useUserRole(): UseUserRoleReturn {
         setIsLoading(true);
 
         try {
+<<<<<<< HEAD
           const response = await profileAPI.getUserProfile(userId);
           // biome-ignore lint/suspicious/noExplicitAny: API data handling
           const profile = (response.data as any) || {};
+=======
+          const userId = user.publicKey || 'unknown';
+          const response = await profileAPI.getUserProfile(userId);
+          const profile = response.data;
+>>>>>>> origin/main
 
           const hostStatus = profile.hostStatus;
           const hasProperties = profile.hasProperties || false;
@@ -113,4 +122,8 @@ export function useUserRole(): UseUserRoleReturn {
   }, [user, isAuthenticated]);
 
   return { ...roleInfo, isLoading };
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/main

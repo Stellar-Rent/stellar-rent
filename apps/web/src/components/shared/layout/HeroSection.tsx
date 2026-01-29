@@ -72,7 +72,7 @@ export const HeroSection = () => {
               )}
               asChild
             >
-              <Link href="/list/create">
+              <Link href="/list">
                 List My Property{' '}
                 <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
               </Link>

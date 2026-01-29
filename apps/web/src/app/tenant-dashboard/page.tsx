@@ -6,6 +6,7 @@ import {
   ChevronDown,
   Home,
   Loader2,
+  LogOut,
   RefreshCw,
   Search,
   Settings,
@@ -18,21 +19,22 @@ import { useEffect, useRef, useState } from 'react';
 
 import BookingHistory from '@/components/dashboard/BookingHistory';
 import NotificationSystem from '@/components/dashboard/NotificationSystem';
+import { useAuth } from '@/hooks/auth/use-auth';
 import { useDashboard } from '@/hooks/useDashboard';
+import { profileAPI } from '@/services/api';
 import { transformFromLegacyUser, transformToLegacyBooking, transformToLegacyUser } from '@/types';
 import type {
   LegacyBooking as BookingType,
   Notification,
-  Transaction,
   LegacyUserProfile as UserProfile,
 } from '@/types';
-import BookingCard from './components/booking-card';
 import { BookingModal, CancelModal } from './components/modal';
 import ProfileManagement from './components/profile-management';
 import WalletTransactions from './components/wallet-transaction';
 
 const TenantDashboard: React.FC = () => {
   const router = useRouter();
+  const { logout } = useAuth();
   const [activeTab, setActiveTab] = useState<'bookings' | 'profile' | 'wallet'>('bookings');
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
@@ -163,7 +165,8 @@ const TenantDashboard: React.FC = () => {
         return false;
       }
 
-      const success = await apiUploadAvatar(user.id, file);
+      const response = await profileAPI.uploadAvatar(user.id, file);
+      const success = response && !('error' in response);
       if (success) {
         showToast('Avatar uploaded successfully', 'success');
         // Refresh user data to get updated avatar
@@ -194,7 +197,8 @@ const TenantDashboard: React.FC = () => {
         return false;
       }
 
-      const success = await apiDeleteAccount(user.id);
+      const response = await profileAPI.deleteAccount(user.id);
+      const success = response && !('error' in response);
       if (success) {
         showToast('Account deleted successfully', 'success');
         // Redirect to home page after account deletion
@@ -382,6 +386,18 @@ const TenantDashboard: React.FC = () => {
                   </span>
                 </div>
               )}
+              <button
+                type="button"
+                onClick={() => {
+                  logout();
+                  router.push('/login');
+                }}
+                className="flex items-center space-x-1 text-gray-500 dark:text-white hover:text-red-500 dark:hover:text-red-400 transition-colors"
+                title="Logout"
+              >
+                <LogOut className="w-5 h-5" />
+                <span className="text-sm hidden sm:inline">Logout</span>
+              </button>
             </div>
           </div>
         </div>

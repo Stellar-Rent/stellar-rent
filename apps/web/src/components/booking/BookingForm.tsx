@@ -28,7 +28,7 @@ interface BookingFormProps {
 }
 
 export function BookingForm({ onSubmit, propertyId }: BookingFormProps) {
-  const { isConnected, publicKey } = useWallet();
+  const { isConnected: _isConnected, publicKey: _publicKey } = useWallet();
   const [selectedDates, setSelectedDates] = useState<DateRange | undefined>({
     from: undefined,
     to: undefined,

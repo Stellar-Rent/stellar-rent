@@ -64,7 +64,7 @@ export default function FilterSidebar({
 
   useEffect(() => {
     onFiltersChange({ price, amenities, rating });
-  }, [price, amenities, rating]);
+  }, [price, amenities, rating, onFiltersChange]);
 
   return (
     <aside
