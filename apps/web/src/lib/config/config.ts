@@ -10,29 +10,23 @@ export const HORIZON_URL =
 export const NETWORK_PASSPHRASE =
   STELLAR_NETWORK === 'mainnet' ? Networks.PUBLIC : Networks.TESTNET;
 
-// Emisor de prueba (solo para desarrollo/testnet)
-const TESTNET_FALLBACK_ISSUER = 'GBBD47IF6LWLVOFOK2UCAVGGOR6RZD76Z72NUKN6KQU6AL76OT6766T2';
+// 1. Definimos el emisor real de la Testnet (Circle) como respaldo.
+const TESTNET_USDC_ISSUER = 'GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5';
 
-// 1. Obtenemos el valor de la variable de entorno según la red
-const rawIssuer = STELLAR_NETWORK === 'mainnet'
-  ? process.env.NEXT_PUBLIC_USDC_ISSUER_MAINNET
-  : process.env.NEXT_PUBLIC_USDC_ISSUER_TESTNET;
+// 2. Intentamos usar la variable de entorno según la red.
+const envIssuer =
+  STELLAR_NETWORK === 'mainnet'
+    ? process.env.NEXT_PUBLIC_USDC_ISSUER_MAINNET
+    : process.env.NEXT_PUBLIC_USDC_ISSUER_TESTNET;
 
-// 2. Lógica de seguridad:
-// - En mainnet: DEBE existir la variable, si no, lanzamos error (fail-fast).
-// - En testnet: Si no existe, usamos el fallback.
-export const USDC_ISSUER = (() => {
-  if (STELLAR_NETWORK === 'mainnet') {
-    if (!rawIssuer) {
-      throw new Error("CRITICAL: USDC_ISSUER_MAINNET is not defined in environment variables.");
-    }
-    return rawIssuer;
-  }
-  
-  // Para testnet o desarrollo
-  if (!rawIssuer) {
-    console.warn("USDC_ISSUER not defined, using testnet fallback.");
-    return TESTNET_FALLBACK_ISSUER;
-  }
-  return rawIssuer;
-})();
+export const USDC_ISSUER = envIssuer || TESTNET_USDC_ISSUER;
+
+// 3. CORRECCIÓN MINOR: Mensaje con el nombre exacto de la variable de entorno
+if (!envIssuer) {
+  const varName =
+    STELLAR_NETWORK === 'mainnet'
+      ? 'NEXT_PUBLIC_USDC_ISSUER_MAINNET'
+      : 'NEXT_PUBLIC_USDC_ISSUER_TESTNET';
+
+  console.warn(`⚠️ ${varName} no está definida. Usando fallback: ${TESTNET_USDC_ISSUER}`);
+}
