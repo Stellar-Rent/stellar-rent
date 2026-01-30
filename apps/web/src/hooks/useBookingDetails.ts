@@ -49,7 +49,7 @@ export function useBookingDetails(bookingId: string): UseBookingDetailsReturn {
         id: data.id || bookingId,
         property: {
           title: data.property?.title || 'Unknown Property',
-          image: data.property?.image || '/images/property-placeholder.jpg',
+          image: data.property?.image || '/images/property-placeholder.webp',
         },
         dates: {
           from: data.dates?.from ? new Date(data.dates.from) : new Date(),

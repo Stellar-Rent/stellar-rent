@@ -1,5 +1,6 @@
 'use client';
 
+import { Spinner } from '@/components/ui/loading-skeleton';
 import { useTheme } from 'next-themes';
 import dynamic from 'next/dynamic';
 import React from 'react';
@@ -12,8 +13,8 @@ const ThemeProvider = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="min-h-screen bg-background text-foreground">
-        <div className="container mx-auto p-4">Cargando...</div>
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
+        <Spinner size="lg" label="Loading application..." />
       </div>
     ),
   }
@@ -41,8 +42,8 @@ export function Providers({ children }: ProvidersProps) {
 
   if (!mounted) {
     return (
-      <div className="min-h-screen bg-background text-foreground">
-        <div className="container mx-auto p-4">Cargando...</div>
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
+        <Spinner size="lg" label="Initializing..." />
       </div>
     );
   }

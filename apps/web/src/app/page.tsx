@@ -1,11 +1,14 @@
+'use client';
+
 import { SearchBar } from '@/components/features/search/SearchBar';
 import { RightSidebar } from '@/components/layout/RightSidebar';
 import PropertyGrid from '@/components/search/PropertyGrid';
+import { useProperties } from '@/hooks/useProperties'; // Keep this import
 import { House } from 'lucide-react';
-import Image from 'next/image';
-import { Suspense } from 'react';
 
 export default function Home() {
+  const { properties, isLoading, error, refresh } = useProperties();
+
   return (
     <div className="flex w-full min-h-screen">
       <main className="flex flex-1 flex-col w-full min-h-screen px-5 pr-16">
@@ -19,15 +22,16 @@ export default function Home() {
           <div className="flex items-center gap-2 mb-4">
             <span className="text-white text-sm bg-secondary p-2 px-4 rounded-full flex items-center gap-2">
               <House className="w-4 h-4" />
-              Showing 23 properties
+              Showing {properties.length} properties
             </span>
           </div>
 
-          <Suspense
-            fallback={<div className="py-16 text-center text-white">Loading properties...</div>}
-          >
-            <PropertyGrid />
-          </Suspense>
+          <PropertyGrid
+            properties={properties}
+            isLoading={isLoading}
+            error={error}
+            onRetry={refresh}
+          />
         </section>
       </main>
 

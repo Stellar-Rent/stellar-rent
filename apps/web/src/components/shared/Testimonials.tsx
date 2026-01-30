@@ -19,7 +19,7 @@ const testimonials: Testimonial[] = [
     role: 'Digital Nomad',
     quote:
       'StellarRent has transformed how I find accommodations during my travels. The crypto payment option means I can book instantly without currency exchange hassles.',
-    avatar: '/images/avatar-1.jpg',
+    avatar: '/images/avatar-1.webp',
   },
   {
     id: 2,
@@ -27,7 +27,7 @@ const testimonials: Testimonial[] = [
     role: 'Property Owner',
     quote:
       'As a property owner, I love the simplicity of receiving payments directly in cryptocurrency. The platform is intuitive and the support team is always responsive.',
-    avatar: '/images/avatar-2.jpg',
+    avatar: '/images/avatar-2.webp',
   },
   {
     id: 3,
@@ -35,7 +35,7 @@ const testimonials: Testimonial[] = [
     role: 'Business Traveler',
     quote:
       'The seamless booking process and transparent pricing make StellarRent my go-to platform for business trips. Being able to pay with crypto is the cherry on top.',
-    avatar: '/images/avatar-3.jpg',
+    avatar: '/images/avatar-3.webp',
   },
 ];
 

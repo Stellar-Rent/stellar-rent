@@ -6,7 +6,7 @@ import ProfileManagement from '@/components/dashboard/ProfileManagement';
 import PropertyManagement from '@/components/dashboard/PropertyManagement';
 import { RoleGuard } from '@/components/guards/RoleGuard';
 import { useRealTimeNotifications } from '@/hooks/useRealTimeUpdates';
-import { Calendar, DollarSign, Settings, User, Wallet } from 'lucide-react';
+import { Calendar, DollarSign, Loader2, RefreshCw, Settings, User, Wallet } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
 import { AddPropertyModal } from './components/AddPropertyModal';
@@ -17,15 +17,20 @@ import { EarningsStats } from './components/EarningsStats';
 import { PaymentMethods } from './components/PaymentMethods';
 import { PayoutHistory } from './components/PayoutHistory';
 import { RecentTransactions } from './components/RecentTransactions';
-import { mockBookings, mockEarnings, mockProperties, mockUser } from './mockData';
+import { mockEarnings, mockProperties, mockUser } from './mockData';
 import type { Property, UserProfile } from './types';
+
+import { ErrorDisplay } from '@/components/ui/error-display';
+import { useDashboard } from '@/hooks/useDashboard';
+import { type UserProfile as ApiUserProfile } from '@/types';
+import type { Booking } from '@/types/shared';
+import Breadcrumb from '~/components/ui/breadcrumb';
 
 const HostDashboard = () => {
   const [activeTab, setActiveTab] = useState('properties');
-  const [properties, setProperties] = useState(mockProperties);
-  const [selectedProperty, _setSelectedProperty] = useState<Property | null>(null);
   const [showCalendarModal, setShowCalendarModal] = useState(false);
   const [showAddPropertyModal, setShowAddPropertyModal] = useState(false);
+  const [selectedProperty, _setSelectedProperty] = useState<Property | null>(null);
   const [selectedDates, setSelectedDates] = useState<Set<string>>(new Set());
   const [newProperty, setNewProperty] = useState({
     title: '',
@@ -40,8 +45,38 @@ const HostDashboard = () => {
     images: [] as string[],
     rules: '',
   });
-  const [user, setUser] = useState(mockUser);
-  const [bookings, setBookings] = useState(mockBookings);
+
+  const {
+    bookings: apiBookings,
+    user: apiUser,
+    isLoadingBookings,
+    isLoadingProfile,
+    bookingsError,
+    profileError,
+    refetchAll,
+    cancelBooking: apiCancelBooking,
+    updateProfile: apiUpdateProfile,
+    uploadAvatar: apiUploadAvatar,
+  } = useDashboard({ userId: 'host-1', userType: 'host' });
+
+  const user = apiUser || mockUser;
+  const bookings: Booking[] = apiBookings.map((b) => ({
+    id: b.id,
+    propertyTitle: b.propertyTitle,
+    propertyImage: b.propertyImage,
+    location: b.propertyLocation,
+    checkIn: b.checkIn,
+    checkOut: b.checkOut,
+    guests: b.guests,
+    totalAmount: b.totalAmount,
+    status: b.status as 'pending' | 'confirmed' | 'completed' | 'cancelled',
+    bookingDate: b.bookingDate,
+    propertyId: '1',
+    canCancel: true,
+    canReview: b.status === 'completed',
+  }));
+
+  const [properties, setProperties] = useState(mockProperties);
 
   const {
     notifications,
@@ -51,7 +86,11 @@ const HostDashboard = () => {
     markAllAsRead: handleMarkAllAsRead,
     deleteNotification: handleDeleteNotification,
     deleteAllNotifications: handleDeleteAllNotifications,
-  } = useRealTimeNotifications(user.id);
+  } = useRealTimeNotifications(user.id.toString());
+
+  const handleRefresh = async () => {
+    await refetchAll();
+  };
 
   const handleAddProperty = (e: React.FormEvent) => {
     e.preventDefault();
@@ -116,25 +155,16 @@ const HostDashboard = () => {
 
   const handleCancelBooking = async (bookingId: string) => {
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      setBookings((prev) =>
-        prev.map((booking) =>
-          booking.id === bookingId
-            ? { ...booking, status: 'cancelled' as const, canCancel: false }
-            : booking
-        )
-      );
-
+      await apiCancelBooking(bookingId);
       addNotification({
         id: Date.now().toString(),
-        type: 'booking',
+        type: 'booking' as const,
         title: 'Booking Cancelled',
         message: 'A booking has been cancelled',
         priority: 'medium',
         isRead: false,
         createdAt: new Date().toISOString(),
-        userId: user.id,
+        userId: user.id.toString(),
       });
     } catch (error) {
       console.error('Failed to cancel booking:', error);
@@ -143,19 +173,32 @@ const HostDashboard = () => {
 
   const handleUpdateProfile = async (updatedProfile: Partial<UserProfile>) => {
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      if (!apiUser) return;
 
-      setUser((prev) => ({ ...prev, ...updatedProfile }));
+      const safeUpdates = {
+        ...updatedProfile,
+        preferences: updatedProfile.preferences
+          ? {
+              currency: apiUser.preferences?.currency || 'USD',
+              language: apiUser.preferences?.language || 'en',
+              notifications: updatedProfile.preferences.notifications,
+              emailNotifications: updatedProfile.preferences.emailUpdates,
+              marketingEmails: apiUser.preferences?.marketingEmails,
+            }
+          : apiUser.preferences,
+      };
+
+      await apiUpdateProfile({ ...apiUser, ...safeUpdates } as unknown as ApiUserProfile);
 
       addNotification({
         id: Date.now().toString(),
-        type: 'system',
+        type: 'system' as const,
         title: 'Profile Updated',
         message: 'Your profile has been successfully updated',
         priority: 'low',
         isRead: false,
         createdAt: new Date().toISOString(),
-        userId: user.id,
+        userId: user.id.toString(),
       });
     } catch (error) {
       console.error('Failed to update profile:', error);
@@ -164,20 +207,16 @@ const HostDashboard = () => {
 
   const handleUploadAvatar = async (file: File) => {
     try {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      const avatarUrl = URL.createObjectURL(file);
-      setUser((prev) => ({ ...prev, avatar: avatarUrl }));
-
+      await apiUploadAvatar(user.id.toString(), file);
       addNotification({
         id: Date.now().toString(),
-        type: 'system',
+        type: 'system' as const,
         title: 'Avatar Updated',
         message: 'Your profile picture has been successfully updated',
         priority: 'low',
         isRead: false,
         createdAt: new Date().toISOString(),
-        userId: user.id,
+        userId: user.id.toString(),
       });
     } catch (error) {
       console.error('Failed to upload avatar:', error);
@@ -205,8 +244,20 @@ const HostDashboard = () => {
             <div className="flex justify-between items-center h-16">
               <div className="flex items-center">
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Host Dashboard</h1>
+                {(isLoadingBookings || isLoadingProfile) && (
+                  <Loader2 className="w-5 h-5 animate-spin text-blue-500 ml-3" />
+                )}
               </div>
               <div className="flex items-center space-x-4">
+                <button
+                  type="button"
+                  onClick={handleRefresh}
+                  className="text-gray-500 dark:text-white hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+                >
+                  <RefreshCw
+                    className={`w-6 h-6 ${isLoadingBookings || isLoadingProfile ? 'animate-spin' : ''}`}
+                  />
+                </button>
                 <NetworkStatus isConnected={true} />
                 <NotificationSystem
                   notifications={notifications.map((notification) => ({
@@ -316,14 +367,23 @@ const HostDashboard = () => {
                 </p>
               </div>
 
-              {/* Statistics Cards */}
-              <BookingStats bookings={bookings} />
-
-              <BookingHistory
-                bookings={bookings}
-                onCancelBooking={handleCancelBooking}
-                isLoading={false}
-              />
+              {bookingsError ? (
+                <ErrorDisplay
+                  message={bookingsError}
+                  onRetry={handleRefresh}
+                  title="Failed to load bookings"
+                />
+              ) : (
+                <>
+                  <BookingStats bookings={bookings} />
+                  <BookingHistory
+                    bookings={bookings}
+                    onCancelBooking={handleCancelBooking}
+                    isLoading={isLoadingBookings}
+                    onRefresh={handleRefresh}
+                  />
+                </>
+              )}
             </div>
           )}
 
@@ -348,14 +408,35 @@ const HostDashboard = () => {
             </div>
           )}
 
-          {activeTab === 'profile' && (
-            <ProfileManagement
-              user={user}
-              onUpdateProfile={handleUpdateProfile}
-              onUploadAvatar={handleUploadAvatar}
-              isLoading={false}
-            />
-          )}
+          {activeTab === 'profile' &&
+            (profileError ? (
+              <ErrorDisplay
+                message={profileError}
+                onRetry={handleRefresh}
+                title="Failed to load profile"
+              />
+            ) : (
+              <ProfileManagement
+                user={{
+                  ...user,
+                  totalSpent: user.totalSpent || 0,
+                  totalBookings: user.totalBookings || 0,
+                  preferences: {
+                    notifications: user.preferences?.notifications ?? true,
+                    emailUpdates:
+                      // biome-ignore lint/suspicious/noExplicitAny: Handling legacy user types compatibility
+                      (user.preferences as any)?.emailNotifications ??
+                      // biome-ignore lint/suspicious/noExplicitAny: Handling legacy user types compatibility
+                      (user.preferences as any)?.emailUpdates ??
+                      true,
+                    pushNotifications: false,
+                  },
+                }}
+                onUpdateProfile={handleUpdateProfile}
+                onUploadAvatar={handleUploadAvatar}
+                isLoading={isLoadingProfile}
+              />
+            ))}
 
           {activeTab === 'wallet' && (
             <div>
