@@ -29,8 +29,8 @@ export function Providers({ children }: ProvidersProps) {
 
   if (!mounted) {
     return (
-      <div className="min-h-screen bg-background text-foreground">
-        <div className="container mx-auto p-4">Cargando...</div>
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
+        <Spinner size="lg" label="Initializing..." />
       </div>
     );
   }

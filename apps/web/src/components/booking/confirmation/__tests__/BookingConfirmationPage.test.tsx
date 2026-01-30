@@ -20,7 +20,7 @@ const mockBookingData: BookingData = {
   id: 'BK123456789',
   property: {
     title: 'Luxury Beachfront Villa',
-    image: '/images/property-placeholder.jpg',
+    image: '/images/property-placeholder.webp',
   },
   dates: {
     from: new Date('2024-03-15'),

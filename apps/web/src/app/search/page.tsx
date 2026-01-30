@@ -19,6 +19,7 @@ export default function SearchPage() {
   const PAGE_SIZE = 3;
   const [sortOrder, setSortOrder] = useState('price_asc');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState({
     price: 0,
     amenities: {} as Record<string, boolean>,
@@ -110,8 +111,16 @@ export default function SearchPage() {
 
           <div className="flex flex-col lg:flex-row">
             <div className="w-full">
-              <PropertyGrid properties={visibleProperties} onLoadMore={loadNextPage} />
-              {isLoading && <p className="text-center my-4">Loading more properties...</p>}
+              <PropertyGrid
+                properties={visibleProperties}
+                onLoadMore={loadNextPage}
+                isLoading={isLoading}
+                error={error}
+                onRetry={() => {
+                  setError(null);
+                  loadNextPage();
+                }}
+              />
             </div>
 
             <div className="w-full lg:w-[40%] h-[300px] lg:h-[70vh] mt-4 lg:mt-12 rounded-2xl border m-0 lg:m-6 block">
