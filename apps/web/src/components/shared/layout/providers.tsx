@@ -1,44 +1,31 @@
 'use client';
 
-import { Spinner } from '@/components/ui/loading-skeleton';
-import { useTheme } from 'next-themes';
-import dynamic from 'next/dynamic';
+import { ThemeProvider, useTheme } from 'next-themes';
 import React from 'react';
 import { AuthProvider } from '~/hooks/auth/use-auth';
 import { StellarProvider } from '~/hooks/stellar/stellar-context';
 import { TrustlessWorkProvider } from '~/providers/TrustlessWorkProvider';
 
-const ThemeProvider = dynamic(
-  () => import('next-themes').then((mod) => ({ default: mod.ThemeProvider })),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
-        <Spinner size="lg" label="Loading application..." />
-      </div>
-    ),
-  }
-);
+/**
+ * Syncs resolved theme to theme-portal-root. Must live inside ThemeProvider.
+ */
+function ThemePortalSync() {
+  const { resolvedTheme } = useTheme();
+  React.useEffect(() => {
+    const portal =
+      typeof window !== 'undefined' ? document.getElementById('theme-portal-root') : null;
+    if (portal && resolvedTheme) portal.className = resolvedTheme;
+  }, [resolvedTheme]);
+  return null;
+}
 
 interface ProvidersProps {
   children: React.ReactNode;
 }
 
 export function Providers({ children }: ProvidersProps) {
-  const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
-
-  React.useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  React.useEffect(() => {
-    const portal =
-      typeof window !== 'undefined' ? document.getElementById('theme-portal-root') : null;
-    if (portal && resolvedTheme) {
-      portal.className = resolvedTheme;
-    }
-  }, [resolvedTheme]);
+  React.useEffect(() => setMounted(true), []);
 
   if (!mounted) {
     return (
@@ -52,17 +39,12 @@ export function Providers({ children }: ProvidersProps) {
     <ThemeProvider
       attribute="class"
       defaultTheme="system"
-      enableSystem={true}
+      enableSystem
       disableTransitionOnChange={false}
       storageKey="stellar-rent-theme"
-      value={{
-        light: 'light',
-        dark: 'dark',
-        system: 'system',
-      }}
     >
+      <ThemePortalSync />
       <StellarProvider>
-        {/* You can envolve a tanstak provider one layer up of TW in order to use mutations or whatever you need */}
         <TrustlessWorkProvider>
           <AuthProvider>{children}</AuthProvider>
         </TrustlessWorkProvider>

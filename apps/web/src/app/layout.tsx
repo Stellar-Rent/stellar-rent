@@ -1,14 +1,19 @@
-import './globals.css';
 import type { Metadata } from 'next';
 import { Geist } from 'next/font/google';
+import './globals.css';
+
 import { Toaster } from 'react-hot-toast';
 import { Providers } from '~/components/shared/layout/providers';
+import { Navbar } from '../components/layout/Navbar';
+import { RightSidebar } from '../components/layout/RightSidebar';
 
-const geist = Geist({ subsets: ['latin'] });
+const geist = Geist({
+  subsets: ['latin'],
+});
 
 export const metadata: Metadata = {
-  title: 'StellaRent',
-  description: 'Plataforma de alquiler de propiedades',
+  title: 'Stellar Rent',
+  description: 'USDC rentals on the Stellar Network',
 };
 
 export default function RootLayout({
@@ -17,7 +22,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="es" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <head>
         <meta name="color-scheme" content="light dark" />
         <meta
@@ -26,10 +31,15 @@ export default function RootLayout({
         />
         <script src="https://accounts.google.com/gsi/client" async defer />
       </head>
-      <body className={`${geist.className} min-h-screen bg-[#0B1320] text-white antialiased`}>
+      <body className={`${geist.className} bg-[#0B1221] min-h-screen antialiased text-white`}>
         <div id="theme-portal-root" />
         <Providers>
-          <main className="flex-1 flex flex-col">{children}</main>
+          <Navbar />
+          <div className="flex flex-1 overflow-hidden pt-14">
+            {/* Added pr-12 to reserve space for the fixed RightSidebar (w-12) */}
+            <main className="flex-1 flex flex-col min-w-0 pr-12">{children}</main>
+            <RightSidebar />
+          </div>
           <Toaster position="top-right" />
         </Providers>
       </body>
