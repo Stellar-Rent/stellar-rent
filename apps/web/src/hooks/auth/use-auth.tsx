@@ -19,7 +19,6 @@ import type {
   StellarSocialAccount,
 } from '~/types/auth';
 
-// Configuración del SDK
 const CONTRACT_ID =
   process.env.NEXT_PUBLIC_CONTRACT_ID || 'CALZGCSB3P3WEBLW3QTF5Y4WEALEVTYUYBC7KBGQ266GDINT7U4E74KW';
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
@@ -27,7 +26,6 @@ const STELLAR_NETWORK = (process.env.NEXT_PUBLIC_STELLAR_NETWORK || 'testnet') a
   | 'testnet'
   | 'mainnet';
 
-// Claves de localStorage
 const STORAGE_KEYS = {
   USER: 'stellar_social_user',
   AUTH_METHOD: 'stellar_social_auth_method',
@@ -53,28 +51,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [authMethod, setAuthMethod] = useState<'google' | 'freighter' | null>(null);
   const [sdk, setSdk] = useState<StellarSocialSDK | null>(null);
 
-  // Refs para acceder al estado actual en callbacks
   const sdkRef = useRef<StellarSocialSDK | null>(null);
   const setUserRef = useRef(setUser);
-  const setAccountRef = useRef(setAccount);
-  const setAuthMethodRef = useRef(setAuthMethod);
   const setIsLoadingRef = useRef(setIsLoading);
 
-  // Actualizar refs cuando cambia el estado
   useEffect(() => {
     sdkRef.current = sdk;
   }, [sdk]);
 
   useEffect(() => {
     setUserRef.current = setUser;
-    setAccountRef.current = setAccount;
-    setAuthMethodRef.current = setAuthMethod;
     setIsLoadingRef.current = setIsLoading;
   }, []);
 
-  // Inicializar SDK
   useEffect(() => {
     const initSDK = async () => {
+      // Validation to prevent initialization error if variables are missing or default
+      const isInvalidId = !GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID.includes('your-google-client-id');
+
+      if (isInvalidId) {
+        console.warn('SDK waiting for valid GOOGLE_CLIENT_ID');
+        setIsLoading(false);
+        return;
+      }
+
       try {
         const stellarSDK = new StellarSocialSDK({
           contractId: CONTRACT_ID,
@@ -87,13 +87,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } catch (error) {
         console.error('❌ Failed to initialize SDK:', error);
         toast.error('Failed to initialize authentication system');
+      } finally {
+        setIsLoading(false);
       }
     };
 
     initSDK();
   }, []);
 
-  // Restaurar sesión desde localStorage
   useEffect(() => {
     const restoreSession = () => {
       try {
@@ -107,7 +108,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const parsedUser = JSON.parse(storedUser) as SocialUser;
           setUser(parsedUser);
           setAuthMethod(storedAuthMethod);
-          console.log('✅ Session restored for:', parsedUser.name || parsedUser.publicKey);
         }
       } catch (error) {
         console.error('Error restoring session:', error);
@@ -120,14 +120,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     restoreSession();
   }, []);
 
-  // Restore account when SDK is ready and we have a stored session
   useEffect(() => {
     const restoreAccount = async () => {
       if (!sdk || !user || account) return;
 
       try {
         if (authMethod === 'freighter') {
-          // For Freighter, try to reconnect silently
           const { isConnected } = await import('@stellar/freighter-api');
           const result = await isConnected();
 
@@ -135,18 +133,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const reconnectResult = await sdk.connectFreighter();
             if (reconnectResult.success && reconnectResult.account) {
               setAccount(reconnectResult.account as StellarSocialAccount);
-              console.log('✅ Freighter account restored');
             }
           } else {
-            // Freighter not available, clear session
-            console.warn('Freighter not available, clearing session');
             clearStorage();
             setUser(null);
             setAuthMethod(null);
           }
         }
-        // For Google, user must re-authenticate to get account
-        // The UI should prompt for re-auth when account is needed
       } catch (error) {
         console.error('Error restoring account:', error);
       }
@@ -155,16 +148,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     restoreAccount();
   }, [sdk, user, authMethod, account]);
 
-  // Configurar Google OAuth cuando el SDK esté listo
   useEffect(() => {
     if (!sdk || !GOOGLE_CLIENT_ID) return;
 
     const setupGoogleOAuth = () => {
       if (typeof window !== 'undefined' && window.google?.accounts?.id) {
-        // Asignar callback global
         window.handleGoogleCredential = handleGoogleAuthComplete;
 
-        // Inicializar Google Identity Services
         window.google.accounts.id.initialize({
           client_id: GOOGLE_CLIENT_ID,
           callback: handleGoogleAuthComplete,
@@ -175,31 +165,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           itp_support: true,
           use_fedcm_for_prompt: true,
         });
-
-        console.log('✅ Google OAuth initialized');
       } else {
-        // Reintentar si el script de Google aún no ha cargado
         setTimeout(setupGoogleOAuth, 500);
       }
     };
 
-    // Esperar a que cargue el script de Google
     setTimeout(setupGoogleOAuth, 1000);
   }, [sdk]);
 
-  // Handler para autenticación con Google
   const handleGoogleAuthComplete = useCallback(async (credentialResponse: CredentialResponse) => {
     const currentSdk = sdkRef.current;
-
-    if (!credentialResponse?.credential) {
-      toast.error('No credential received from Google');
-      return;
-    }
-
-    if (!currentSdk) {
-      toast.error('SDK not initialized');
-      return;
-    }
+    if (!credentialResponse?.credential || !currentSdk) return;
 
     setIsLoadingRef.current(true);
     const toastId = toast.loading('Creating your Stellar account...');
@@ -219,30 +195,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           authMethod: 'google',
         };
 
-        // Guardar en estado
-        setUserRef.current(socialUser);
-        setAccountRef.current(stellarAccount);
-        setAuthMethodRef.current('google');
+        setUser(socialUser);
+        setAccount(stellarAccount);
+        setAuthMethod('google');
 
-        // Persistir en localStorage
         localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(socialUser));
         localStorage.setItem(STORAGE_KEYS.AUTH_METHOD, 'google');
 
         toast.success(`Welcome ${socialUser.name || 'User'}!`, { id: toastId });
-        console.log('✅ Google auth successful:', socialUser.publicKey);
       } else {
         throw new Error(result.error || 'Authentication failed');
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Error de autenticación';
+      const errorMessage = error instanceof Error ? error.message : 'Authentication error';
       toast.error(errorMessage, { id: toastId });
-      console.error('❌ Google auth failed:', error);
     } finally {
       setIsLoadingRef.current(false);
     }
   }, []);
 
-  // Login con Google (trigger manual)
   const loginWithGoogle = useCallback(
     async (credentialResponse: CredentialResponse) => {
       await handleGoogleAuthComplete(credentialResponse);
@@ -250,12 +221,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [handleGoogleAuthComplete]
   );
 
-  // Login con Freighter
   const loginWithFreighter = useCallback(async () => {
-    if (!sdk) {
-      toast.error('SDK not initialized');
-      return;
-    }
+    if (!sdk) return;
 
     setIsLoading(true);
     const toastId = toast.loading('Connecting to Freighter...');
@@ -272,73 +239,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           authMethod: 'freighter',
         };
 
-        // Guardar en estado
         setUser(socialUser);
         setAccount(stellarAccount);
         setAuthMethod('freighter');
 
-        // Persistir en localStorage
         localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(socialUser));
         localStorage.setItem(STORAGE_KEYS.AUTH_METHOD, 'freighter');
 
         toast.success('Wallet connected!', { id: toastId });
-        console.log('✅ Freighter auth successful:', socialUser.publicKey);
       } else {
         throw new Error(result.error || 'Failed to connect Freighter');
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to connect wallet';
       toast.error(errorMessage, { id: toastId });
-      console.error('❌ Freighter auth failed:', error);
     } finally {
       setIsLoading(false);
     }
   }, [sdk]);
 
-  // Logout
   const logout = useCallback(() => {
-    // Limpiar estado
     setUser(null);
     setAccount(null);
     setAuthMethod(null);
-
-    // Limpiar localStorage
     clearStorage();
 
-    // Revocar acceso de Google si estaba autenticado con Google
     if (authMethod === 'google' && window.google?.accounts?.id) {
       window.google.accounts.id.disableAutoSelect();
     }
 
     toast.success('Logged out');
-    console.log('✅ Logged out');
   }, [authMethod]);
 
-  // Obtener balance
   const getBalance = useCallback(async (): Promise<BalanceInfo[]> => {
-    if (!account) {
-      console.warn('No account available for balance check');
-      return [];
-    }
-
+    if (!account) return [];
     try {
-      const balances = await account.getBalance();
-      return balances;
-    } catch (error) {
-      console.error('Error fetching balance:', error);
+      return await account.getBalance();
+    } catch (_error) {
       return [];
     }
   }, [account]);
 
-  // Enviar pago
   const sendPayment = useCallback(
     async (to: string, amount: string, memo?: string): Promise<string> => {
-      if (!account) {
-        throw new Error('No active account');
-      }
-
+      if (!account) throw new Error('No active account');
       const toastId = toast.loading('Sending payment...');
-
       try {
         const txHash = await account.sendPayment(to, amount, undefined, memo);
         toast.success('Payment sent successfully', { id: toastId });
@@ -374,11 +319,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
-// Helper para limpiar storage
 function clearStorage() {
   localStorage.removeItem(STORAGE_KEYS.USER);
   localStorage.removeItem(STORAGE_KEYS.AUTH_METHOD);
-  // Limpiar claves legacy también
   localStorage.removeItem('user');
   localStorage.removeItem('authToken');
   localStorage.removeItem('authType');

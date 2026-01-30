@@ -3,7 +3,6 @@ import { Geist } from 'next/font/google';
 import './globals.css';
 
 import { Toaster } from 'react-hot-toast';
-// CORRECCIÓN: La ruta es ../providers porque están al mismo nivel que components
 import { Providers } from '~/components/shared/layout/providers';
 import { Navbar } from '../components/layout/Navbar';
 import { RightSidebar } from '../components/layout/RightSidebar';
@@ -14,7 +13,7 @@ const geist = Geist({
 
 export const metadata: Metadata = {
   title: 'Stellar Rent',
-  description: 'Alquileres con USDC en la red Stellar',
+  description: 'USDC rentals on the Stellar Network',
 };
 
 export default function RootLayout({

@@ -1,10 +1,9 @@
-<<<<<<< HEAD
-// @ts-ignore: Acceso a la raíz del proyecto
+// @ts-ignore: Accessing root project SDK
 export { StellarSocialSDK } from '../../../../index';
 
 /**
- * Definimos los tipos manualmente aquí para que la aplicación no los busque 
- * en el index de la raíz, evitando así los errores 2305.
+ * Manually defined types to prevent TS2305 errors when
+ * resolving types from the root directory.
  */
 export type AuthMethod = 'google' | 'apple' | 'facebook' | 'wallet';
 export type UserRole = 'guest' | 'host' | 'tenant' | 'dual';
@@ -19,15 +18,3 @@ export interface StellarUser {
   email?: string;
   role?: UserRole;
 }
-=======
-// Re-export del Stellar Social SDK para uso en la aplicación
-// Este archivo facilita las importaciones y permite cambiar la fuente del SDK fácilmente
-
-export { StellarSocialSDK } from '../../stellar-social-sdk/dist/index.esm.js';
-export type {
-  SocialAuthConfig,
-  AuthMethod,
-  AuthResult,
-  SocialAccountData,
-} from '../../stellar-social-sdk/dist/index.esm.js';
->>>>>>> origin/main

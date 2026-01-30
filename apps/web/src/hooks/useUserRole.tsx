@@ -1,10 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-<<<<<<< HEAD
 // @ts-ignore: Alias resolution issue
-=======
->>>>>>> origin/main
 import { profileAPI } from '~/services/api';
 // @ts-ignore: Alias resolution issue
 import type { RoleInfo, UserRole } from '~/types/roles';
@@ -25,7 +22,6 @@ export function useUserRole(): UseUserRoleReturn {
 
   useEffect(() => {
     const fetchUserRole = async () => {
-      // 1. Si no está autenticado o no hay usuario, retornamos guest de inmediato
       if (!isAuthenticated || !user) {
         setRoleInfo({
           role: 'guest',
@@ -36,28 +32,13 @@ export function useUserRole(): UseUserRoleReturn {
         return;
       }
 
-      // 2. Extraemos el ID. Si no existe, no llamamos a la API
-      const userId = user.publicKey || user.id;
-      if (!userId) {
-        // CORRECCIÓN: Tipamos 'prev' como RoleInfo para eliminar el error 7006
-        setRoleInfo((prev: RoleInfo) => ({ ...prev, role: 'guest' }));
-        setIsLoading(false);
-        return;
-      }
-
       try {
         setIsLoading(true);
 
         try {
-<<<<<<< HEAD
-          const response = await profileAPI.getUserProfile(userId);
-          // biome-ignore lint/suspicious/noExplicitAny: API data handling
-          const profile = (response.data as any) || {};
-=======
           const userId = user.publicKey || 'unknown';
           const response = await profileAPI.getUserProfile(userId);
-          const profile = response.data;
->>>>>>> origin/main
+          const profile = (response as any).data || {};
 
           const hostStatus = profile.hostStatus;
           const hasProperties = profile.hasProperties || false;
@@ -85,13 +66,13 @@ export function useUserRole(): UseUserRoleReturn {
           }
           localStorage.setItem('hasProperties', String(hasProperties));
         } catch (_apiError) {
-          // Fallback to localStorage if API fails
+          // Fallback to local storage if API call fails
           const storedHostStatus = localStorage.getItem('hostStatus');
           const storedHasProperties = localStorage.getItem('hasProperties') === 'true';
 
-          const validHostStatuses = ['pending', 'verified', 'rejected', 'suspended'];
+          const validStatuses = ['pending', 'verified', 'rejected', 'suspended'];
           const hostStatus =
-            storedHostStatus && validHostStatuses.includes(storedHostStatus)
+            storedHostStatus && validStatuses.includes(storedHostStatus)
               ? (storedHostStatus as 'pending' | 'verified' | 'rejected' | 'suspended')
               : undefined;
 
@@ -122,8 +103,4 @@ export function useUserRole(): UseUserRoleReturn {
   }, [user, isAuthenticated]);
 
   return { ...roleInfo, isLoading };
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/main

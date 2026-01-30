@@ -1,4 +1,5 @@
 'use client';
+
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Calendar, Home, MapPin, Star, Users, Wallet } from 'lucide-react';
@@ -13,7 +14,7 @@ export default function PropertyDetailPage() {
   const propertyId = searchParams.get('propertyId');
   const [property, setProperty] = useState<FullPropertyProps | null>(null);
 
-  const [imageError, _setImageError] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const [bookingData, setBookingData] = useState({
     checkIn: '',
     checkOut: '',
@@ -26,7 +27,6 @@ export default function PropertyDetailPage() {
     const checkInDate = new Date(checkIn);
     const checkOutDate = new Date(checkOut);
 
-    // Validate dates
     if (checkInDate >= checkOutDate) return 0;
 
     const timeDiff = checkOutDate.getTime() - checkInDate.getTime();
@@ -34,10 +34,10 @@ export default function PropertyDetailPage() {
   };
 
   const nights = calculateNights(bookingData.checkIn, bookingData.checkOut);
-  const subtotal = property && property.price * nights;
+  const subtotal = property ? property.price * nights : 0;
   const cleaningFee = 150;
   const serviceFee = 100;
-  const total = subtotal && subtotal + cleaningFee + serviceFee;
+  const total = subtotal + cleaningFee + serviceFee;
 
   useEffect(() => {
     if (propertyId) {
@@ -59,13 +59,12 @@ export default function PropertyDetailPage() {
       <button
         type="button"
         onClick={() => window.history.back()}
-        className=" text-base underline text-blue-800 dark:text-blue-400 "
+        className="text-base underline text-blue-800 dark:text-blue-400"
       >
         ← Back to Search
       </button>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-4">
-        {/* Property Images */}
         <div className="lg:col-span-2">
           <div className="relative h-[400px] w-full rounded-lg overflow-hidden">
             {!imageError ? (
@@ -83,6 +82,7 @@ export default function PropertyDetailPage() {
                       src={img}
                       alt={`${property.title} ${index + 1}`}
                       className="w-full h-full object-cover"
+                      onError={() => setImageError(true)}
                     />
                   </div>
                 ))}
@@ -124,15 +124,12 @@ export default function PropertyDetailPage() {
           <div className="mb-8">
             <h2 className="text-xl font-semibold mb-4">About this property</h2>
             <p className="text-muted-foreground mb-4">
-              This beautiful property offers a perfect blend of comfort and luxury. Located in the
-              heart of {property.location}, it provides easy access to local attractions,
-              restaurants, and transportation.
+              This property is located in {property.location}, providing access to local
+              attractions.
             </p>
             <p className="text-muted-foreground">
-              The property features modern amenities, including high-speed WiFi, a fully equipped
-              kitchen, and comfortable sleeping arrangements. Perfect for both short and long-term
-              stays, this rental property accepts cryptocurrency payments for a seamless booking
-              experience.
+              Modern amenities include high-speed WiFi and fully equipped kitchen for both short and
+              long-term stays.
             </p>
           </div>
 
@@ -149,7 +146,6 @@ export default function PropertyDetailPage() {
           </div>
         </div>
 
-        {/* Booking Card */}
         <div className="lg:col-span-1">
           <Card className="p-6 sticky top-6">
             <div className="flex items-center justify-between mb-6">
@@ -163,19 +159,13 @@ export default function PropertyDetailPage() {
                   Check-in
                 </label>
                 <div className="flex items-center border rounded-md p-2 bg-background">
-                  <Calendar className="h-5 w-5 text-muted-foreground " />
+                  <Calendar className="h-5 w-5 text-muted-foreground" />
                   <input
                     id="check-in"
                     type="date"
                     className="border-0 p-0 focus:outline-none w-full bg-transparent"
-                    placeholder="Add date"
                     value={bookingData.checkIn}
-                    onChange={(e) =>
-                      setBookingData({
-                        ...bookingData,
-                        checkIn: e.target.value,
-                      })
-                    }
+                    onChange={(e) => setBookingData({ ...bookingData, checkIn: e.target.value })}
                   />
                 </div>
               </div>
@@ -190,15 +180,9 @@ export default function PropertyDetailPage() {
                     id="check-out"
                     type="date"
                     className="border-0 p-0 focus:outline-none w-full bg-transparent"
-                    placeholder="Add date"
                     value={bookingData.checkOut}
-                    onChange={(e) =>
-                      setBookingData({
-                        ...bookingData,
-                        checkOut: e.target.value,
-                      })
-                    }
-                    min={bookingData.checkIn} // Prevent selecting checkout before checkin
+                    onChange={(e) => setBookingData({ ...bookingData, checkOut: e.target.value })}
+                    min={bookingData.checkIn}
                   />
                 </div>
               </div>
@@ -215,10 +199,7 @@ export default function PropertyDetailPage() {
                   className="border-0 p-0 focus:outline-none w-full bg-transparent"
                   value={bookingData.guests}
                   onChange={(e) =>
-                    setBookingData({
-                      ...bookingData,
-                      guests: Number(e.target.value),
-                    })
+                    setBookingData({ ...bookingData, guests: Number(e.target.value) })
                   }
                 >
                   {[...Array(property.maxGuests)].map((_, i) => (
@@ -233,9 +214,9 @@ export default function PropertyDetailPage() {
             <div className="mb-6">
               <div className="flex justify-between mb-2">
                 <span>
-                  ${property.price} × {nights || 0} nights
+                  ${property.price} × {nights} nights
                 </span>
-                <span>${subtotal || 0}</span>
+                <span>${subtotal}</span>
               </div>
               <div className="flex justify-between mb-2">
                 <span>Cleaning fee</span>
@@ -247,7 +228,7 @@ export default function PropertyDetailPage() {
               </div>
               <div className="border-t pt-2 mt-2 flex justify-between font-bold">
                 <span>Total (USDC)</span>
-                <span>${total || cleaningFee + serviceFee}</span>
+                <span>${total}</span>
               </div>
             </div>
 
@@ -256,8 +237,7 @@ export default function PropertyDetailPage() {
             </Button>
 
             <p className="text-xs text-center text-muted-foreground mt-4">
-              You won&apos;t be charged yet. Payment will be processed through our secure crypto
-              payment gateway.
+              Payment will be processed through our secure payment gateway.
             </p>
           </Card>
         </div>
