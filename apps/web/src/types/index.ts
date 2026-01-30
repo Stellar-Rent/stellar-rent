@@ -1,7 +1,5 @@
-// Re-export all types from shared file for backward compatibility
 export * from './shared';
 
-// Legacy types for backward compatibility
 export interface DashboardBooking {
   id: string;
   propertyTitle: string;
@@ -45,7 +43,6 @@ export interface UserProfile {
   verified: boolean;
   memberSince: string;
   publicKey?: string;
-  // Host-related fields
   hostStatus?: 'pending' | 'verified' | 'rejected' | 'suspended';
   hasProperties?: boolean;
   preferences?: {
@@ -85,110 +82,6 @@ export interface Transaction {
   bookingId?: number;
 }
 
-export interface APIResponse<T> {
-  success: boolean;
-  data: T;
-  message?: string;
-  error?: string;
-}
-
-export interface ConfirmPaymentInput {
-  transactionHash: string;
-}
-
-export interface ConfirmPaymentResponse {
-  bookingId: string;
-  status: string;
-  message: string;
-}
-
-export function transformToLegacyBooking(booking: DashboardBooking): LegacyBooking {
-  if (!booking) {
-    throw new Error('Invalid booking data');
-  }
-
-  return {
-    id: Number.parseInt(booking.id) || 0,
-    propertyTitle: booking.propertyTitle,
-    propertyLocation: booking.propertyLocation,
-    propertyImage: booking.propertyImage,
-    checkIn: booking.checkIn,
-    checkOut: booking.checkOut,
-    guests: booking.guests,
-    totalAmount: booking.totalAmount,
-    status:
-      booking.status === 'pending'
-        ? 'upcoming'
-        : booking.status === 'confirmed'
-          ? 'upcoming'
-          : (booking.status as 'upcoming' | 'ongoing' | 'completed' | 'cancelled'),
-    bookingDate: booking.bookingDate,
-    hostName: booking.hostName,
-    rating: booking.rating,
-    canCancel: booking.canCancel,
-  };
-}
-
-export function transformToLegacyUser(user: UserProfile): LegacyUserProfile {
-  if (!user) {
-    throw new Error('Invalid user data');
-  }
-
-  return {
-    ...user,
-    id: Number.parseInt(user.id) || 1,
-  };
-}
-
-export function transformFromLegacyUser(user: LegacyUserProfile): UserProfile {
-  if (!user) {
-    throw new Error('Invalid user data');
-  }
-
-  return {
-    ...user,
-    id: user.id.toString(),
-  };
-}
-
-declare global {
-  interface Window {
-    freighterApi?: {
-      isConnected: () => Promise<boolean>;
-      connect: () => Promise<void>;
-      disconnect: () => Promise<void>;
-      getPublicKey: () => Promise<string>;
-      getNetwork: () => Promise<string>;
-      signTransaction: (transaction: string) => Promise<string>;
-    };
-  }
-}
-
-// Dashboard Types
-export interface DashboardProperty {
-  id: number;
-  title: string;
-  location: string;
-  price: number;
-  bedrooms: number;
-  bathrooms: number;
-  guests: number;
-  rating: number;
-  reviews: number;
-  image: string;
-  status: 'active' | 'inactive' | 'maintenance';
-  bookings: number;
-  earnings: number;
-  description?: string;
-  amenities?: string[];
-  propertyType?: string;
-  rules?: string;
-  occupancyRate?: number;
-  averageRating?: number;
-  totalBookings?: number;
-  monthlyEarnings?: number;
-}
-
 export interface Notification {
   id: string;
   type: 'booking' | 'payment' | 'review' | 'system' | 'message' | 'reminder';
@@ -208,50 +101,34 @@ export interface Notification {
   };
 }
 
-export interface AnalyticsData {
-  overview: {
-    totalBookings: number;
-    totalEarnings: number;
-    averageRating: number;
-    totalProperties: number;
-    activeBookings: number;
-    completedBookings: number;
-    cancelledBookings: number;
-    totalGuests: number;
+export function transformToLegacyBooking(booking: DashboardBooking): LegacyBooking {
+  if (!booking) throw new Error('Invalid booking data');
+  return {
+    id: Number.parseInt(booking.id) || 0,
+    propertyTitle: booking.propertyTitle,
+    propertyLocation: booking.propertyLocation,
+    propertyImage: booking.propertyImage,
+    checkIn: booking.checkIn,
+    checkOut: booking.checkOut,
+    guests: booking.guests,
+    totalAmount: booking.totalAmount,
+    status:
+      booking.status === 'pending' || booking.status === 'confirmed'
+        ? 'upcoming'
+        : (booking.status as any),
+    bookingDate: booking.bookingDate,
+    hostName: booking.hostName,
+    rating: booking.rating,
+    canCancel: (booking as any).canCancel ?? true,
   };
-  trends: {
-    bookings: { date: string; count: number; revenue: number }[];
-    ratings: { date: string; average: number; count: number }[];
-    occupancy: { date: string; rate: number }[];
-  };
-  topProperties: {
-    id: number;
-    title: string;
-    bookings: number;
-    revenue: number;
-    rating: number;
-    occupancyRate: number;
-  }[];
-  revenueBreakdown: {
-    category: string;
-    amount: number;
-    percentage: number;
-  }[];
-  monthlyStats: {
-    month: string;
-    bookings: number;
-    revenue: number;
-    guests: number;
-  }[];
 }
 
-export interface PropertyCalendarBooking {
-  id: string;
-  checkIn: Date;
-  checkOut: Date;
-  status: 'confirmed' | 'pending' | 'cancelled' | 'completed';
-  guestName: string;
-  guests: number;
-  totalAmount: number;
-  propertyId: number;
+export function transformToLegacyUser(user: UserProfile): LegacyUserProfile {
+  if (!user) throw new Error('Invalid user data');
+  return {
+    ...user,
+    id: Number.parseInt(user.id) || 1,
+    phone: user.phone || '',
+    preferences: user.preferences || { currency: 'USD', language: 'en', notifications: true },
+  } as LegacyUserProfile;
 }

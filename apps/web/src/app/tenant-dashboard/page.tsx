@@ -1,14 +1,11 @@
 'use client';
 import {
   AlertCircle,
-  Bell,
   Check,
-  ChevronDown,
   Home,
   Loader2,
   LogOut,
   RefreshCw,
-  Search,
   Settings,
   User,
   Wallet,
@@ -22,7 +19,7 @@ import NotificationSystem from '@/components/dashboard/NotificationSystem';
 import { useAuth } from '@/hooks/auth/use-auth';
 import { useDashboard } from '@/hooks/useDashboard';
 import { profileAPI } from '@/services/api';
-import { transformFromLegacyUser, transformToLegacyBooking, transformToLegacyUser } from '@/types';
+import { transformToLegacyBooking, transformToLegacyUser } from '@/types';
 import type {
   LegacyBooking as BookingType,
   Notification,
@@ -38,12 +35,9 @@ const TenantDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'bookings' | 'profile' | 'wallet'>('bookings');
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
-  const [searchTerm, _setSearchTerm] = useState<string>('');
-  const [filterStatus, _setFilterStatus] = useState<string>('all');
   const [selectedBooking, setSelectedBooking] = useState<BookingType | null>(null);
   const [showBookingModal, setShowBookingModal] = useState<boolean>(false);
   const [showCancelModal, setShowCancelModal] = useState<boolean>(false);
-  const [_isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const [toast, setToast] = useState<{
@@ -53,35 +47,24 @@ const TenantDashboard: React.FC = () => {
   }>({ show: false, message: '', type: 'success' });
 
   const {
-    bookings: apiBookings,
-    user: apiUser,
-    transactions: apiTransactions,
-    walletBalance,
-    pendingTransactions,
-    isLoadingBookings,
-    isLoadingProfile,
-    isLoadingWallet,
-    bookingsError,
-    profileError,
-    walletError,
+    bookings: apiBookings = [],
+    user: apiUser = null,
+    transactions: apiTransactions = [],
+    walletBalance = 0,
+    pendingTransactions = [],
+    isLoadingBookings = false,
+    isLoadingProfile = false,
+    isLoadingWallet = false,
+    bookingsError = null,
     cancelBooking: apiCancelBooking,
     updateProfile: apiUpdateProfile,
     exportTransactions: apiExportTransactions,
     refetchAll,
     isAuthenticated,
-  } = useDashboard();
+  } = useDashboard({ userId: 'current', userType: 'tenant' }) as any;
 
-  const bookings = apiBookings.map(transformToLegacyBooking);
+  const bookings = (apiBookings || []).map(transformToLegacyBooking);
   const user = apiUser ? transformToLegacyUser(apiUser) : null;
-  const transactions = apiTransactions;
-
-  const filterOptions = [
-    { value: 'all', label: 'All Bookings' },
-    { value: 'upcoming', label: 'Upcoming' },
-    { value: 'ongoing', label: 'Ongoing' },
-    { value: 'completed', label: 'Completed' },
-    { value: 'cancelled', label: 'Cancelled' },
-  ];
 
   const showToast = (message: string, type: 'success' | 'error') => {
     setToast({ show: true, message, type });
@@ -93,49 +76,19 @@ const TenantDashboard: React.FC = () => {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsDropdownOpen(false);
+        // Lógica para cerrar dropdown si existiera
       }
     };
-
     document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const _getCurrentFilterLabel = () => {
-    const currentOption = filterOptions.find((option) => option.value === filterStatus);
-    return currentOption ? currentOption.label : 'All Bookings';
-  };
-
-  const _filteredBookings = bookings.filter((booking) => {
-    const matchesSearch =
-      booking.propertyTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      booking.propertyLocation.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterStatus === 'all' || booking.status === filterStatus;
-    return matchesSearch && matchesFilter;
-  });
-
-  const handleViewDetails = (booking: BookingType): void => {
-    setSelectedBooking(booking);
-    setShowBookingModal(true);
-  };
-
-  const handleCancelBooking = (booking: BookingType): void => {
-    setSelectedBooking(booking);
-    setShowCancelModal(true);
-  };
-
-  const handleConfirmCancel = async (bookingId: number): Promise<void> => {
+  const handleConfirmCancel = async (bookingId: number | string): Promise<void> => {
     try {
       const success = await apiCancelBooking(bookingId.toString());
-      if (success) {
-        showToast('Booking cancelled successfully', 'success');
-      } else {
-        showToast('Failed to cancel booking', 'error');
-      }
-    } catch (error) {
-      console.error('Error cancelling booking:', error);
+      if (success) showToast('Booking cancelled successfully', 'success');
+      else showToast('Failed to cancel booking', 'error');
+    } catch (_error) {
       showToast('An error occurred while cancelling the booking', 'error');
     } finally {
       setShowCancelModal(false);
@@ -145,174 +98,44 @@ const TenantDashboard: React.FC = () => {
 
   const handleUpdateUser = async (updatedUser: UserProfile): Promise<void> => {
     try {
-      const apiUser = transformFromLegacyUser(updatedUser);
-      const success = await apiUpdateProfile(apiUser);
-      if (success) {
-        showToast('Profile updated successfully', 'success');
-      } else {
-        showToast('Failed to update profile', 'error');
-      }
-    } catch (error) {
-      console.error('Error updating profile:', error);
+      const success = await apiUpdateProfile(updatedUser as any);
+      if (success) showToast('Profile updated successfully', 'success');
+      else showToast('Failed to update profile', 'error');
+    } catch (_error) {
       showToast('An error occurred while updating profile', 'error');
     }
   };
 
   const handleUploadAvatar = async (file: File): Promise<boolean> => {
     try {
-      if (!user?.id) {
-        showToast('User ID not found', 'error');
-        return false;
-      }
-
-      const response = await profileAPI.uploadAvatar(user.id, file);
-      const success = response && !('error' in response);
-      if (success) {
+      if (!user?.id) return false;
+      const response = await profileAPI.uploadAvatar(user.id.toString(), file);
+      if (response && !('error' in (response as any))) {
         showToast('Avatar uploaded successfully', 'success');
-        // Refresh user data to get updated avatar
         await refetchAll();
         return true;
       }
-
-      showToast('Failed to upload avatar', 'error');
       return false;
-    } catch (error) {
-      console.error('Error uploading avatar:', error);
-      showToast('An error occurred while uploading avatar', 'error');
+    } catch (_error) {
       return false;
     }
   };
 
   const handleDeleteAccount = async (): Promise<boolean> => {
     try {
-      if (!user?.id) {
-        showToast('User ID not found', 'error');
-        return false;
-      }
-
-      const confirmed = confirm(
-        'Are you sure you want to delete your account? This action cannot be undone.'
-      );
-      if (!confirmed) {
-        return false;
-      }
-
-      const response = await profileAPI.deleteAccount(user.id);
-      const success = response && !('error' in response);
-      if (success) {
+      if (!user?.id) return false;
+      if (!confirm('Are you sure you want to delete your account?')) return false;
+      const response = await profileAPI.deleteAccount(user.id.toString());
+      if (response && !('error' in (response as any))) {
         showToast('Account deleted successfully', 'success');
-        // Redirect to home page after account deletion
         router.push('/');
         return true;
       }
-
-      showToast('Failed to delete account', 'error');
       return false;
-    } catch (error) {
-      console.error('Error deleting account:', error);
-      showToast('An error occurred while deleting account', 'error');
+    } catch (_error) {
       return false;
     }
   };
-
-  const handleExportTransactions = (): void => {
-    apiExportTransactions();
-  };
-
-  const handleRefresh = async (): Promise<void> => {
-    await refetchAll();
-  };
-
-  const handleMarkAsRead = (id: string) => {
-    setNotifications((prev) =>
-      prev.map((notification) =>
-        notification.id === id ? { ...notification, read: true } : notification
-      )
-    );
-    setUnreadNotifications((prev) => Math.max(0, prev - 1));
-  };
-
-  const handleMarkAllAsRead = () => {
-    setNotifications((prev) => prev.map((notification) => ({ ...notification, read: true })));
-    setUnreadNotifications(0);
-  };
-
-  const handleDeleteNotification = (id: string) => {
-    setNotifications((prev) => {
-      const notificationToDelete = prev.find((notification) => notification.id === id);
-      const isUnread = notificationToDelete?.read === false;
-
-      // Only decrement unread count if the deleted notification was unread
-      if (isUnread) {
-        setUnreadNotifications((prevCount) => Math.max(0, prevCount - 1));
-      }
-
-      return prev.filter((notification) => notification.id !== id);
-    });
-  };
-
-  const handleDeleteAllNotifications = () => {
-    setNotifications([]);
-    setUnreadNotifications(0);
-  };
-
-  // Toast Component
-  const ToastNotification = () => {
-    if (!toast.show) return null;
-
-    return (
-      <div className="fixed top-4 right-4 z-50 max-w-sm">
-        <div
-          className={`rounded-lg p-4 shadow-lg ${
-            toast.type === 'success'
-              ? 'bg-green-100 border border-green-200 text-green-800'
-              : 'bg-red-100 border border-red-200 text-red-800'
-          }`}
-        >
-          <div className="flex items-center">
-            {toast.type === 'success' ? (
-              <Check className="w-5 h-5 mr-2" />
-            ) : (
-              <AlertCircle className="w-5 h-5 mr-2" />
-            )}
-            <span className="text-sm font-medium">{toast.message}</span>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const ErrorDisplay = ({
-    error,
-    onRetry,
-    title = 'Something went wrong',
-  }: {
-    error: string;
-    onRetry: () => void;
-    title?: string;
-  }) => (
-    <div className="flex items-center justify-center p-8 bg-red-50 dark:bg-red-900/20 rounded-lg">
-      <div className="text-center">
-        <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-        <h3 className="text-lg font-medium text-red-900 dark:text-red-100 mb-2">{title}</h3>
-        <p className="text-red-700 dark:text-red-300 mb-4">{error}</p>
-        <button
-          type="button"
-          onClick={onRetry}
-          className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
-        >
-          Try Again
-        </button>
-      </div>
-    </div>
-  );
-
-  const LoadingDisplay = ({ message }: { message: string }) => (
-    <div className="flex items-center justify-center p-8">
-      <Loader2 className="w-8 h-8 animate-spin text-blue-500 mr-3" />
-      <span className="text-gray-600 dark:text-gray-300">{message}</span>
-    </div>
-  );
 
   if (!isAuthenticated) {
     return (
@@ -322,13 +145,10 @@ const TenantDashboard: React.FC = () => {
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
             Authentication Required
           </h2>
-          <p className="text-gray-600 dark:text-gray-300 mb-6">
-            Please log in to access your dashboard
-          </p>
           <button
             type="button"
             onClick={() => router.push('/login')}
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+            className="bg-blue-600 text-white px-6 py-3 rounded-lg mt-4"
           >
             Go to Login
           </button>
@@ -339,7 +159,22 @@ const TenantDashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen mt-[2em] lg:mt-0 bg-gray-50 pt-[5%] bg-gradient-to-b from-white to-blue-50 dark:from-[#0B1D39] dark:to-[#071429] dark:text-white">
-      <ToastNotification />
+      {toast.show && (
+        <div className="fixed top-4 right-4 z-50 max-w-sm">
+          <div
+            className={`rounded-lg p-4 shadow-lg border ${toast.type === 'success' ? 'bg-green-100 border-green-200 text-green-800' : 'bg-red-100 border-red-200 text-red-800'}`}
+          >
+            <div className="flex items-center">
+              {toast.type === 'success' ? (
+                <Check className="w-5 h-5 mr-2" />
+              ) : (
+                <AlertCircle className="w-5 h-5 mr-2" />
+              )}
+              <span className="text-sm font-medium">{toast.message}</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       <header className="bg-white dark:bg-[#0B1D39]/90 shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -353,21 +188,30 @@ const TenantDashboard: React.FC = () => {
             <div className="flex items-center space-x-4">
               <button
                 type="button"
-                onClick={handleRefresh}
-                className="text-gray-500 dark:text-white hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
-                disabled={isLoadingBookings || isLoadingProfile || isLoadingWallet}
+                onClick={() => refetchAll()}
+                className="text-gray-500 dark:text-white hover:text-gray-700"
               >
-                <RefreshCw
-                  className={`w-6 h-6 ${isLoadingBookings || isLoadingProfile || isLoadingWallet ? 'animate-spin' : ''}`}
-                />
+                <RefreshCw className={`w-6 h-6 ${isLoadingBookings ? 'animate-spin' : ''}`} />
               </button>
               <NotificationSystem
                 notifications={notifications}
-                onMarkAsRead={handleMarkAsRead}
-                onMarkAllAsRead={handleMarkAllAsRead}
-                onDeleteNotification={handleDeleteNotification}
-                onDeleteAllNotifications={handleDeleteAllNotifications}
                 unreadCount={unreadNotifications}
+                onMarkAsRead={(id) =>
+                  setNotifications((prev) =>
+                    prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+                  )
+                }
+                onMarkAllAsRead={() => {
+                  setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+                  setUnreadNotifications(0);
+                }}
+                onDeleteNotification={(id) =>
+                  setNotifications((prev) => prev.filter((n) => n.id !== id))
+                }
+                onDeleteAllNotifications={() => {
+                  setNotifications([]);
+                  setUnreadNotifications(0);
+                }}
               />
               <button type="button" className="text-gray-500 dark:text-white">
                 <Settings className="w-6 h-6" />
@@ -381,7 +225,7 @@ const TenantDashboard: React.FC = () => {
                     height={32}
                     className="w-8 h-8 rounded-full"
                   />
-                  <span className="text-sm font-medium text-gray-700 dark:text-white">
+                  <span className="text-sm font-medium text-gray-700 dark:text-white hidden sm:inline">
                     {user.name}
                   </span>
                 </div>
@@ -392,8 +236,7 @@ const TenantDashboard: React.FC = () => {
                   logout();
                   router.push('/login');
                 }}
-                className="flex items-center space-x-1 text-gray-500 dark:text-white hover:text-red-500 dark:hover:text-red-400 transition-colors"
-                title="Logout"
+                className="flex items-center space-x-1 text-gray-500 dark:text-white hover:text-red-500"
               >
                 <LogOut className="w-5 h-5" />
                 <span className="text-sm hidden sm:inline">Logout</span>
@@ -417,7 +260,7 @@ const TenantDashboard: React.FC = () => {
                   key={tab.id}
                   type="button"
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm ${
+                  className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                     activeTab === tab.id
                       ? 'border-blue-500 text-blue-600 dark:text-blue-400'
                       : 'border-transparent text-gray-500 dark:text-white hover:border-gray-300'
@@ -435,72 +278,57 @@ const TenantDashboard: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {activeTab === 'bookings' && (
           <BookingHistory
-            bookings={bookings}
+            bookings={bookings as any}
             isLoading={isLoadingBookings}
-            onViewDetails={handleViewDetails}
-            onRefresh={handleRefresh}
+            onViewDetails={
+              ((b: any) => {
+                setSelectedBooking(b);
+                setShowBookingModal(true);
+              }) as any
+            }
+            onCancelBooking={async (id: string) => {
+              const book = bookings.find((b: any) => b.id.toString() === id);
+              if (book) {
+                setSelectedBooking(book);
+                setShowCancelModal(true);
+              }
+            }}
             error={bookingsError}
           />
         )}
 
-        {activeTab === 'profile' &&
-          (profileError ? (
-            <ErrorDisplay
-              error={profileError}
-              onRetry={handleRefresh}
-              title="Failed to load profile"
-            />
-          ) : isLoadingProfile ? (
-            <LoadingDisplay message="Loading your profile..." />
-          ) : user ? (
-            <ProfileManagement
-              user={user}
-              onUpdateProfile={handleUpdateUser}
-              onUploadAvatar={handleUploadAvatar}
-              onDeleteAccount={handleDeleteAccount}
-            />
-          ) : (
-            <div className="text-center py-12">
-              <User className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-xl font-medium text-gray-900 dark:text-white mb-2">
-                Profile not found
-              </h3>
-              <p className="text-gray-600 dark:text-white">
-                Unable to load your profile information
-              </p>
-            </div>
-          ))}
+        {activeTab === 'profile' && user && (
+          <ProfileManagement
+            {...({
+              user: user,
+              onUpdateProfile: handleUpdateUser,
+              onUploadAvatar: handleUploadAvatar,
+              onDeleteAccount: handleDeleteAccount,
+            } as any)}
+          />
+        )}
 
-        {activeTab === 'wallet' &&
-          (walletError ? (
-            <ErrorDisplay
-              error={walletError}
-              onRetry={handleRefresh}
-              title="Failed to load wallet"
-            />
-          ) : isLoadingWallet ? (
-            <LoadingDisplay message="Loading wallet information..." />
-          ) : (
-            <WalletTransactions
-              walletBalance={walletBalance}
-              pendingTransactions={pendingTransactions}
-              transactions={transactions}
-              onExportTransactions={handleExportTransactions}
-            />
-          ))}
+        {activeTab === 'wallet' && (
+          <WalletTransactions
+            walletBalance={walletBalance}
+            pendingTransactions={pendingTransactions}
+            transactions={apiTransactions}
+            onExportTransactions={apiExportTransactions}
+          />
+        )}
       </div>
 
       <BookingModal
         booking={selectedBooking}
         isOpen={showBookingModal}
         onClose={() => setShowBookingModal(false)}
-        onCancel={handleCancelBooking}
+        onCancel={() => setShowCancelModal(true)}
       />
       <CancelModal
         booking={selectedBooking}
         isOpen={showCancelModal}
         onClose={() => setShowCancelModal(false)}
-        onConfirm={handleConfirmCancel}
+        onConfirm={(id: any) => handleConfirmCancel(id)}
       />
     </div>
   );

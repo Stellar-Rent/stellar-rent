@@ -36,7 +36,8 @@ export default function RootLayout({
         <Providers>
           <Navbar />
           <div className="flex flex-1 overflow-hidden pt-14">
-            <main className="flex-1 flex flex-col min-w-0">{children}</main>
+            {/* Added pr-12 to reserve space for the fixed RightSidebar (w-12) */}
+            <main className="flex-1 flex flex-col min-w-0 pr-12">{children}</main>
             <RightSidebar />
           </div>
           <Toaster position="top-right" />

@@ -74,7 +74,7 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
             </button>
           </div>
 
-          <form onSubmit={onSubmit} className="space-y-6 ">
+          <form onSubmit={onSubmit} className="space-y-6">
             <div className="border-b border-gray-200 pb-6">
               <h3 className="text-lg font-semibold dark:text-white text-gray-900 mb-4">
                 Basic Information
@@ -92,8 +92,8 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                     type="text"
                     required
                     value={newProperty.title}
-                    onChange={(e) => setNewProperty({ ...newProperty, title: e.target.value })}
-                    className="w-full px-3 py-2 border dark:text-white text-black border-gray-300 rounded-lg  bg-transparent "
+                    onChange={(e) => setNewProperty((prev) => ({ ...prev, title: e.target.value }))}
+                    className="w-full px-3 py-2 border dark:text-white text-black border-gray-300 rounded-lg bg-transparent"
                     placeholder="Enter a catchy title for your property"
                   />
                 </div>
@@ -110,9 +110,9 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                     required
                     value={newProperty.propertyType}
                     onChange={(e) =>
-                      setNewProperty({ ...newProperty, propertyType: e.target.value })
+                      setNewProperty((prev) => ({ ...prev, propertyType: e.target.value }))
                     }
-                    className="w-full px-3 py-2 border dark:text-white border-gray-300 rounded-lg focus:ring-0 bg-transparent focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border dark:text-white border-gray-300 rounded-lg focus:ring-0 bg-transparent"
                   >
                     {propertyTypes.map((type) => (
                       <option key={type.value} value={type.value}>
@@ -134,8 +134,10 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                     type="text"
                     required
                     value={newProperty.location}
-                    onChange={(e) => setNewProperty({ ...newProperty, location: e.target.value })}
-                    className="w-full px-3 py-2 border dark:text-white   text-black border-gray-300 rounded-lg focus:ring-0 bg-transparent focus:ring-blue-500 focus:border-transparent"
+                    onChange={(e) =>
+                      setNewProperty((prev) => ({ ...prev, location: e.target.value }))
+                    }
+                    className="w-full px-3 py-2 border dark:text-white text-black border-gray-300 rounded-lg bg-transparent"
                     placeholder="City, State, Country"
                   />
                 </div>
@@ -153,8 +155,8 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                     required
                     min="1"
                     value={newProperty.price}
-                    onChange={(e) => setNewProperty({ ...newProperty, price: e.target.value })}
-                    className="w-full px-3 py-2 border dark:text-white border-gray-300 rounded-lg focus:ring-0 bg-transparent focus:ring-blue-500 focus:border-transparent"
+                    onChange={(e) => setNewProperty((prev) => ({ ...prev, price: e.target.value }))}
+                    className="w-full px-3 py-2 border dark:text-white border-gray-300 rounded-lg bg-transparent"
                     placeholder="100"
                   />
                 </div>
@@ -172,10 +174,10 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                     rows={4}
                     value={newProperty.description}
                     onChange={(e) =>
-                      setNewProperty({ ...newProperty, description: e.target.value })
+                      setNewProperty((prev) => ({ ...prev, description: e.target.value }))
                     }
-                    className="w-full px-3 py-2 dark:text-white border border-gray-300 rounded-lg focus:ring-0 bg-transparent focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Describe your property, its unique features, and what makes it special..."
+                    className="w-full px-3 py-2 dark:text-white border border-gray-300 rounded-lg bg-transparent"
+                    placeholder="Describe your property..."
                   />
                 </div>
               </div>
@@ -197,9 +199,12 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                     id="bedrooms"
                     value={newProperty.bedrooms}
                     onChange={(e) =>
-                      setNewProperty({ ...newProperty, bedrooms: Number.parseInt(e.target.value) })
+                      setNewProperty((prev) => ({
+                        ...prev,
+                        bedrooms: Number.parseInt(e.target.value),
+                      }))
                     }
-                    className="w-full px-3 py-2 border dark:text-white border-gray-300 rounded-lg focus:ring-0 bg-transparent focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border dark:text-white border-gray-300 rounded-lg bg-transparent"
                   >
                     {[1, 2, 3, 4, 5, 6, 7, 8].map((num) => (
                       <option key={num} value={num}>
@@ -220,9 +225,12 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                     id="bathroom"
                     value={newProperty.bathrooms}
                     onChange={(e) =>
-                      setNewProperty({ ...newProperty, bathrooms: Number.parseInt(e.target.value) })
+                      setNewProperty((prev) => ({
+                        ...prev,
+                        bathrooms: Number.parseInt(e.target.value),
+                      }))
                     }
-                    className="w-full px-3 py-2 border dark:text-white border-gray-300 rounded-lg focus:ring-0 bg-transparent focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border dark:text-white border-gray-300 rounded-lg bg-transparent"
                   >
                     {[1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5].map((num) => (
                       <option key={num} value={num}>
@@ -243,9 +251,12 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                     id="guest"
                     value={newProperty.guests}
                     onChange={(e) =>
-                      setNewProperty({ ...newProperty, guests: Number.parseInt(e.target.value) })
+                      setNewProperty((prev) => ({
+                        ...prev,
+                        guests: Number.parseInt(e.target.value),
+                      }))
                     }
-                    className="w-full px-3 py-2 dark:text-white border border-gray-300 rounded-lg focus:ring-0 bg-transparent focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 dark:text-white border border-gray-300 rounded-lg bg-transparent"
                   >
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16].map((num) => (
                       <option key={num} value={num}>
@@ -268,7 +279,7 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                       type="checkbox"
                       checked={newProperty.amenities.includes(amenity)}
                       onChange={() => onAmenityToggle(amenity)}
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      className="rounded border-gray-300 text-blue-600"
                     />
                     <span className="text-sm dark:text-white text-gray-700">{amenity}</span>
                   </label>
@@ -284,65 +295,21 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                 rows={3}
                 id="rules"
                 value={newProperty.rules}
-                onChange={(e) => setNewProperty({ ...newProperty, rules: e.target.value })}
-                className="w-full px-3 py-2 border dark:text-white border-gray-300 rounded-lg focus:ring-0 bg-transparent focus:ring-blue-500 focus:border-transparent"
-                placeholder="No smoking, No pets, Quiet hours after 10 PM, etc."
+                onChange={(e) => setNewProperty((prev) => ({ ...prev, rules: e.target.value }))}
+                className="w-full px-3 py-2 border dark:text-white border-gray-300 rounded-lg bg-transparent"
+                placeholder="No smoking, No pets, etc."
               />
-            </div>
-
-            <div className="pb-6">
-              <h3 className="text-lg font-semibold dark:text-white text-gray-900 mb-4">Photos</h3>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                <div className="text-gray-500">
-                  <svg
-                    className="mx-auto h-12 w-12 text-gray-400"
-                    stroke="currentColor"
-                    fill="none"
-                    viewBox="0 0 48 48"
-                    aria-hidden="true"
-                  >
-                    <title>Upload photos</title>
-                    <path
-                      d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                  <div className="mt-4">
-                    <label htmlFor="file-upload" className="cursor-pointer">
-                      <span className="mt-2 block dark:text-white text-sm font-medium text-gray-900">
-                        Upload property photos
-                      </span>
-                      <input
-                        id="file-upload"
-                        name="file-upload"
-                        type="file"
-                        className="sr-only"
-                        multiple
-                        accept="image/*"
-                      />
-                    </label>
-                    <p className="mt-1 text-xs dark:text-white text-gray-500">
-                      PNG, JPG, GIF up to 10MB each
-                    </p>
-                  </div>
-                </div>
-              </div>
             </div>
 
             <div className="flex justify-end space-x-4 pt-6">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-6 py-2 dark:text-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                className="px-6 py-2 dark:text-white border border-gray-300 rounded-lg"
               >
                 Cancel
               </button>
-              <button
-                type="submit"
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-              >
+              <button type="submit" className="px-6 py-2 bg-blue-600 text-white rounded-lg">
                 Add Property
               </button>
             </div>

@@ -346,7 +346,18 @@ const MobileMenuDrawer = ({ isOpen, onClose, menuItems }: any) => (
   <div
     className={`fixed inset-0 z-50 transition-opacity md:hidden ${isOpen ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
   >
-    <div className="absolute inset-0 bg-black/60" onClick={onClose} />
+    <div
+      className="absolute inset-0 bg-black/60"
+      onClick={onClose}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
+          onClose();
+        }
+      }}
+      role="button"
+      tabIndex={0}
+      aria-label="Close menu"
+    />
     <aside
       className={`absolute right-0 h-full w-72 bg-secondary p-6 transition-transform ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
     >
